@@ -12,3 +12,7 @@ dialog{border:0;padding:0;border-radius:15px;box-shadow:0 24px 100px #102a4050;w
 .connection-stats{display:flex;gap:24px;flex-wrap:wrap;margin:24px 0}.connection-stats div{display:flex;flex-direction:column;gap:5px}.connection-stats strong{font-size:28px}.connection-stats span{font-size:12px;color:var(--muted)}.break-word{overflow-wrap:anywhere}
 
 .nav-short{display:none}@media(max-width:750px){.nav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}.nav button{min-width:0;font-size:.72rem}.nav-full{display:none}.nav-short{display:inline}.nav button .badge{right:3px}}
+
+.planning-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#e4f4ee;border:1px solid #95c9b4;border-radius:12px;padding:18px;margin-bottom:22px}.planning-banner p{font-size:.875rem;margin-top:5px}.planning-banner .btn{flex-shrink:0}@media(max-width:750px){.planning-banner{align-items:flex-start;flex-direction:column}}
+
+.field[hidden]{display:none}

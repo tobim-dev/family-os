@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY, appointment_id INTEGER 
 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, actor TEXT NOT NULL, action TEXT NOT NULL, details TEXT NOT NULL, created TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS appointments_day ON appointments(day);
 CREATE INDEX IF NOT EXISTS tasks_owner_state ON tasks(owner,state);
+CREATE TABLE IF NOT EXISTS planning_sessions(id TEXT PRIMARY KEY, session_token TEXT NOT NULL REFERENCES sessions(token) ON DELETE CASCADE, actor TEXT NOT NULL REFERENCES users(id), expires REAL NOT NULL, ended INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL);
 '''
 
@@ -62,7 +63,11 @@ class Login(BaseModel):
     code: str = Field(default='', max_length=8)
 
 
-class ProposalInput(BaseModel):
+class JointInput(BaseModel):
+    planning_session: str | None = Field(default=None, max_length=64)
+
+
+class ProposalInput(JointInput):
     day: date
     kind: Literal['bring', 'pickup']
     owner: Literal['tobi', 'britta']
@@ -74,11 +79,11 @@ class ProposalInput(BaseModel):
     issue_id: int | None = Field(default=None, ge=1)
 
 
-class Decision(BaseModel):
+class Decision(JointInput):
     action: Literal['approve', 'reject', 'withdraw']
 
 
-class Bulk(BaseModel):
+class Bulk(JointInput):
     ids: list[int] = Field(min_length=1, max_length=64)
 
 
@@ -187,10 +192,50 @@ def create_app(db_path=None, demo=None, origin=None):
         if missing:
             raise HTTPException(409, 'Bitte zuerst das Family-OS-Konto für ' + ' und '.join(missing) + ' auf dem NAS einrichten. Gemeinsame Abstimmungen benötigen beide Konten.')
 
+    def planning_mode(conn, request):
+        token = hashlib.sha256(request.cookies.get('fos_session', '').encode()).hexdigest()
+        row = conn.execute('SELECT id,actor,expires FROM planning_sessions WHERE session_token=? AND ended=0 AND expires>? ORDER BY expires DESC LIMIT 1', (token, time.time())).fetchone()
+        return dict(row) if row else None
+
+    def validate_planning(conn, request, mode_id):
+        if not mode_id:
+            return False
+        mode = planning_mode(conn, request)
+        if not mode or not hmac.compare_digest(mode['id'], mode_id):
+            raise HTTPException(409, 'Der gemeinsame Planungsmodus wurde beendet oder ist abgelaufen. Bitte neu laden; die Änderung wurde nicht gespeichert.')
+        require_household(conn)
+        return True
+
     def audit(conn, actor, action, details):
         conn.execute('INSERT INTO audit(actor,action,details,created) VALUES(?,?,?,?)', (actor, action, details, now()))
 
     integrations.routes(app, identity, ROOT / 'static')
+
+    @app.post('/api/planning/start')
+    def start_planning(request: Request):
+        with db() as conn:
+            actor = identity(request, conn)
+            require_household(conn)
+            existing = planning_mode(conn, request)
+            if existing:
+                return existing
+            token = hashlib.sha256(request.cookies['fos_session'].encode()).hexdigest()
+            mode_id = secrets.token_hex(16)
+            expires = time.time() + 7200
+            conn.execute('INSERT INTO planning_sessions VALUES(?,?,?,?,0)', (mode_id, token, actor, expires))
+            audit(conn, actor, 'Gemeinsame Planung gestartet', 'Beide planen zusammen an diesem Gerät. Direkte Zuordnung für höchstens zwei Stunden.')
+            notify(conn, 'britta' if actor == 'tobi' else 'tobi', 'planning-start:' + mode_id, 'Gemeinsam planen ist aktiv', PEOPLE[actor] + ' hat den gemeinsamen Planungsmodus an einem Gerät gestartet. Dort gespeicherte Zuordnungen gelten direkt als abgestimmt.')
+        return {'id': mode_id, 'actor': actor, 'expires': expires}
+
+    @app.post('/api/planning/stop')
+    def stop_planning(request: Request):
+        with db() as conn:
+            actor = identity(request, conn)
+            mode = planning_mode(conn, request)
+            if mode:
+                conn.execute('UPDATE planning_sessions SET ended=1 WHERE id=?', (mode['id'],))
+                audit(conn, actor, 'Gemeinsame Planung beendet', 'Neue Vorschläge benötigen wieder die Bestätigung der anderen Person.')
+        return {'ok': True}
 
     @app.get('/api/config')
     def config():
@@ -248,8 +293,9 @@ def create_app(db_path=None, demo=None, origin=None):
             proposals = [dict(r) for r in conn.execute("SELECT p.*,a.day,a.kind,a.owner AS current_owner FROM proposals p JOIN appointments a ON a.id=p.appointment_id WHERE p.state='pending' ORDER BY p.deadline")]
             issues = [dict(r) for r in conn.execute("SELECT i.*,a.day,a.kind FROM issues i LEFT JOIN appointments a ON a.id=i.appointment_id WHERE i.state='open' ORDER BY i.deadline")]
             tasks = [dict(r) for r in conn.execute("SELECT * FROM tasks WHERE state IN ('open','done') ORDER BY state DESC,due,id DESC LIMIT 200")]
+            planning = planning_mode(conn, request)
             history = [dict(r) for r in conn.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 30')]
-        return {'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo}
+        return {'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
 
     @app.post('/api/proposals')
     def propose(data: ProposalInput, request: Request):
@@ -259,6 +305,7 @@ def create_app(db_path=None, demo=None, origin=None):
         with db() as conn:
             actor = identity(request, conn)
             require_household(conn)
+            joint = validate_planning(conn, request, data.planning_session)
             conn.execute('INSERT OR IGNORE INTO appointments(day,kind) VALUES(?,?)', (str(data.day), data.kind))
             slot = conn.execute('SELECT * FROM appointments WHERE day=? AND kind=?', (str(data.day), data.kind)).fetchone()
             if slot['version'] != data.expected_version:
@@ -273,14 +320,17 @@ def create_app(db_path=None, demo=None, origin=None):
                     raise HTTPException(409, 'Der Klärungspunkt passt nicht zu diesem Termin.')
             cursor = conn.execute('INSERT INTO proposals(appointment_id,owner,start,end,creator,reason,deadline,base_version,created,issue_id) VALUES(?,?,?,?,?,?,?,?,?,?)', (slot['id'],data.owner,data.start,data.end,actor,data.reason.strip(),deadline,slot['version'],now(),data.issue_id))
             audit(conn, actor, 'Vorschlag erstellt', f'{data.day}: {"Bringen" if data.kind == "bring" else "Abholen"} → {PEOPLE[data.owner]}')
-            notify(conn, 'britta' if actor == 'tobi' else 'tobi', f'proposal:{cursor.lastrowid}', 'Neue Terminabstimmung', f'{data.day}: Ein Betreuungsvorschlag wartet auf deine Zustimmung.')
+            if joint:
+                approve(conn, actor, cursor.lastrowid, send_notice=False, joint=True)
+            else:
+                notify(conn, 'britta' if actor == 'tobi' else 'tobi', f'proposal:{cursor.lastrowid}', 'Neue Terminabstimmung', f'{data.day}: Ein Betreuungsvorschlag wartet auf deine Zustimmung.')
             return {'id': cursor.lastrowid}
 
-    def approve(conn, actor, proposal_id, send_notice=True):
+    def approve(conn, actor, proposal_id, send_notice=True, joint=False):
         proposal = conn.execute('SELECT * FROM proposals WHERE id=?', (proposal_id,)).fetchone()
         if not proposal or proposal['state'] != 'pending':
             raise HTTPException(409, 'Dieser Vorschlag ist nicht mehr offen.')
-        if proposal['creator'] == actor:
+        if proposal['creator'] == actor and not joint:
             raise HTTPException(403, 'Der andere muss deinen Vorschlag bestätigen.')
         slot = conn.execute('SELECT * FROM appointments WHERE id=?', (proposal['appointment_id'],)).fetchone()
         if slot['version'] != proposal['base_version']:
@@ -298,7 +348,7 @@ def create_app(db_path=None, demo=None, origin=None):
             conn.execute("UPDATE issues SET state='resolved',version=version+1,resolution=? WHERE id=? AND state='open'", ('Gemeinsam bestätigte Neuplanung', proposal['issue_id']))
         if send_notice:
             notify(conn, proposal['creator'], f'approved:{proposal_id}', 'Planung gemeinsam bestätigt', f"{slot['day']}: Betreuung bestätigt. Bitte deine Aufgaben und den Übertragungsstatus prüfen.")
-        audit(conn, actor, 'Planung bestätigt', f"{slot['day']} · {kind}: {PEOPLE[proposal['owner']]} übernimmt.")
+        audit(conn, actor, 'In gemeinsamer Planung zugeordnet' if joint else 'Planung bestätigt', f"{slot['day']} · {kind}: {PEOPLE[proposal['owner']]} übernimmt.")
 
     @app.post('/api/proposals/{proposal_id}/decision')
     def decide(proposal_id: int, data: Decision, request: Request):
@@ -308,7 +358,8 @@ def create_app(db_path=None, demo=None, origin=None):
             if not proposal:
                 raise HTTPException(409, 'Dieser Vorschlag ist nicht mehr offen.')
             if data.action == 'approve':
-                approve(conn, actor, proposal_id)
+                joint = validate_planning(conn, request, data.planning_session)
+                approve(conn, actor, proposal_id, send_notice=not joint, joint=joint)
             else:
                 if (data.action == 'withdraw') != (proposal['creator'] == actor):
                     raise HTTPException(403, 'Diese Entscheidung steht der anderen Person zu.')
@@ -323,8 +374,9 @@ def create_app(db_path=None, demo=None, origin=None):
             raise HTTPException(422, 'Doppelte Vorschläge.')
         with db() as conn:
             actor = identity(request, conn)
+            joint = validate_planning(conn, request, data.planning_session)
             for proposal_id in data.ids:
-                approve(conn, actor, proposal_id, send_notice=False)
+                approve(conn, actor, proposal_id, send_notice=False, joint=joint)
             notify(conn, 'britta' if actor == 'tobi' else 'tobi', 'approved-batch:' + hashlib.sha256(str(sorted(data.ids)).encode()).hexdigest(), 'Planung gemeinsam bestätigt', f'{len(data.ids)} Betreuungsvorschläge wurden bestätigt. Bitte die Aufgaben zur Arbeitskalenderpflege prüfen.')
         return {'ok': True}
 

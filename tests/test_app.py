@@ -147,6 +147,77 @@ class PlanningTests(unittest.TestCase):
         self.assertTrue(all(a['owner'] is None for a in s['appointments']))
         self.assertEqual(self.tobi.post('/api/month-draft',json=data).status_code,409)
 
+    def start_joint(self, client=None):
+        response = (client or self.tobi).post('/api/planning/start', json={})
+        self.assertEqual(response.status_code, 200)
+        return response.json()['id']
+
+    def test_joint_direct_assignment_and_followup_tasks(self):
+        mode = self.start_joint()
+        response = self.proposal(planning_session=mode)
+        self.assertEqual(response.status_code, 200)
+        s = self.state()
+        self.assertEqual(s['planning']['id'], mode)
+        self.assertEqual(s['appointments'][0]['owner'], 'tobi')
+        self.assertEqual(s['proposals'], [])
+        self.assertEqual(len(s['tasks']), 1)
+        self.app.state.integrations.reconcile()
+        with self.app.state.db() as conn:
+            targets = conn.execute('SELECT key FROM calendar_targets').fetchall()
+            self.assertEqual([r[0] for r in targets], ['slot-' + str(s['appointments'][0]['id'])])
+            self.assertEqual(conn.execute("SELECT COUNT(*) FROM notifications WHERE dedupe LIKE 'proposal:%'").fetchone()[0], 0)
+        self.assertEqual(self.proposal(planning_session=mode,owner='britta',expected_version=1).status_code,200)
+        self.assertEqual({t['owner'] for t in self.state()['tasks'] if t['state']=='open'}, {'tobi','britta'})
+        self.assertEqual(self.proposal(planning_session=mode,expected_version=1).status_code,409)
+
+    def test_joint_mode_does_not_apply_to_other_login_or_unmarked_request(self):
+        mode = self.start_joint()
+        self.assertIsNone(self.state(self.britta)['planning'])
+        self.assertEqual(self.proposal(self.britta,planning_session=mode).status_code,409)
+        with self.client('tobi') as other:
+            self.assertEqual(self.proposal(other,planning_session=mode).status_code,409)
+        self.assertEqual(self.proposal().status_code,200)
+        self.assertIsNone(self.state()['appointments'][0]['owner'])
+
+    def test_joint_mode_expiry_and_stop_reject_stale_dialogs(self):
+        mode = self.start_joint()
+        self.assertEqual(self.start_joint(),mode)
+        with self.app.state.db() as conn:
+            conn.execute('UPDATE planning_sessions SET expires=?',(time.time()-1,))
+        self.assertEqual(self.proposal(planning_session=mode).status_code,409)
+        self.assertEqual(self.state()['appointments'],[])
+        mode = self.start_joint()
+        self.tobi.post('/api/planning/stop',json={})
+        self.assertEqual(self.proposal(planning_session=mode).status_code,409)
+        self.assertIsNone(self.state()['planning'])
+        self.assertEqual(self.proposal().status_code,200)
+        self.assertIsNone(self.state()['appointments'][0]['owner'])
+
+    def test_joint_mode_logout_revokes_and_restart_preserves_expiry(self):
+        mode = self.start_joint()
+        restarted = create_app(self.path,demo=True)
+        with restarted.state.db() as conn:
+            self.assertGreater(conn.execute('SELECT expires FROM planning_sessions WHERE id=?',(mode,)).fetchone()[0],time.time())
+        self.tobi.post('/api/logout',json={})
+        self.tobi.post('/api/login',json={'user':'tobi'})
+        self.assertEqual(self.proposal(planning_session=mode).status_code,409)
+
+    def test_joint_mode_start_does_not_silently_accept_existing_proposals(self):
+        pid = self.proposal().json()['id']
+        mode = self.start_joint()
+        self.assertIsNone(self.state()['appointments'][0]['owner'])
+        response = self.tobi.post(f'/api/proposals/{pid}/decision',json={'action':'approve','planning_session':mode})
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(self.state()['appointments'][0]['owner'],'tobi')
+
+    def test_joint_batch_still_atomic(self):
+        pid = self.proposal().json()['id']
+        mode = self.start_joint()
+        self.assertEqual(self.tobi.post('/api/proposals/approve-batch',json={'ids':[pid,999],'planning_session':mode}).status_code,409)
+        self.assertIsNone(self.state()['appointments'][0]['owner'])
+        self.assertEqual(self.tobi.post('/api/proposals/approve-batch',json={'ids':[pid],'planning_session':mode}).status_code,200)
+        self.assertEqual(self.state()['appointments'][0]['owner'],'tobi')
+
     def test_auth_csrf_and_input_validation(self):
         anonymous=TestClient(self.app,base_url='http://127.0.0.1:8765')
         self.assertEqual(anonymous.get('/api/state?month=2026-09').status_code,401)

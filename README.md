@@ -48,6 +48,27 @@ direkt aus dem Klärungspunkt gestartet werden; mit gemeinsamer Bestätigung wir
 der verknüpfte Punkt abgeschlossen. Ein reines Gesprächsergebnis verändert keine
 Termine.
 
+## Gemeinsam auf der Couch planen
+
+In Übersicht oder Monatsplanung **Gemeinsam planen** auswählen und ausdrücklich
+„Wir planen zusammen · Modus starten“ anklicken. Damit erklärt ihr, dass ihr
+zusammen plant. Es ist keine zweite Anmeldung und keine einzelne Freigabe nötig.
+Neue Zuordnungen werden mit **Verbindlich zuordnen** direkt gespeichert.
+Der grüne Hinweis zeigt den aktiven Modus und seine Ablaufzeit.
+
+Der Modus gilt nur für diese Anmeldung (einschließlich ihrer Browser-Tabs), endet
+nach zwei Stunden oder über **Planung beenden** und wird beim Abmelden widerrufen.
+Andere Anmeldungen behalten die gegenseitige Freigabe. Ein abgelaufener Modus
+führt beim Speichern zu einer klaren Meldung; es erfolgt keine stille Umwandlung.
+Bestehende Vorschläge werden beim Einschalten nicht automatisch übernommen.
+Monatsentwürfe können nach einer gemeinsamen Prüfung gesammelt bestätigt werden,
+auch wenn die angemeldete Person sie selbst erstellt hat.
+
+Arbeitskalender-Aufgaben, Änderungsverlauf, Versionsprüfung und Google-Abgleich
+bleiben aktiv. Die Historie nennt die bedienende Person und kennzeichnet direkte
+Zuordnungen als gemeinsame Planung. Die andere Person erhält beim Start eine
+Mitteilung über den eingeschalteten Modus.
+
 ## Was implementiert ist
 
 - Übersicht der nächsten Betreuungstage und Monatsplanung.
