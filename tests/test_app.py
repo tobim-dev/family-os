@@ -176,6 +176,30 @@ class AuthenticationTests(unittest.TestCase):
         data.update(changes)
         return self.client.post('/api/login',json=data)
 
+    def test_single_account_planning_fails_cleanly_then_succeeds_with_partner(self):
+        self.assertEqual(self.login().status_code, 200)
+        day = date.today() + timedelta(days=7)
+        while day.weekday() > 4:
+            day += timedelta(days=1)
+        deadline = (datetime.now().astimezone() + timedelta(days=2)).isoformat()
+        data = {'day':str(day),'kind':'bring','owner':'tobi','start':'07:45','end':'08:45','expected_version':0,'reason':'Gemeinsam prüfen','deadline':deadline}
+        response = self.client.post('/api/proposals', json=data)
+        self.assertEqual(response.status_code, 409)
+        self.assertIn('Britta', response.json()['detail'])
+        issue = self.client.post('/api/issues', json={'text':'Besprechen','deadline':deadline})
+        self.assertEqual(issue.status_code, 409)
+        self.assertIn('Britta', issue.json()['detail'])
+        month = self.client.post('/api/month-draft', json={'month':'2027-02','bring_start':'07:45','bring_end':'08:45','pickup_start':'15:30','pickup_end':'17:30'})
+        self.assertEqual(month.status_code, 409)
+        with self.app.state.db() as conn:
+            for table in ('appointments','proposals','issues','notifications'):
+                self.assertEqual(conn.execute('SELECT COUNT(*) FROM ' + table).fetchone()[0], 0)
+            conn.execute('INSERT INTO users(id,password,totp) VALUES(?,?,?)', ('britta', password_hash('test-password-123'), pyotp.random_base32()))
+        self.assertEqual(self.client.post('/api/proposals', json=data).status_code, 200)
+        with self.app.state.db() as conn:
+            self.assertEqual(conn.execute('SELECT owner FROM notifications').fetchone()[0], 'britta')
+            self.assertEqual(conn.execute('SELECT state FROM proposals').fetchone()[0], 'pending')
+
     def test_password_and_mfa_required_and_otp_replay_blocked(self):
         self.assertEqual(self.login(code='').status_code,401)
         code=pyotp.TOTP(self.secret).now()

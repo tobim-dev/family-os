@@ -38,6 +38,7 @@ jobs:
         run: |
           node --check static/app.js
           node --check static/sw.js
+          node --test tests/test_api.cjs
           python scripts/check_unraid.py
       - name: Build production image
         run: docker build --tag family-os:test .

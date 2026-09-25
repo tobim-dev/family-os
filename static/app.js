@@ -15,8 +15,12 @@ let state=null,config=null,view='home',month=iso(new Date()).slice(0,7),taskFilt
 let opener=null, loadSequence=0;
 async function api(path,body){
   const response=await fetch('/api'+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-Family-Request':'1'},body:body===undefined?undefined:JSON.stringify(body)});
-  const data=await response.json();
-  if(!response.ok){if(response.status===401&&path!='/login'){state=null;renderLogin();}throw new Error(typeof data.detail==='string'?data.detail:'Bitte die Eingaben prüfen.');}
+  if(response.status===401&&path!='/login'){state=null;renderLogin();}
+  let data;
+  try{data=await response.json();}catch(_){
+    throw new Error(response.ok?'Die Serverantwort konnte nicht gelesen werden. Bitte die Übersicht neu laden.':`Die Anfrage konnte nicht abgeschlossen werden (HTTP ${response.status}). Bitte zuerst die Übersicht neu laden und den Stand prüfen. Falls der Fehler bleibt, die Container-Protokolle prüfen.`);
+  }
+  if(!response.ok)throw new Error(typeof data?.detail==='string'?data.detail:response.status>=500?'Beim Verarbeiten ist ein Serverfehler aufgetreten. Bitte die Übersicht neu laden und den Stand prüfen.':'Bitte die Eingaben prüfen.');
   return data;
 }
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,4500);}

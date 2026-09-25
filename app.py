@@ -181,6 +181,12 @@ def create_app(db_path=None, demo=None, origin=None):
             raise HTTPException(401, 'Bitte anmelden.')
         return row['user_id']
 
+    def require_household(conn):
+        present = {row[0] for row in conn.execute('SELECT id FROM users')}
+        missing = [name for key, name in PEOPLE.items() if key not in present]
+        if missing:
+            raise HTTPException(409, 'Bitte zuerst das Family-OS-Konto für ' + ' und '.join(missing) + ' auf dem NAS einrichten. Gemeinsame Abstimmungen benötigen beide Konten.')
+
     def audit(conn, actor, action, details):
         conn.execute('INSERT INTO audit(actor,action,details,created) VALUES(?,?,?,?)', (actor, action, details, now()))
 
@@ -252,8 +258,7 @@ def create_app(db_path=None, demo=None, origin=None):
         deadline = deadline_value(data.deadline)
         with db() as conn:
             actor = identity(request, conn)
-            if not conn.execute('SELECT id FROM users WHERE id=?', (data.owner,)).fetchone():
-                raise HTTPException(409, 'Bitte zuerst beide persönlichen Konten einrichten.')
+            require_household(conn)
             conn.execute('INSERT OR IGNORE INTO appointments(day,kind) VALUES(?,?)', (str(data.day), data.kind))
             slot = conn.execute('SELECT * FROM appointments WHERE day=? AND kind=?', (str(data.day), data.kind)).fetchone()
             if slot['version'] != data.expected_version:
@@ -330,8 +335,7 @@ def create_app(db_path=None, demo=None, origin=None):
             raise HTTPException(422, 'Die Endzeit muss nach der Startzeit liegen.')
         with db() as conn:
             actor = identity(request, conn)
-            if conn.execute('SELECT COUNT(*) FROM users').fetchone()[0] != 2:
-                raise HTTPException(409, 'Bitte zuerst beide persönlichen Konten einrichten.')
+            require_household(conn)
             if conn.execute('SELECT id FROM appointments WHERE day BETWEEN ? AND ?', (str(first), str(last))).fetchone():
                 raise HTTPException(409, 'Der Monat enthält bereits Termine. Bitte einzeln ergänzen.')
             created = 0
@@ -358,6 +362,7 @@ def create_app(db_path=None, demo=None, origin=None):
         deadline = deadline_value(data.deadline)
         with db() as conn:
             actor = identity(request, conn)
+            require_household(conn)
             if data.appointment_id and not conn.execute('SELECT id FROM appointments WHERE id=?', (data.appointment_id,)).fetchone():
                 raise HTTPException(404, 'Termin nicht gefunden.')
             created_issue = conn.execute('INSERT INTO issues(appointment_id,text,owner,deadline,created) VALUES(?,?,?,?,?)', (data.appointment_id,data.text.strip(),actor,deadline,now()))
