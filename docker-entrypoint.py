@@ -20,7 +20,9 @@ def main():
         if data.is_symlink():
             raise SystemExit('/data must not be a symlink.')
         data.mkdir(exist_ok=True)
-        os.chown(data, uid, gid)
+        # Temporarily own the directory while preparing files. This avoids
+        # needing DAC_OVERRIDE to traverse an existing private appdata folder.
+        os.chown(data, 0, 0)
         os.chmod(data, 0o700)
         # Never recursively change ownership of an arbitrary host mount.
         for name in ('family.sqlite', 'family.sqlite-wal', 'family.sqlite-shm',
@@ -31,6 +33,7 @@ def main():
             if path.is_file():
                 os.chown(path, uid, gid)
                 os.chmod(path, 0o600)
+        os.chown(data, uid, gid)
         os.setgroups([])
         os.setgid(gid)
         os.setuid(uid)
