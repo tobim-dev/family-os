@@ -1,0 +1,15 @@
+.env
+data/
+*.sqlite*
+__pycache__/
+.venv/
+*.backup
+
+google-client*.json
+client_secret*.json
+*.key
+*.pem
+*.keys/
+
+.DS_Store
+*.log

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Container version="2">
+  <Name>family-os</Name>
+  <Repository>ghcr.io/tobim-dev/family-os:latest</Repository>
+  <Registry>https://github.com/tobim-dev/family-os/pkgs/container/family-os</Registry>
+  <Network>bridge</Network>
+  <Privileged>false</Privileged>
+  <Shell>sh</Shell>
+  <Project>https://github.com/tobim-dev/family-os</Project>
+  <Support>https://github.com/tobim-dev/family-os/issues</Support>
+  <Overview>Family OS: Betreuung gemeinsam planen, Aenderungen bestaetigen, Aufgaben und Mitteilungen verwalten. Passwort und MFA im Regelbetrieb. HTTPS-Reverse-Proxy und zwei persoenliche Konten nach der Installation einrichten; siehe Projektanleitung. Kein Zugriff auf Arbeitskalender. Google und Push sind optional. Die Anwendung ist ein Entwicklungsstand.</Overview>
+  <Category>Productivity:</Category>
+  <WebUI>https://fos.lausbuben.cloud</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/tobim-dev/family-os/main/unraid/family-os.xml</TemplateURL>
+  <ExtraParams>--user 0:0 --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --cap-drop=ALL --cap-add=CHOWN --cap-add=FOWNER --cap-add=SETUID --cap-add=SETGID --security-opt=no-new-privileges:true --restart=unless-stopped</ExtraParams>
+  <PostArgs/>
+  <Config Name="Web-Port (nur LAN / Reverse Proxy)" Target="8000" Default="8765" Mode="tcp" Description="HTTP-Zielport fuer den Reverse Proxy. Nicht direkt im Router freigeben; Anmeldung erfolgt ueber die HTTPS-Adresse." Type="Port" Display="always" Required="true" Mask="false">8765</Config>
+  <Config Name="Datenordner" Target="/data" Default="/mnt/user/appdata/family-os" Mode="rw" Description="Dauerhafte Datenbank und Verbindungsschluessel. Gemeinsam sichern und beim Aktualisieren erhalten." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/family-os</Config>
+  <Config Name="Oeffentliche HTTPS-Adresse" Target="FOS_ORIGIN" Default="https://fos.lausbuben.cloud" Mode="" Description="Exakte Adresse ohne abschliessenden Slash. Bei Aenderung auch WebUI-Adresse und Google-Weiterleitungsadresse anpassen." Type="Variable" Display="always" Required="true" Mask="false">https://fos.lausbuben.cloud</Config>
+  <Config Name="Google Gemeinschaftskalender-ID (optional)" Target="FOS_GOOGLE_CALENDAR_ID" Default="" Mode="" Description="Nur euren privaten Gemeinschaftskalender eintragen. OAuth-Datei spaeter als /data/google-client.json ablegen." Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="Datenbank" Target="FOS_DB" Default="/data/family.sqlite" Mode="" Description="Pfad innerhalb des persistenten Datenordners." Type="Variable" Display="advanced" Required="true" Mask="false">/data/family.sqlite</Config>
+  <Config Name="Google OAuth-Datei" Target="FOS_GOOGLE_CLIENT_FILE" Default="/data/google-client.json" Mode="" Description="Private OAuth-Clientdatei; niemals ins Repository hochladen." Type="Variable" Display="advanced" Required="false" Mask="false">/data/google-client.json</Config>
+  <Config Name="Regelbetrieb" Target="FOS_DEMO" Default="0" Mode="" Description="Auf dem NAS immer 0. Die Demo mit vereinfachter Anmeldung ist ausschliesslich lokal vorgesehen." Type="Variable" Display="advanced" Required="true" Mask="false">0</Config>
+  <Config Name="Dateieigentuemer UID" Target="FOS_UID" Default="99" Mode="" Description="Unraid nobody: 99. Nur die Initialisierung laeuft als root; die Anwendung danach unter dieser UID." Type="Variable" Display="advanced" Required="true" Mask="false">99</Config>
+  <Config Name="Dateigruppe GID" Target="FOS_GID" Default="100" Mode="" Description="Unraid users: 100." Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
+  <Config Name="Zeitzone" Target="TZ" Default="Europe/Berlin" Mode="" Description="Familienplanung verwendet Europe/Berlin." Type="Variable" Display="advanced" Required="true" Mask="false">Europe/Berlin</Config>
+</Container>

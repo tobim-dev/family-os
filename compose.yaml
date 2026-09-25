@@ -1,0 +1,23 @@
+services:
+  family-os:
+    build: .
+    restart: unless-stopped
+    environment:
+      FOS_ORIGIN: ${FOS_ORIGIN:?Bitte HTTPS-Adresse in .env setzen}
+      FOS_DB: /data/family.sqlite
+      FOS_DEMO: "0"
+      FOS_GOOGLE_CALENDAR_ID: ${FOS_GOOGLE_CALENDAR_ID:-}
+      FOS_GOOGLE_CLIENT_FILE: /data/google-client.json
+    ports:
+      - "127.0.0.1:8765:8000"
+    volumes:
+      - family-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  family-data:
