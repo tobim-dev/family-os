@@ -26,6 +26,7 @@ from backups import AutoBackup
 from meal_reminders import MealReminders
 from closures import Closures, CONFIRMED_DAYS_SQL
 from lina import Lina
+from vouchers import Vouchers
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -220,6 +221,10 @@ def create_app(db_path=None, demo=None, origin=None):
     app.state.lina = lina
     integrations.periodic.append(lina.periodic)
     lina.routes(app, identity)
+    vouchers = Vouchers(db, path.parent, demo)
+    app.state.vouchers = vouchers
+    integrations.periodic.append(vouchers.periodic)
+    vouchers.routes(app, identity)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):

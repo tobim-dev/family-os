@@ -124,6 +124,29 @@ CREATE TABLE lina_items(
  updated TEXT NOT NULL);
 CREATE INDEX lina_items_list_state ON lina_items(list,state);
 '''),
+    (5, 'Einkaufsgutscheine (PDF auf dem NAS, Restbetrag)', '''
+CREATE TABLE vouchers(
+ id INTEGER PRIMARY KEY,
+ store TEXT NOT NULL DEFAULT 'Kaufland',
+ value_cents INTEGER NOT NULL CHECK(value_cents > 0),
+ remaining_cents INTEGER NOT NULL CHECK(remaining_cents >= 0),
+ note TEXT NOT NULL DEFAULT '',
+ file TEXT NOT NULL UNIQUE,
+ filename TEXT NOT NULL,
+ size INTEGER NOT NULL,
+ uploaded_by TEXT NOT NULL REFERENCES users(id),
+ version INTEGER NOT NULL DEFAULT 1,
+ created TEXT NOT NULL,
+ updated TEXT NOT NULL,
+ CHECK(remaining_cents <= value_cents));
+CREATE TABLE voucher_uses(
+ id INTEGER PRIMARY KEY,
+ voucher_id INTEGER NOT NULL REFERENCES vouchers(id),
+ before_cents INTEGER NOT NULL,
+ after_cents INTEGER NOT NULL,
+ actor TEXT NOT NULL REFERENCES users(id),
+ created TEXT NOT NULL);
+'''),
 ]
 
 LATEST = 1 + len(MIGRATIONS)

@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-154 Tests bestanden (`python -m unittest discover -s tests -v`):
+162 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -56,6 +56,18 @@ Nanny-Planung (Migration 2):
 - Monatsplanung: mehrere Tage atomar (Überschneidung → nichts gespeichert), nur ein Monat,
   eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
 - Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
+
+Gutscheine (Migration 5):
+
+- Migration mit bestehenden Lina-Daten verlustfrei; Restbetrag nie über dem Wert (Datenbankregel).
+- Nur PDF bis 5 MB; Datei mit Rechten 600 im Ordner 700; Abruf nur angemeldet, `no-store`;
+  ohne Anmeldung wird der Upload vor dem Lesen abgewiesen.
+- Teilweise Nutzung bleibt aktiv, 0 € ins Archiv, Korrektur möglich, Verlauf je Änderung;
+  zu hohe Beträge und veraltete Versionen werden abgewiesen.
+- Erinnerung nur donnerstags 9–16 Uhr, einmal, fällig 16 Uhr; Ablegen einer PDF schließt sie; abschaltbar.
+- Tägliche Sicherung enthält die Gutschein-PDFs.
+- Browser (1300 px, 390 px): PDF ablegen, 12,40 € einlösen → 12,60 € „Teilweise genutzt“.
+  Dabei gefundene Namenskollision zweier Skripte behoben und als Test ergänzt.
 
 Lina (Migration 4):
 
@@ -173,7 +185,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-14 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe und Nanny-WhatsApp-Texte bestehen. Oberfläche, neuer
+15 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft

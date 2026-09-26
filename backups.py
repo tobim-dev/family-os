@@ -1,7 +1,8 @@
 """Automatic daily backup of database and keys (Q-01).
 
 * Once per day from FOS_BACKUP_HOUR (default 3 o'clock) a consistent copy of
-  the database is written with the SQLite backup API, together with the keys
+  the database is written with the SQLite backup API, together with the
+  voucher PDFs (``vouchers/``) and the keys
   that are needed to read stored tokens (integration.key, push-private.pem,
   Google client file). A missed run is caught up on the next background tick.
 * Each backup is written into a temporary folder, checked with
@@ -158,6 +159,10 @@ class AutoBackup:
             os.chmod(copy, 0o600)
             if self.verify(copy) != 'ok':
                 raise IntegrityError('Die Sicherungskopie hat die Integritätsprüfung nicht bestanden.')
+            vouchers = self.data / 'vouchers'
+            if vouchers.is_dir():
+                shutil.copytree(vouchers, partial / 'vouchers')
+                os.chmod(partial / 'vouchers', 0o700)
             keys = self.key_files()
             if keys:
                 (partial / 'keys').mkdir(mode=0o700)

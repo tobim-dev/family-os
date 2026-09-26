@@ -35,7 +35,7 @@ gewählte erste Funktionsbereiche.
 
 | ID | Anforderung oder Kontext | Stand / überprüfbares Ergebnis |
 | --- | --- | --- |
-| Z-01 | Eine zentrale Anlaufstelle für die Familienplanung schaffen, damit weniger vergessen wird und Informationen ohne Suchen in Nachrichten auffindbar sind. | Teilweise: Betreuung, Aufgaben, Essen, Nanny und Lina (Kleidung/Windeln) vorhanden; Gutscheine, Sprache und Offline fehlen. |
+| Z-01 | Eine zentrale Anlaufstelle für die Familienplanung schaffen, damit weniger vergessen wird und Informationen ohne Suchen in Nachrichten auffindbar sind. | Teilweise: Betreuung, Aufgaben, Essen, Nanny, Lina (Kleidung/Windeln) und Gutscheine vorhanden; Sprache und Offline fehlen. |
 | Z-02 | Hoher Grad an Automation und Proaktivität soll den Alltag entlasten. Zuverlässigkeit und Ergebnisqualität haben Vorrang; Fehler dürfen keine zusätzliche Alltagsarbeit verursachen. | Teilweise: Kalenderabgleich, Aufgaben und Mitteilungen; weitere Routinen ausstehend. Keine Behauptung absoluter Fehlerfreiheit. |
 | Z-03 | Tobi und Britta sind die Nutzer. Lina wird mitgeplant. Die Anwendung soll zunächst innerhalb der Familie bleiben. | Rahmen / vorhanden: zwei persönliche Konten; kein Nanny-Konto als Voraussetzung. |
 | Z-04 | Bedienung so einfach wie möglich, mit erkennbarem Nutzen und möglichst wenig laufender Datenpflege. | Rahmen: insbesondere bei Vorräten keine Einzelverbrauchserfassung verlangen. |
@@ -138,12 +138,12 @@ Quelle: erster Einkaufsbericht und spätere Konkretisierung von Aktionen und Abl
 
 | ID | Anforderung oder Kontext | Stand / überprüfbares Ergebnis |
 | --- | --- | --- |
-| G-01 | Möglichst viele PAYBACK-Punkte sammeln: Tobi prüft Aktionen und kauft dann Wunschgutscheine zur Umwandlung in Kaufland-Gutscheine. | Ausstehend als Unterstützung; kein festgelegtes Kaufbudget und keine autonome Kaufentscheidung. |
-| G-02 | Relevante Aktionen melden und rechtzeitig an die Vorbereitung für den Einkauf erinnern. | Ausstehend: Aktionsquelle und Meldekriterien noch festzulegen. |
-| G-03 | Zeitbedarf berücksichtigen: nach Kauf gewöhnlich etwa 24 Stunden bis zur Umwandlung, danach etwa eine Stunde bis zur Bereitstellung per E-Mail. | Ausstehend: Planungswerte mit Pufferbedarf, keine garantierten Anbieterfristen. |
-| G-04 | Gutscheine werden über einen E-Mail-Link als PDF bereitgestellt und sollen an der Kaufland-Kasse schnell griffbereit sein. | Ausstehend: zentraler Zugriff; E-Mail-Anbieter oder automatischer Postfachzugriff nicht vereinbart. |
-| G-05 | Übersicht aktiver, teilweise genutzter und vollständig verbrauchter Gutscheine bereitstellen. | Ausstehend: Teilrest nachvollziehbar; Herkunft bzw. automatische Ermittlung eines Restbetrags noch offen. |
-| G-06 | Aktuelle Ablage: iCloud-Ordner „Einkaufsgutscheine“; vollständig verbrauchte PDFs in Unterordner „Archiv“, teilweise genutzte bleiben aktiv. | Kontext / ausstehend: Ordnerlogik berücksichtigen. Eine automatische iCloud-Synchronisierung wurde nicht verbindlich festgelegt. |
+| G-01 | Möglichst viele PAYBACK-Punkte sammeln: Tobi prüft Aktionen und kauft dann Wunschgutscheine zur Umwandlung in Kaufland-Gutscheine. | Teilweise (vorläufig): wöchentliche Aufgabe für Tobi; Kaufentscheidung bleibt bei ihm, kein Budget, keine Automatisierung. |
+| G-02 | Relevante Aktionen melden und rechtzeitig an die Vorbereitung für den Einkauf erinnern. | Teilweise (vorläufig): Erinnerung donnerstags 9 Uhr (abschaltbar). Aktionen werden nicht automatisch gemeldet; Quelle weiter offen (O-07). |
+| G-03 | Zeitbedarf berücksichtigen: nach Kauf gewöhnlich etwa 24 Stunden bis zur Umwandlung, danach etwa eine Stunde bis zur Bereitstellung per E-Mail. | Vorhanden (vorläufig): Kauf bis Do 16 Uhr, damit nach etwa 24 h Umwandlung + 1 h E-Mail der Gutschein zum Freitagseinkauf bereit ist. |
+| G-04 | Gutscheine werden über einen E-Mail-Link als PDF bereitgestellt und sollen an der Kaufland-Kasse schnell griffbereit sein. | Vorhanden (vorläufig): PDF einmal hochladen, liegt auf dem NAS (nur nach Anmeldung abrufbar), „PDF öffnen“ unter Essen & Einkauf. Kein Postfachzugriff. |
+| G-05 | Übersicht aktiver, teilweise genutzter und vollständig verbrauchter Gutscheine bereitstellen. | Vorhanden: unbenutzt / teilweise genutzt / verbraucht (Archiv); Restbetrag manuell nach dem Einkauf, jede Änderung protokolliert. |
+| G-06 | Aktuelle Ablage: iCloud-Ordner „Einkaufsgutscheine“; vollständig verbrauchte PDFs in Unterordner „Archiv“, teilweise genutzte bleiben aktiv. | Umgesetzt analog zur Ordnerlogik: verbrauchte Gutscheine ins Archiv, teilweise genutzte bleiben aktiv. Keine iCloud-Synchronisierung. |
 | G-07 | Kaufvorbereitung und Umwandlung können wegen zahlreicher CAPTCHAs schwierig sein. Aktionsmeldungen und Erinnerungen sind ausdrücklich erwünscht. | Rahmen: Vollautomatisierung von Kauf/Umwandlung nicht zugesagt; keine CAPTCHA-Umgehung vorsehen. |
 
 ## 6. Kleidung, Krippenausstattung, Vinted und Windeln
@@ -214,6 +214,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | Erinnerungszeiten | Aktuell Tages-/Wochenübersicht 19 Uhr, normale Erinnerungen ab 9 Uhr, normale Nachtruhe 21–7 Uhr. Sonntagabend/Vorabend und sofortige Terminabstimmungen sind Nutzeranforderungen; die übrigen exakten Uhrzeiten sind hier als Implementierungsstand vermerkt. Essensplanung Do 9 Uhr, Einkaufsliste Fr 9 Uhr (E-02). |
 | Google | Eigene Family-OS-Einträge im bestehenden Zielkalender; kein Import beliebiger fremder Google-Termine. Ob solche Termine künftig in einer Gesamtübersicht benötigt werden, ist offen. |
 | Nanny im Kalender | Angefragte Termine vorläufig, bestätigte fest im bestehenden Gemeinschaftskalender, ohne Zeitblockade; Wünsche bleiben lokal, Absagen werden entfernt. Vorläufige Implementierungsentscheidung zu O-04. |
+| Gutscheine | PDF-Ablage auf dem NAS (`vouchers/`, Teil der täglichen Sicherung), Restbetrag manuell, Archiv bei 0 €; Erinnerung „Gutscheine vorbereiten“ donnerstags 9 Uhr an Tobi, fällig 16 Uhr, schließt sich beim Ablegen einer PDF. Vorläufige Implementierungsentscheidung zu O-07. |
 | Lina | Windeln ereignisbasiert (geöffnet/gekauft/gezählt), Nachkaufaufgabe ab 1 Packung an Tobi; Wechselkleidung an die Person, die als Nächstes bringt, plus Prüfaufgabe alle vier Wochen für Britta; Kleidungsbedarf und Aussortiertes bei Britta, Vinted-Text nur aus eigenen Angaben. Vorläufige Implementierungsentscheidung zu O-08; Brittas Rückmeldung (O-01) steht aus. |
 | Cookidoo | Inoffizielle Bibliothek, verschlüsselte Tokens, getrennte Anmeldung/Erstabruf, gezielte Änderungen, Diagnose und manuelle Prüfung unklarer Schreibvorgänge. Grenzen in COOKIDOO.md. |
 | Offline | Manuell speicherbare HTML-Einkaufskopie ist ein Zwischenstand, keine vollständige Offline-App und kein automatischer Rückabgleich. |
@@ -230,7 +231,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | O-04 | Weitgehend geklärt 26.09.2026 → N-09, N-10. Offen: Monatsunterlagen für den Minijob, Korrektur nach Überweisung. Nanny im Google-Kalender als vorläufige Implementierungsentscheidung umgesetzt (Abschnitt 9). | N-04–N-07 |
 | O-05 | Teilweise umgesetzt (E-15) mit vorläufigen Implementierungsregeln: Vegetarisch per Zutaten-/Kategorieprüfung (keine Garantie, Hinweis „bitte prüfen“), keine Wiederholung aus vier Wochen, Mo–Fr 45 / Sa–So 90 Minuten als änderbare Vorgabe. Offen: weitere Familienpräferenzen, Abneigungen, Wiederholungsfenster bestätigen. | E-04–E-08 |
 | O-06 | Geklärt 26.09.2026 → E-16. Offen bleibt nur das Abhaken mehrdeutiger Einzelartikel (weiter direkt in Cookidoo). | E-09–E-12 |
-| O-07 | Quellen und Kriterien für PAYBACK-Aktionen, Erinnerungszeitpunkt, Gutscheinrestbeträge, PDF-/E-Mail-/iCloud-Zugriff und Automatisierungsgrenzen. | G-01–G-07 |
+| O-07 | Teilweise umgesetzt mit vorläufigen Regeln (Abschnitt 9). Offen: Quelle und Kriterien für Aktionsmeldungen, E-Mail-/iCloud-Zugriff, gewünschter Erinnerungszeitpunkt. | G-01–G-07 |
 | O-08 | Teilweise umgesetzt mit vorläufigen Regeln (Bereich „Lina“, Abschnitt 9). Mit Britta bestätigen: Schwellen, Zuständigkeiten, Saisonbedarf, Vinted-Bilder/Ablauf. | K-01–K-07 |
 | O-09 | Spracherkennung lokal oder extern, erlaubte Inhalte, Kontrolle des Texts und Löschung bei Fehlern. | A-01–A-02, D-02 |
 | O-10 | Kalender/Einkauf bei NAS- oder Netzausfall: lesend/schreibend, Dauer, iPhone-Verhalten, Wiederabgleich und Konflikte. | V-01, E-13 |

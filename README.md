@@ -205,7 +205,7 @@ nicht lesbar. Dasselbe gilt für Cookidoo-Tokens. Die Anwendung erzeugt bei vorh
 damit auch bei laufender Anwendung ein konsistenter Stand entsteht.
 
 **Automatische Sicherung:** Täglich ab 3 Uhr (`FOS_BACKUP_HOUR`) legt die Anwendung unter
-`/data/backups/auto/<Datum>/` eine Kopie der Datenbank samt Ordner `keys` an. Die Kopie wird
+`/data/backups/auto/<Datum>/` eine Kopie der Datenbank samt Ordner `keys` und den abgelegten Gutschein-PDFs (`vouchers`) an. Die Kopie wird
 vor dem Ablegen mit `PRAGMA integrity_check` geprüft; unvollständige Kopien bleiben nie liegen.
 Aufbewahrt werden die letzten 14 Tage (`FOS_BACKUP_KEEP`), eigene Ordner daneben bleiben
 unberührt. Eine versäumte Nacht wird beim nächsten Lauf nachgeholt. Schlägt die Sicherung fehl,

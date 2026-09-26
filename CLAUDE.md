@@ -28,11 +28,12 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
 - `recipe_images.py`: Rezeptbilder über den NAS (Host-Allowlist, Cache); Browser lädt nie extern.
 - `closures.py`: Tage ohne Krippe (Schließtag, Feiertag, Urlaub, Krankheit) mit Bestätigung; setzt Wege aus.
 - `lina.py`: Windelvorrat (ereignisbasiert), Wechselkleidung Krippe, Kleidungsbedarf, Aussortiertes.
+- `vouchers.py`: Einkaufsgutscheine (PDF unter `vouchers/` auf dem NAS, Restbetrag, Donnerstags-Erinnerung).
 - `nanny.py`: Nanny-Termine, WhatsApp-Anfragen (nur vorbereiteter Text), Stunden, Monatsabrechnung.
 - `backups.py`: tägliche automatische Sicherung (DB + Schlüssel, Integritätsprüfung, Aufbewahrung).
 - `migrations.py`: versioniertes SQLite-Schema (`PRAGMA user_version`).
 - `manage.py`: Konten einrichten, Backups. `docker-entrypoint.py`: Unraid-Rechte.
-- `static/`: Vanilla-JS-PWA ohne Build-Schritt (`app.js` Kern, `meals.js`, `nanny.js`, `closures.js`, `lina.js` je Bereich), strikte CSP (keine Inline-Skripte/-Styles,
+- `static/`: Vanilla-JS-PWA ohne Build-Schritt (`app.js` Kern, `meals.js`, `nanny.js`, `closures.js`, `lina.js`, `vouchers.js` je Bereich; globale Namen müssen dateiübergreifend eindeutig sein, geprüft in `tests/test_scripts.cjs`), strikte CSP (keine Inline-Skripte/-Styles,
   keine externen Ressourcen).
 
 ## Datenbank-Regeln

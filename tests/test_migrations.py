@@ -168,7 +168,7 @@ class MigrationTests(unittest.TestCase):
             conn.execute("INSERT INTO day_closures(day,kind,batch,state,creator,created) VALUES('2026-10-08','vacation','b','confirmed','tobi','x')")
             conn.execute("INSERT INTO tasks(owner,title,details,due,created) VALUES('tobi','Arbeitskalender aktualisieren','d','2026-10-01','x')")
         conn.close()
-        self.assertEqual(migrate(self.path), [4])
+        self.assertEqual(migrate(self.path, migrations.MIGRATIONS[:3]), [4])
         with sqlite3.connect(self.path) as conn:
             self.assertEqual(conn.execute('SELECT day,state FROM day_closures').fetchall(), [('2026-10-08', 'confirmed')])
             self.assertEqual(conn.execute('SELECT title FROM tasks').fetchall(), [('Arbeitskalender aktualisieren',)])
@@ -177,6 +177,22 @@ class MigrationTests(unittest.TestCase):
                 conn.execute("INSERT INTO lina_items(list,text,owner,creator,created,updated) VALUES('wardrobe','x','tobi','tobi','x','x')")
         conn.close()
         self.assertTrue(any(b.name.startswith('pre-migration-v3-v4-') for b in self.backups()))
+
+    def test_voucher_migration_keeps_lina_data(self):
+        legacy_database(self.path)
+        migrate(self.path, migrations.MIGRATIONS[:3])  # production state before version 5
+        with sqlite3.connect(self.path) as conn:
+            conn.execute("INSERT INTO lina_diapers(kind,packs,actor,created) VALUES('set',3,'tobi','x')")
+            conn.execute("INSERT INTO lina_items(list,text,owner,creator,created,updated) VALUES('need','Jacke','tobi','tobi','x','x')")
+        conn.close()
+        self.assertEqual(migrate(self.path), [5])
+        with sqlite3.connect(self.path) as conn:
+            self.assertEqual(conn.execute('SELECT kind,packs FROM lina_diapers').fetchall(), [('set', 3)])
+            self.assertEqual(conn.execute('SELECT text FROM lina_items').fetchall(), [('Jacke',)])
+            with self.assertRaises(sqlite3.IntegrityError):
+                conn.execute("INSERT INTO vouchers(value_cents,remaining_cents,file,filename,size,uploaded_by,created,updated) VALUES(100,200,'f','f',1,'tobi','x','x')")
+        conn.close()
+        self.assertTrue(any(b.name.startswith('pre-migration-v4-v5-') for b in self.backups()))
 
     def test_statement_splitting_handles_triggers(self):
         script = "CREATE TABLE a(x); CREATE TRIGGER t AFTER INSERT ON a BEGIN UPDATE a SET x=1; END; SELECT 1;"
