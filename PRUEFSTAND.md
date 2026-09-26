@@ -95,7 +95,7 @@ Cookidoo-Oberfläche dieser Etappe:
 
 ## Praktisch noch offen
 
-- Das neue Cookidoo-Image auf dem bestehenden NAS aktualisieren und die Verbindung einrichten.
+- Cookidoo-Anmeldung am NAS gelang laut übermittelten Logs. Der danach beobachtete Ladefehler wegen mehrfacher Kennungen wurde korrigiert; Rückmeldung zum erfolgreichen Gesamtablauf nach diesem Fix steht noch aus.
 - Containerbau und Starttests laufen in GitHub Actions; kein lokaler Docker-Daemon.
 - Vollständiger Wiederherstellungslauf in separater NAS-Testinstallation.
 - Browserprüfung auf den tatsächlichen iPhones; die bisherigen Tests verwendeten

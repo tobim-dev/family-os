@@ -5,6 +5,10 @@
 **Installation auf Unraid:** [Anwendung über die XML-Vorlage installieren](UNRAID.md).
 Fertiges Image: `ghcr.io/tobim-dev/family-os:latest`.
 
+**Produktanforderungen:** [Vollständiger Anforderungskatalog](ANFORDERUNGEN.md) ·
+[Abgleich: bisher dokumentiert und ergänzt](ANFORDERUNGSABGLEICH.md).
+Der Katalog enthält auch die noch nicht implementierten Anforderungen aus dem Interview.
+
 
 Betreuung planen, Änderungen gemeinsam bestätigen, Klärungspunkte zuordnen,
 Aufgaben nachhalten und den Gemeinschaftskalender verbinden. Dazu kommen
@@ -101,7 +105,8 @@ Nanny-Verwaltung, automatische Menüvorschläge, automatisch verfügbare
 Offline-Einkaufslisten mit späterem Abgleich sowie Spracherkennung folgen später.
 Die erste Cookidoo-Anbindung ist integriert; siehe [COOKIDOO.md](COOKIDOO.md).
 Es gibt keinen Zugriff auf Arbeitskalender. Google und Push benötigen die Einrichtung
-nach [VERBINDUNGEN.md](VERBINDUNGEN.md); echte End-to-End-Tests stehen noch aus.
+nach [VERBINDUNGEN.md](VERBINDUNGEN.md). Google-Verbindung und Terminzuordnung wurden
+vom Nutzer bestätigt; vollständige Integrations- und iPhone-Push-Abnahme stehen noch aus.
 
 Diese Etappe ist ein überprüfbarer Entwicklungsstand, noch kein vollständig
 abgenommenes öffentliches Familiensystem. Brittas Rückmeldung ist zurückgestellt.

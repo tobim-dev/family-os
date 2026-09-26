@@ -110,6 +110,7 @@ aktiviert werden; den Schlüssel deshalb zusammen mit der Datenbank sichern.
 
 ## Vor der alltäglichen Nutzung noch abzunehmen
 
-Google-Autorisierung und echter Kalenderablauf, Push auf beiden iPhones,
-Neustart des NAS, Wiederherstellung aus Sicherung sowie Erreichbarkeit von außen.
-Diese Prüfungen wurden bisher nicht an eurem NAS oder euren Geräten durchgeführt.
+Tobi hat den NAS-Betrieb, die Einrichtung beider Konten, die Google-Verbindung und
+die Terminzuordnung als funktionierend gemeldet. Das ist keine vollständige Abnahme
+aller Fehlerfälle. Noch zu prüfen sind insbesondere Push auf beiden iPhones,
+Neustart- und Ausfallverhalten sowie Wiederherstellung aus Sicherung.
