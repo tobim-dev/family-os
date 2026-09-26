@@ -2,7 +2,7 @@
 // Keeps the read-only offline copy on this device current (sw.js, offline.py).
 // Stored: last shopping list and active voucher PDFs. Removed on logout.
 
-const OFFLINE_STORE = 'fos-offline-v1';
+const OFFLINE_STORE = 'fos-offline-v2';  // same name as in sw.js
 const OFFLINE_EVERY_MS = 5 * 60 * 1000;
 let offlineSavedAt = 0;
 

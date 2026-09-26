@@ -48,3 +48,13 @@ test('without a saved copy the network error is passed on', async () => {
   const empty = worker(async () => { throw new Error('offline'); });
   await assert.rejects(empty('/api/offline'), /offline/);
 });
+
+test('"?direkt" always bypasses the offline copy', async () => {
+  const offline = worker(async () => { throw new Error('offline'); }, {'/static/offline.html': 'OFFLINE PAGE'});
+  assert.equal(await offline('/?direkt=1', 'navigate'), 'not handled');
+});
+
+test('sw.js and offline-sync.js use the same cache name', () => {
+  const name = /const OFFLINE_CACHE = '([^']+)'/.exec(fs.readFileSync('static/sw.js', 'utf8'))[1];
+  assert.match(fs.readFileSync('static/offline-sync.js', 'utf8'), new RegExp(`OFFLINE_STORE = '${name}'`));
+});

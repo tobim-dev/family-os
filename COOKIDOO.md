@@ -139,9 +139,10 @@ Einträge in Cookidoo bearbeiten. Genau einen Family-OS-Prozess pro Datenbank be
 
 Wer Family OS einmal mit Verbindung öffnet, hat auf diesem Gerät automatisch eine Lesekopie
 der Einkaufsliste und der aktiven Gutschein-PDFs (höchstens alle fünf Minuten aktualisiert).
-Ohne Verbindung, wenn das NAS nicht antwortet oder nach fünf Sekunden ohne Antwort öffnet sich
+Ohne Verbindung, wenn das NAS nicht antwortet oder nach zehn Sekunden ohne Antwort öffnet sich
 **Einkauf offline** mit dem Stand der Liste. Dort lässt sich nichts ändern; abgehakt wird in der
-Cookidoo-App. Beim Abmelden wird die Kopie gelöscht. iOS kann den Speicher einer Website
+Cookidoo-App. Die Seite nennt den Grund (kein Netz, Reverse Proxy erreicht den Container nicht,
+NAS zu langsam); **Direkt öffnen** umgeht die Kopie. Beim Abmelden wird die Kopie gelöscht. iOS kann den Speicher einer Website
 bei längerer Nichtnutzung leeren; als Home-Bildschirm-App ist das seltener. Einmal mit Verbindung
 öffnen stellt die Kopie wieder her.
 

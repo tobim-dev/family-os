@@ -4,9 +4,10 @@
 // voucher PDFs are cached. The page script decides what is stored and clears
 // it on logout. All other API responses are never cached.
 
-const OFFLINE_CACHE = 'fos-offline-v1';
+const OFFLINE_CACHE = 'fos-offline-v2';
 const SHELL = ['/static/offline.html', '/static/offline.js', '/static/style.css', '/static/favicon.svg'];
-const TIMEOUT_MS = 5000;
+// Long enough for a slow start of the NAS; the offline page is for real outages.
+const TIMEOUT_MS = 10000;
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(OFFLINE_CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -49,6 +50,8 @@ self.addEventListener('fetch', event => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // Escape hatch from the offline page: "?direkt" always goes to the network.
+  if (url.searchParams.has('direkt')) return;
   if (request.mode === 'navigate') {
     event.respondWith(networkOr(request, '/static/offline.html'));
   } else if (cachedCopy(url)) {

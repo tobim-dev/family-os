@@ -42,3 +42,28 @@ function offlineRender(data) {
     stand.textContent = 'Auf diesem Gerät ist noch keine Offline-Kopie gespeichert. Sie entsteht, sobald Family OS einmal mit Verbindung geöffnet war.';
   }
 })();
+
+// Why is the offline page shown? Ask the NAS directly (/health is never cached).
+async function offlineDiagnose() {
+  const box = document.querySelector('#offline-reason');
+  const started = Date.now();
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000));
+  try {
+    const response = await Promise.race([fetch('/health?pruefung=' + started, {cache: 'no-store'}), timeout]);
+    const seconds = ((Date.now() - started) / 1000).toFixed(1).replace('.', ',');
+    if (response.ok) {
+      box.textContent = `Der NAS antwortet wieder (in ${seconds} s). „Erneut verbinden“ öffnet Family OS.`;
+    } else if ([502, 503, 504].includes(response.status)) {
+      box.textContent = `Der Reverse Proxy erreicht den Family-OS-Container nicht (HTTP ${response.status}). `
+        + 'Nach einem Update bitte im Reverse Proxy das Ziel des Containers prüfen oder ihn neu starten.';
+    } else {
+      box.textContent = `Der NAS antwortet mit HTTP ${response.status}.`;
+    }
+  } catch (error) {
+    box.textContent = error.message === 'timeout'
+      ? 'Der NAS antwortet nicht innerhalb von 15 Sekunden. Er ist erreichbar, aber überlastet oder startet gerade.'
+      : 'Keine Verbindung zum NAS (kein Netz, oder der Reverse Proxy ist nicht erreichbar).';
+  }
+}
+
+offlineDiagnose();

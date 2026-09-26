@@ -88,6 +88,8 @@ Offline-Lesekopie (E-13, E-17):
 - Browser (Chromium, 390 px): mit Verbindung öffnen, Server stoppen, neu laden → „Einkauf offline“ mit Liste
   und Zeitstempel; nach dem Abmelden ist der Speicher leer.
 - Nicht geprüft: Verhalten auf echten iPhones (Home-Bildschirm-App, Speicherbereinigung durch iOS).
+- Offline-Seite nennt den Grund (keine Verbindung, Proxy-Fehler 502–504, zu langsam) per Direktprüfung von
+  `/health`; „Direkt öffnen“ (`?direkt`) umgeht die Kopie immer. Zeitgrenze für Seitenaufrufe 10 s.
 
 Spracheingabe (A-01, A-02, A-10) mit simuliertem Modell, echte Audio-Dekodierung:
 
@@ -249,7 +251,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-24 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
+26 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft

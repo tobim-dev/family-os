@@ -47,7 +47,7 @@ class OfflineTests(unittest.TestCase):
         self.assertIn('Einkauf offline', self.client.get('/static/offline.html').text)
         worker = self.client.get('/sw.js')
         self.assertEqual(worker.headers['service-worker-allowed'], '/')
-        self.assertIn('fos-offline-v1', worker.text)
+        self.assertIn('fos-offline-v2', worker.text)
 
 
 if __name__ == '__main__':
