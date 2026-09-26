@@ -31,6 +31,7 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
 - `vouchers.py`: Einkaufsgutscheine (PDF unter `vouchers/` auf dem NAS, Restbetrag, Donnerstags-Erinnerung).
 - `nanny.py`: Nanny-Termine, WhatsApp-Anfragen (nur vorbereiteter Text), Stunden, Monatsabrechnung.
 - `speech.py`: lokale Spracherkennung (faster-whisper, Deutsch), Aufnahme nur im Arbeitsspeicher, Text nur zur Kontrolle ins Feld.
+- `offline.py` + `static/sw.js`, `offline-sync.js`, `offline.html/.js`: Lesekopie von Einkaufsliste und Gutscheinen auf dem Gerät (nur diese Daten werden im Browser gespeichert).
 - `backups.py`: tägliche automatische Sicherung (DB + Schlüssel, Integritätsprüfung, Aufbewahrung).
 - `migrations.py`: versioniertes SQLite-Schema (`PRAGMA user_version`).
 - `manage.py`: Konten einrichten, Backups. `docker-entrypoint.py`: Unraid-Rechte.

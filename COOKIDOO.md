@@ -124,6 +124,16 @@ Einträge in Cookidoo bearbeiten. Genau einen Family-OS-Prozess pro Datenbank be
 
 ## Einkauf ohne NAS-Verbindung
 
+Wer Family OS einmal mit Verbindung öffnet, hat auf diesem Gerät automatisch eine Lesekopie
+der Einkaufsliste und der aktiven Gutschein-PDFs (höchstens alle fünf Minuten aktualisiert).
+Ohne Verbindung, wenn das NAS nicht antwortet oder nach fünf Sekunden ohne Antwort öffnet sich
+**Einkauf offline** mit dem Stand der Liste. Dort lässt sich nichts ändern; abgehakt wird in der
+Cookidoo-App. Beim Abmelden wird die Kopie gelöscht. iOS kann den Speicher einer Website
+bei längerer Nichtnutzung leeren; als Home-Bildschirm-App ist das seltener. Einmal mit Verbindung
+öffnen stellt die Kopie wieder her.
+
+### Als Datei
+
 **Offline-Kopie speichern** lädt eine eigenständige HTML-Einkaufsliste mit Zeitstempel.
 Vor dem Einkauf auf dem Gerät speichern und prüfen, ob sie sich dort öffnen lässt.
 Sie enthält die zuletzt vom Server gelesene Einkaufsliste. Die Anwendung selbst

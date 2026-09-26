@@ -78,6 +78,7 @@ function voucherUploadDialog() {
         throw new Error(detail);
       }
       modal.close();
+      if (typeof refreshOffline === 'function') refreshOffline(true);
       await loadVouchers();
       await load();
       toast('Gutschein abgelegt.');
@@ -100,6 +101,7 @@ function voucherUseDialog(id, action) {
     const cents = parseVoucherEuro(data.amount);
     if (!(cents >= 0)) throw new Error('Bitte einen Betrag angeben.');
     voucherState = await api(`/vouchers/${v.id}/use`, {action, cents, version: v.version});
+    if (typeof refreshOffline === 'function') refreshOffline(true);
   });
 }
 

@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-172 Tests bestanden (`python -m unittest discover -s tests -v`):
+175 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -56,6 +56,15 @@ Nanny-Planung (Migration 2):
 - Monatsplanung: mehrere Tage atomar (Überschneidung → nichts gespeichert), nur ein Monat,
   eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
 - Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
+
+Offline-Lesekopie (E-13, E-17):
+
+- `/api/offline` nur angemeldet; enthält Einkaufsliste und nur Gutscheine mit Restbetrag, keine Dateinamen.
+- Service Worker (simuliert): ohne Verbindung und bei 5xx vom Proxy Offline-Seite bzw. Kopie; abgelaufene
+  Anmeldung (401) wird nicht durch die Kopie ersetzt; andere API-Antworten werden nie aus dem Speicher bedient.
+- Browser (Chromium, 390 px): mit Verbindung öffnen, Server stoppen, neu laden → „Einkauf offline“ mit Liste
+  und Zeitstempel; nach dem Abmelden ist der Speicher leer.
+- Nicht geprüft: Verhalten auf echten iPhones (Home-Bildschirm-App, Speicherbereinigung durch iOS).
 
 Spracheingabe (A-01, A-02, A-10) mit simuliertem Modell, echte Audio-Dekodierung:
 
@@ -200,7 +209,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-15 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
+19 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft
