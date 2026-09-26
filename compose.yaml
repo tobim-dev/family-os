@@ -8,6 +8,10 @@ services:
       FOS_DEMO: "0"
       FOS_GOOGLE_CALENDAR_ID: ${FOS_GOOGLE_CALENDAR_ID:-}
       FOS_GOOGLE_CLIENT_FILE: /data/google-client.json
+      # Optional: Claude für Essensvorschläge. Schlüssel nur in .env, nie ins Repository.
+      FOS_ANTHROPIC_API_KEY: ${FOS_ANTHROPIC_API_KEY:-}
+      FOS_CLAUDE_MODEL: ${FOS_CLAUDE_MODEL:-}
+      FOS_CLAUDE_MONTHLY_CALLS: ${FOS_CLAUDE_MONTHLY_CALLS:-40}
     ports:
       - "127.0.0.1:8765:8000"
     volumes:

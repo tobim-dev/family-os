@@ -123,7 +123,7 @@ Nanny-Termine werden noch nicht in den Google-Kalender übertragen.
 
 ## Noch nicht implementiert
 
-Automatische Menüvorschläge, automatisch verfügbare
+Automatisch verfügbare
 Offline-Einkaufslisten mit späterem Abgleich sowie Spracherkennung folgen später.
 Die erste Cookidoo-Anbindung ist integriert; siehe [COOKIDOO.md](COOKIDOO.md).
 Es gibt keinen Zugriff auf Arbeitskalender. Google und Push benötigen die Einrichtung

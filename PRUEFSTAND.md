@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-102 Tests bestanden (`python -m unittest discover -s tests -v`):
+110 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -75,6 +75,19 @@ Zusätzliche Integrationstests mit simulierten Google-/Push-Antworten:
 - Push-Fehler bleiben ausstehend; abgelaufene Abonnements werden deaktiviert.
 - Push-Annahme erzeugt keine falsche Lesebestätigung.
 - Kalenderabweichung lässt sich nur nach Prüfung des aktuellen Stands erneut übertragen.
+
+Wochenvorschläge (simulierte Cookidoo- und Claude-Antworten):
+
+- Lokal: kein Fleisch/Fisch, Zeitgrenze je Tag, keine Doppelungen, bereits geplante Tage und
+  Rezepte der Woche ausgelassen, Rezepte der letzten vier Wochen ausgeschlossen, Details zwischengespeichert.
+- An Claude gehen nur `tage` (Wochentag, Minuten) und `kandidaten` (anonyme Nummer, Name, Minuten,
+  Eiweiß, Zutaten); keine Namen, Daten, Cookidoo-IDs, Bildadressen oder Wünsche.
+- Ungültige Claude-Auswahl (doppelt, zu lang, erfunden, nicht angefragter Tag) wird verworfen und lokal ergänzt.
+- Claude-Fehler und erreichtes Monatslimit führen zum lokalen Vorschlag mit Hinweis.
+- Vorschläge schreiben nichts nach Cookidoo; die Demo ruft weder Cookidoo noch Claude auf.
+- Vegetarisch-Prüfung: Speck im Flammkuchen, Rinderbrühe, Sardellen erkannt; Fleischtomaten und Hühnereier erlaubt.
+- Browser: Vorschlagsdialog, Panel mobil ohne Überbreite, „Gesendete Daten“, „Alle übernehmen“
+  mit jeweils aktueller Revision je Schritt.
 
 Rezeptbilder:
 
@@ -155,7 +168,7 @@ Cookidoo-Oberfläche dieser Etappe:
 - Google-Verbindung und Terminzuordnung wurden vom Nutzer als funktionierend bestätigt.
 - Push-Zustellung, Berechtigungen und Fokusverhalten auf beiden echten iPhones: offen.
 - Cookidoo-End-to-End-Test dieser neuen Oberfläche am echten Konto steht aus.
-- Nanny-Termine im Google-Kalender, automatische Menüvorschläge, automatischer Offline-Abgleich und Sprache folgen später.
+- Nanny-Termine im Google-Kalender, echter Claude-Aufruf mit eurem Schlüssel, automatischer Offline-Abgleich und Sprache folgen später.
 
 Die Entwickler-Testbibliothek meldet eine Abkündigung ihres bisherigen HTTP-Test-
 Adapters. Die Tests sind erfolgreich; die Meldung betrifft nicht den laufenden

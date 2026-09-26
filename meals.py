@@ -29,6 +29,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field, SecretStr
 from integrations import dump, TZ
 from recipe_images import RecipeImages
+from meal_suggestions import MealSuggestions
 
 for name in ('cookidoo_api.cookidoo', 'cookidoo_api.well_known', 'cookidoo_api.helpers'):
     logging.getLogger(name).disabled = True
@@ -109,6 +110,14 @@ class SearchInput(BaseModel):
     max_minutes: int = Field(default=45, ge=5, le=180)
 
 
+class SuggestInput(BaseModel):
+    start: str
+    weekday_minutes: int = Field(default=45, ge=15, le=120)
+    weekend_minutes: int = Field(default=90, ge=15, le=240)
+    wishes: str = Field(default='', max_length=120)
+    use_ai: bool = False
+
+
 class Change(BaseModel):
     id: str = Field(pattern=r'^[a-f0-9-]{36}$')
     start: str
@@ -133,6 +142,7 @@ class Meals:
             conn.execute("UPDATE meal_operations SET state='review',message='Der Server wurde während der Übertragung neu gestartet. Bitte in Cookidoo prüfen.' WHERE state='sending'")
         self.adapter = self.client
         self.images = RecipeImages(self.db, integrations.directory, self.demo)
+        self.suggestions = MealSuggestions(self)
 
     @asynccontextmanager
     async def client(self, credentials=None):
@@ -209,14 +219,14 @@ class Meals:
             conn.execute("INSERT OR REPLACE INTO metadata VALUES('cookidoo_diagnostic',?)", (dump(diagnostic),))
         return detail
 
-    def run(self, coroutine):
+    def run(self, coroutine, timeout=None):
         if not self.lock.acquire(blocking=False):
             coroutine.close()
             raise HTTPException(409, 'Cookidoo wird gerade abgeglichen. Bitte kurz warten.')
         self.diagnostic_id, self.started, self.phase = uuid4().hex[:12], time.monotonic(), 'prepare'
         LOG.info('Cookidoo started diagnostic=%s', self.diagnostic_id)
         try:
-            result = asyncio.run(asyncio.wait_for(coroutine, timeout=REQUEST_TIMEOUT))
+            result = asyncio.run(asyncio.wait_for(coroutine, timeout=timeout or REQUEST_TIMEOUT))
             with self.db() as conn:
                 conn.execute("DELETE FROM metadata WHERE key IN ('cookidoo_diagnostic','cookidoo_sync_error')")
             LOG.info('Cookidoo completed diagnostic=%s elapsed_ms=%d', self.diagnostic_id, int((time.monotonic()-self.started)*1000))
@@ -253,6 +263,7 @@ class Meals:
         # A snapshot has one coherent revision; don't splice a newer shopping list into it.
         return {'diagnostic': diagnostic, 'error': diagnostic['detail'] if diagnostic else error[0] if error else None, 'connected': connected and not self.demo, 'demo': self.demo, 'snapshot': data, 'revision': revision(data) if data else None,
                 'updated': row['updated'] if row else None, 'reviews': reviews, 'images': self.images.available(recipe_ids),
+                'suggestion': self.suggestions.stored(start), 'ai': self.suggestions.info(),
                 'shopping_updated': latest['updated'] if latest else None}
 
     async def sync(self, start):
@@ -491,6 +502,20 @@ class Meals:
             if not re.fullmatch(r'r[0-9]+', rid):
                 raise HTTPException(422, 'Ungültige Cookidoo-Rezept-ID.')
             return self.run(self.details(rid))
+
+        @app.post('/api/meals/suggest')
+        def suggest(data: SuggestInput, request: Request):
+            actor(request)
+            start = week_start(data.start)
+            wishes = [w.strip()[:40] for w in data.wishes.split(',') if len(w.strip()) >= 2][:3]
+            if self.demo:
+                snapshot = self.status(start)['snapshot'] or {'days': []}
+                planned = {d['day'] for d in snapshot['days'] if d['recipes'] or d['custom_ids']}
+                result = self.suggestions.demo(start, data.weekday_minutes, data.weekend_minutes, planned)
+                with self.db() as conn:
+                    conn.execute('INSERT OR REPLACE INTO meal_cache VALUES(?,?,?)', ('suggestion:' + str(start), dump(result), time.time()))
+                return result
+            return self.run(self.suggestions.suggest(start, data.weekday_minutes, data.weekend_minutes, wishes, data.use_ai), timeout=150)
 
         @app.get('/api/meals/image/{rid}')
         def image(rid: str, request: Request):

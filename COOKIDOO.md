@@ -38,6 +38,24 @@ und lässt keine echten Cookidoo-Schreibvorgänge zu.
 - Eigene Cookidoo-Rezepte werden im Kalender angezeigt, aber in dieser Etappe direkt
   in Cookidoo bearbeitet. Das Gerät erhält seine Daten weiterhin über Cookidoo.
 
+## Wochenvorschläge
+
+„Woche vorschlagen“ sucht in Cookidoo nach vegetarischen, eiweißreichen Gerichten (plus optionale
+Wünsche als Suchbegriffe) und prüft die Kandidaten auf dem NAS: keine Fleisch-/Fischzutat, Kochzeit
+(Vorgabe Mo–Fr 45, Sa/So 90 Minuten), keine Wiederholung der letzten vier Wochen, Eiweiß pro Portion.
+Rezeptdetails werden 30 Tage zwischengespeichert.
+
+Mit einem Claude-API-Schlüssel (`FOS_ANTHROPIC_API_KEY`, in Unraid maskiert) wählt Claude aus diesen
+Kandidaten eine abwechslungsreiche Woche. Gesendet werden ausschließlich Wochentag und Zeitgrenze sowie
+je Kandidat eine anonyme Nummer, Rezeptname, Minuten, Eiweiß und Zutatennamen. Keine Namen, Datumsangaben,
+Cookidoo-IDs, Verläufe oder Wünsche. „Gesendete Daten“ zeigt den genauen Inhalt. Die Antwort wird lokal
+geprüft; ungültige Auswahl wird verworfen und vom NAS ergänzt. Ohne Schlüssel, bei Fehlern oder nach dem
+Monatslimit (`FOS_CLAUDE_MONTHLY_CALLS`, Vorgabe 40) entsteht ein lokaler Vorschlag. Modell über
+`FOS_CLAUDE_MODEL` (Vorgabe `claude-haiku-4-5-20251001`).
+
+Vorschläge ändern Cookidoo nicht. „Übernehmen“ bzw. „Alle übernehmen“ nutzt den abgesicherten Weg
+mit Revisionsprüfung je Rezept und hält bei einer Abweichung an.
+
 ## Rezeptbilder
 
 Wochenplan, Suchtreffer und Rezeptdetails zeigen die Vorschaubilder aus Cookidoo.

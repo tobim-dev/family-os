@@ -114,14 +114,15 @@ Cookidoo-Erprobung. Die aktuellen technischen Einschränkungen stehen in COOKIDO
 | E-02 | Tobi plant gewöhnlich Donnerstag oder Freitagmittag. Einkauf normalerweise Freitagabend oder Samstagvormittag bei Kaufland. | Kontext für spätere rechtzeitige Unterstützung; keine feste Erinnerungsuhrzeit vereinbart. |
 | E-03 | Ausschließlich Thermomix-Gerichte verwenden, Planung in Cookidoo „Meine Woche“. | Teilweise: Cookidoo-Anbindung vorhanden; zuverlässige Gesamtbedienung am realen Konto noch abzunehmen. |
 | E-04 | Britta und Tobi essen vegetarisch; Lina isst mit. | Rahmen: vegetarische Eignung ist fachliche Vorgabe, nicht allein durch ein Suchwort erfüllt. Weitere Unverträglichkeiten wurden nicht erhoben. |
-| E-05 | Gerichte dürfen bevorzugt proteinreich sein. | Ausstehend als automatische Empfehlung; keine feste Proteinmenge vereinbart. |
+| E-05 | Gerichte dürfen bevorzugt proteinreich sein. | Vorhanden in den Wochenvorschlägen (E-15): Eiweiß pro Portion aus Cookidoo-Nährwerten als Rangkriterium; keine feste Proteinmenge vereinbart. |
 | E-06 | Kochzeit in der Regel höchstens 45 Minuten, am Wochenende auch länger. | Teilweise: Suche mit Zeitlimit; Gesamtzeit wird aktuell verwendet. Kein vereinbartes starres Wochenendlimit. |
 | E-07 | Die normalen Cookidoo-Portionen, meist vier, reichen für die Familie. | Vorhanden: Standardmengen übernehmen; keine automatische Umrechnung auf drei Portionen verlangen. |
-| E-08 | Das System soll Planung und Übertragung gerne automatisieren, sofern zuverlässig; eine inoffizielle Cookidoo-API ist akzeptiert. | Teilweise: Lesen und gezielte Änderungen; automatische Menüauswahl ausstehend. Zuverlässigkeit bleibt Bedingung. |
+| E-08 | Das System soll Planung und Übertragung gerne automatisieren, sofern zuverlässig; eine inoffizielle Cookidoo-API ist akzeptiert. | Teilweise: Lesen, gezielte Änderungen und automatische Wochenvorschläge (E-15); Übernahme nach Cookidoo nur per Klick. Zuverlässigkeit bleibt Bedingung. |
 | E-09 | Bestehender Wochenablauf: Einkaufsliste von alten Rezeptzutaten bereinigen, selbst ergänzte Artikel dabei erhalten, dann Zutaten aller geplanten Gerichte hinzufügen. | Teilweise: einzelne Rezeptzutaten bearbeiten; kein kompletter sicherer Wochenwechsel als geführter Gesamtprozess. |
 | E-10 | Danach Vorräte zuhause durchgehen und bereits vorhandene Zutaten abhaken. Nur den Rest einkaufen. | Teilweise: gezielte Häkchen vorhanden; mehrdeutige Cookidoo-Kennungen aktuell nur direkt dort bearbeitbar. |
 | E-11 | Liste auch unter der Woche für akuten Bedarf, Frühstück und andere Artikel ergänzen. | Vorhanden als eigene Einkaufsartikel; reale Gesamtintegration noch nicht vollständig abgenommen. |
 | E-12 | Vorhandene eigene Artikel und bereits gesetzte Häkchen bei Übertragungen berücksichtigen; keine unbeabsichtigte Listenlöschung oder Doppeländerung. | Teilweise: gezielte, geprüfte Operationen und Konfliktbehandlung; keine absolute Verlustfreiheitsgarantie der inoffiziellen Schnittstelle. |
+| E-15 | Wunsch 26.09.2026: Automatische Rezeptvorschläge für die Essensplanung; Claude API darf genutzt werden, dabei so wenig Daten wie möglich übertragen. | Vorhanden: Kandidaten aus Cookidoo, harte Regeln lokal (vegetarisch, Zeit, Wiederholung, Eiweiß), optionale Auswahl durch Claude mit minimalen anonymen Daten, lokaler Ersatz ohne Schlüssel oder bei Fehlern, Übernahme nur per Klick. |
 | E-14 | Wunsch 26.09.2026: Bei der Cookidoo-Planung Bilder der Rezepte anzeigen. | Vorhanden: Vorschaubilder in Wochenplan, Suche und Rezeptdetails, über den NAS geladen und zwischengespeichert (D-01, keine externen Ressourcen im Browser). Reale Anzeige mit dem echten Cookidoo-Konto noch zu bestätigen. |
 | E-13 | Einkaufsinformationen sollen unterwegs schnell zugänglich sein. | Teilweise: mobile Ansicht und manuell gespeicherte Offline-Kopie; vollständiger Offline-Abgleich ausstehend. Siehe V-01 für die noch offene genaue Ausfallanforderung. |
 
@@ -182,7 +183,7 @@ Kosten und späterer GitHub-/Unraid-Veröffentlichung.
 | ID | Anforderung oder Kontext | Stand / überprüfbares Ergebnis |
 | --- | --- | --- |
 | D-01 | Datensparsam arbeiten, ohne die nötige Qualität der Aufgaben zu opfern; NAS als zentrale Datenhaltung. | Rahmen: Datenumfang je Integration begründen, keine beliebige Cloud-Kopie der Familienplanung. |
-| D-02 | Ausgewählte Inhalte dürfen an einen KI-Dienst übermittelt werden. Adressen und Geburtstage sollen auf dem NAS bleiben. | Rahmen: externe KI ist begrenzt erlaubt; konkrete Datenfilter/Anbieter noch nicht festgelegt. Keine externen KI-Aufrufe derzeit erforderlich. |
+| D-02 | Ausgewählte Inhalte dürfen an einen KI-Dienst übermittelt werden. Adressen und Geburtstage sollen auf dem NAS bleiben. | Rahmen / vorhanden: Anbieter Claude API (Entscheidung 26.09.2026). Datenfilter für Essensvorschläge: nur Wochentag + Zeitgrenze und je Kandidat anonyme Nummer, Rezeptname, Minuten, Eiweiß, Zutatennamen. Gesendeter Inhalt in der App einsehbar. |
 | D-03 | Außerhalb der verbotenen Arbeitskalender dürfen benötigte Anbindungen geprüft werden, insbesondere Cookidoo und Gemeinschaftskalender. | Rahmen: keine Pflicht, sämtliche verfügbaren Konten anzubinden oder beliebige Daten weiterzugeben. |
 | Q-01 | Hohe Zuverlässigkeit: Änderungen, Fehler und unklare Ergebnisse müssen nachvollziehbar sein; fehlgeschlagene Übertragung darf nicht als Erfolg erscheinen. | Teilweise: Prüfungen, Diagnosen, Status und Wiederholungsschutz; praktische Gesamt-Abnahme verbleibt. Aus dem Qualitätsziel abgeleitete Akzeptanzbedingung. |
 | V-01 | Google-Kalender und Einkaufsliste wurden als besonders kritische Bereiche genannt; der Rest ist zunächst weniger kritisch. | Rahmen: genaue Ausfall-/Offline-Frage hinter dieser Antwort ist nicht vollständig überliefert. Verfügbarkeitsdauer, Offline-Schreiben und Wiederabgleich ausdrücklich noch klären. |
@@ -223,13 +224,13 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | O-02 | Brittas Zeitblöcke, Urlaub, Feiertage, Krankheit und Krippenschließtage; Bewertung ungleicher Abhol-/Nachmittagslast und Nanny-Ausnahmen. | B-04–B-09 |
 | O-03 | Geklärt 26.09.2026 → N-08. | N-01–N-03 |
 | O-04 | Weitgehend geklärt 26.09.2026 → N-09, N-10. Offen: Monatsunterlagen für den Minijob, Korrektur nach Überweisung, Nanny im Google-Kalender. | N-04–N-07 |
-| O-05 | Automatische vegetarische Rezeptauswahl zuverlässig prüfen; Proteinpräferenz, Wiederholungen, weitere Familienpräferenzen und Umgang mit nicht verfügbaren Rezepten konkretisieren. | E-04–E-08 |
+| O-05 | Teilweise umgesetzt (E-15) mit vorläufigen Implementierungsregeln: Vegetarisch per Zutaten-/Kategorieprüfung (keine Garantie, Hinweis „bitte prüfen“), keine Wiederholung aus vier Wochen, Mo–Fr 45 / Sa–So 90 Minuten als änderbare Vorgabe. Offen: weitere Familienpräferenzen, Abneigungen, Wiederholungsfenster bestätigen. | E-04–E-08 |
 | O-06 | Geführter Wochenwechsel der Einkaufsliste und Umgang mit mehrdeutigen Kennungen ohne Verlust bestehender Positionen. | E-09–E-12 |
 | O-07 | Quellen und Kriterien für PAYBACK-Aktionen, Erinnerungszeitpunkt, Gutscheinrestbeträge, PDF-/E-Mail-/iCloud-Zugriff und Automatisierungsgrenzen. | G-01–G-07 |
 | O-08 | Saisonbedarf und einfache Kleidungs-/Windel-Erfassung, Nachkaufschwellen und Vinted-Bild-/Text-/Veröffentlichungsablauf mit Britta konkretisieren. | K-01–K-07 |
 | O-09 | Spracherkennung lokal oder extern, erlaubte Inhalte, Kontrolle des Texts und Löschung bei Fehlern. | A-01–A-02, D-02 |
 | O-10 | Kalender/Einkauf bei NAS- oder Netzausfall: lesend/schreibend, Dauer, iPhone-Verhalten, Wiederabgleich und Konflikte. | V-01, E-13 |
-| O-11 | Externe KI-Auswahl und Ausgaben nachvollziehbar gegen das Budget prüfen. Kein Anbieter oder kostenpflichtiger Vertrag vereinbart. | Z-05, D-02, T-07 |
+| O-11 | Teilweise: Claude API für Essensvorschläge freigegeben (26.09.2026), Modell Claude Haiku 4.5, Monatslimit 40 Anfragen, Token-Verbrauch in der App sichtbar. Offen: tatsächliche Kosten nach einigen Wochen gegen T-07 prüfen; API-Konto/Schlüssel richtet Tobi ein. | Z-05, D-02, T-07 |
 | O-12 | Reale Push-Zustellung auf beiden iPhones, Wiederherstellung aus Backup und Cookidoo-Gesamtablauf nach den jüngsten Fehlerkorrekturen prüfen. | A-04–A-07, Q-01 |
 
 Bereits gemeldet: Google-Verbindung erfolgreich, beide Familienkonten eingerichtet,

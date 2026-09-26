@@ -13,6 +13,7 @@ assert configs['FOS_DEMO'].text == '0'
 assert configs['FOS_ORIGIN'].text.startswith('https://')
 assert configs['FOS_DB'].text == '/data/family.sqlite'
 assert configs['8000'].attrib['Type'] == 'Port'
+assert configs['FOS_ANTHROPIC_API_KEY'].attrib['Mask'] == 'true' and not (configs['FOS_ANTHROPIC_API_KEY'].text or '').strip(), 'API key must be masked and empty'
 assert '--cap-drop=ALL' in root.findtext('ExtraParams')
 assert '--privileged' not in root.findtext('ExtraParams')
 print('Unraid template: installation contract valid.')
