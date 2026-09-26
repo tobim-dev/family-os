@@ -22,6 +22,7 @@ from integrations import Integrations, notify
 from meals import Meals
 from migrations import migrate
 from nanny import Nanny
+from backups import AutoBackup
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -205,6 +206,10 @@ def create_app(db_path=None, demo=None, origin=None):
     app.state.nanny = nanny
     integrations.periodic.append(nanny.periodic)
     nanny.routes(app, identity)
+    backups = AutoBackup(db, path, path.parent, demo, integrations.client_file)
+    app.state.backups = backups
+    integrations.backups = backups
+    integrations.periodic.append(backups.periodic)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):

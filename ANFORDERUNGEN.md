@@ -186,7 +186,7 @@ Kosten und späterer GitHub-/Unraid-Veröffentlichung.
 | D-01 | Datensparsam arbeiten, ohne die nötige Qualität der Aufgaben zu opfern; NAS als zentrale Datenhaltung. | Rahmen: Datenumfang je Integration begründen, keine beliebige Cloud-Kopie der Familienplanung. |
 | D-02 | Ausgewählte Inhalte dürfen an einen KI-Dienst übermittelt werden. Adressen und Geburtstage sollen auf dem NAS bleiben. | Rahmen / vorhanden: Anbieter Claude API (Entscheidung 26.09.2026). Datenfilter für Essensvorschläge: nur Wochentag + Zeitgrenze und je Kandidat anonyme Nummer, Rezeptname, Minuten, Eiweiß, Zutatennamen. Gesendeter Inhalt in der App einsehbar. |
 | D-03 | Außerhalb der verbotenen Arbeitskalender dürfen benötigte Anbindungen geprüft werden, insbesondere Cookidoo und Gemeinschaftskalender. | Rahmen: keine Pflicht, sämtliche verfügbaren Konten anzubinden oder beliebige Daten weiterzugeben. |
-| Q-01 | Hohe Zuverlässigkeit: Änderungen, Fehler und unklare Ergebnisse müssen nachvollziehbar sein; fehlgeschlagene Übertragung darf nicht als Erfolg erscheinen. | Teilweise: Prüfungen, Diagnosen, Status und Wiederholungsschutz; praktische Gesamt-Abnahme verbleibt. Aus dem Qualitätsziel abgeleitete Akzeptanzbedingung. |
+| Q-01 | Hohe Zuverlässigkeit: Änderungen, Fehler und unklare Ergebnisse müssen nachvollziehbar sein; fehlgeschlagene Übertragung darf nicht als Erfolg erscheinen. | Teilweise: Prüfungen, Diagnosen, Status, Wiederholungsschutz und tägliche automatische Sicherung; praktische Gesamt-Abnahme verbleibt. Aus dem Qualitätsziel abgeleitete Akzeptanzbedingung. |
 | V-01 | Google-Kalender und Einkaufsliste wurden als besonders kritische Bereiche genannt; der Rest ist zunächst weniger kritisch. | Rahmen: genaue Ausfall-/Offline-Frage hinter dieser Antwort ist nicht vollständig überliefert. Verfügbarkeitsdauer, Offline-Schreiben und Wiederabgleich ausdrücklich noch klären. |
 | T-01 | Webanwendung auf dem eigenen Unraid-NAS als Docker-Container betreiben. | Vorhanden; NAS-Betrieb vom Nutzer bestätigt. |
 | T-02 | Hardware: Intel 14. Generation, 32 GB RAM, nur integrierte GPU. | Rahmen: keine dedizierte GPU voraussetzen; insbesondere für spätere lokale KI relevant. |
@@ -214,7 +214,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | Google | Eigene Family-OS-Einträge im bestehenden Zielkalender; kein Import beliebiger fremder Google-Termine. Ob solche Termine künftig in einer Gesamtübersicht benötigt werden, ist offen. |
 | Cookidoo | Inoffizielle Bibliothek, verschlüsselte Tokens, getrennte Anmeldung/Erstabruf, gezielte Änderungen, Diagnose und manuelle Prüfung unklarer Schreibvorgänge. Grenzen in COOKIDOO.md. |
 | Offline | Manuell speicherbare HTML-Einkaufskopie ist ein Zwischenstand, keine vollständige Offline-App und kein automatischer Rückabgleich. |
-| Backups | Manuelle Sicherung von Datenbank und Schlüsseln implementiert; automatische Sicherung und Wiederherstellungsziele noch nicht verbindlich festgelegt. |
+| Backups | Manuelle Sicherung sowie tägliche automatische Sicherung (ab 3 Uhr, 14 Tage, mit Integritätsprüfung und Fehlermeldung) im NAS-Datenordner. Vorläufige Implementierungsentscheidung; ein getrenntes Sicherungsziel und Wiederherstellungsziele sind nicht festgelegt. |
 | Containerlieferung | GHCR-Image mit `latest` und Commit-Tags; Update wird von Tobi auf Unraid ausgelöst. Eine Pipeline-Veröffentlichung ist noch kein NAS-Update. |
 
 ## 10. Offene Entscheidungen und Abnahme

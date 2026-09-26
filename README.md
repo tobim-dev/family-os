@@ -202,8 +202,17 @@ vorhanden, ein gleichnamiger Ordner mit Endung `.keys` angelegt: Verschlüsselun
 Push-Schlüssel und Google-Zugangsdatei. **Datenbank und Schlüsselordner gemeinsam** auf ein
 separates geschütztes Ziel kopieren. Ohne `integration.key` sind gesicherte Google-Tokens
 nicht lesbar. Dasselbe gilt für Cookidoo-Tokens. Die Anwendung erzeugt bei vorhandenen Tokens keinen Ersatzschlüssel. Der Befehl verwendet die SQLite-Backup-API,
-damit auch bei laufender Anwendung ein konsistenter Stand entsteht. Es ist noch
-kein automatischer Sicherungsplan eingerichtet.
+damit auch bei laufender Anwendung ein konsistenter Stand entsteht.
+
+**Automatische Sicherung:** Täglich ab 3 Uhr (`FOS_BACKUP_HOUR`) legt die Anwendung unter
+`/data/backups/auto/<Datum>/` eine Kopie der Datenbank samt Ordner `keys` an. Die Kopie wird
+vor dem Ablegen mit `PRAGMA integrity_check` geprüft; unvollständige Kopien bleiben nie liegen.
+Aufbewahrt werden die letzten 14 Tage (`FOS_BACKUP_KEEP`), eigene Ordner daneben bleiben
+unberührt. Eine versäumte Nacht wird beim nächsten Lauf nachgeholt. Schlägt die Sicherung fehl,
+zeigt **Verbindungen → Sicherung** den Fehler, Tobi erhält eine Mitteilung und nach einer Stunde
+folgt ein neuer Versuch. Der Ordner liegt auf demselben NAS: für ein getrenntes Ziel eine eigene
+Freigabe einhängen und `FOS_BACKUP_DIR` darauf setzen oder den Ordner regelmäßig wegkopieren
+(z. B. mit dem Unraid-Plugin „Appdata Backup“).
 
 Wiederherstellung: Anwendung stoppen, aktuelle Datenbank gesondert sichern, die
 gewählte Sicherung als `/data/family.sqlite` und Dateien aus `.keys` unter ihren
@@ -257,4 +266,4 @@ Die Anwendung importiert keine fremden Google-Termine. Änderungen an eigenen
 Einträgen werden als Konflikt gezeigt, nicht automatisch in Familienentscheidungen
 umgewandelt. Ein Wechsel des Zielkalenders erfordert eine kontrollierte Migration.
 Eine manuell speicherbare Einkaufskopie ist vorhanden. Automatischer Offline-Abgleich
-und ein automatischer Sicherungsplan folgen später.
+folgt später. Die tägliche automatische Sicherung ersetzt keine Kopie auf ein getrenntes Ziel.

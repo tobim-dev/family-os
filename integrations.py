@@ -109,6 +109,7 @@ class Integrations:
         self.client_file = os.getenv('FOS_GOOGLE_CLIENT_FILE', '')
         self.stop = threading.Event()
         self.periodic = []  # callables run on every background tick
+        self.backups = None  # AutoBackup, set by create_app
         self.lock = threading.Lock()
         with db() as conn:
             conn.execute("INSERT OR IGNORE INTO metadata VALUES('installation',?)", (secrets.token_hex(16),))
@@ -387,7 +388,8 @@ class Integrations:
         waiting = conn.execute("SELECT COUNT(*) FROM push_deliveries d JOIN notifications n ON n.id=d.notification_id JOIN push_subscriptions s ON s.id=d.subscription_id WHERE n.owner=? AND d.state='queued' AND s.active=1", (owner,)).fetchone()[0]
         return {'google_connected': connected, 'google_configured': bool(self.calendar and self.client_file), 'calendar_targets': targets,
                 'notifications': notices, 'push_devices': devices, 'push_accepted': accepted, 'push_waiting': waiting, 'push_public_key': self.push_public,
-                'origin': self.origin, 'calendar_kind': 'Bestehender Gemeinschaftskalender'}
+                'origin': self.origin, 'calendar_kind': 'Bestehender Gemeinschaftskalender',
+                'backup': self.backups.status(conn) if self.backups else None}
 
     def routes(self, app, identity, static):
         @app.get('/api/connections')

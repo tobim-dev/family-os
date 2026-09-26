@@ -92,6 +92,11 @@ Für einen Rollback deshalb das ältere Image **und** die passende `pre-migratio
 als `/data/family.sqlite` einsetzen. Danach vorgenommene Änderungen fehlen dann.
 Automatische `pre-migration`-Kopien ersetzen nicht die Sicherung auf ein separates Ziel.
 
+**Tägliche Sicherung:** Unter `/data/backups/auto/` liegen die letzten 14 Tagesstände
+(Datenbank und `keys`). Einstellbar über „Sicherungen aufbewahren“ und „Sicherungsordner“
+(erweiterte Ansicht der Vorlage). Wiederherstellung wie oben beschrieben: Datenbank aus dem
+Tagesordner als `/data/family.sqlite`, Dateien aus `keys` nach `/data`.
+
 ## Was die Pipeline prüft
 
 Alle Python-Tests, JavaScript-Syntax und XML-Einstellungen. Danach ein echter

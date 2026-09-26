@@ -26,6 +26,7 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
 - `meal_suggestions.py`: Wochenvorschläge; harte Regeln lokal, Claude API optional mit minimalen anonymen Daten.
 - `recipe_images.py`: Rezeptbilder über den NAS (Host-Allowlist, Cache); Browser lädt nie extern.
 - `nanny.py`: Nanny-Termine, WhatsApp-Anfragen (nur vorbereiteter Text), Stunden, Monatsabrechnung.
+- `backups.py`: tägliche automatische Sicherung (DB + Schlüssel, Integritätsprüfung, Aufbewahrung).
 - `migrations.py`: versioniertes SQLite-Schema (`PRAGMA user_version`).
 - `manage.py`: Konten einrichten, Backups. `docker-entrypoint.py`: Unraid-Rechte.
 - `static/`: Vanilla-JS-PWA ohne Build-Schritt (`app.js` Kern, `meals.js`, `nanny.js` je Bereich), strikte CSP (keine Inline-Skripte/-Styles,

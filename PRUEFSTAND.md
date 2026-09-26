@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-122 Tests bestanden (`python -m unittest discover -s tests -v`):
+129 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -56,6 +56,15 @@ Nanny-Planung (Migration 2):
 - Monatsplanung: mehrere Tage atomar (Überschneidung → nichts gespeichert), nur ein Monat,
   eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
 - Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
+
+Automatische Sicherung:
+
+- Genau eine Sicherung pro Tag ab der eingestellten Stunde; versäumte Tage werden nachgeholt.
+- Kopie besteht die Integritätsprüfung, enthält den aktuellen Stand und die Schlüssel; Rechte 600/700.
+- Nur die neuesten N Tagesordner bleiben; fremde Ordner werden nie gelöscht.
+- Fehlgeschlagene Integritätsprüfung hinterlässt keinen Ordner und keine Teilkopie.
+- Nicht beschreibbares Ziel: Fehler im Status, eine Mitteilung pro Tag, neuer Versuch erst nach einer Stunde,
+  danach Erfolg und Fehler gelöscht. Die Demo schreibt keine Sicherungen.
 
 Zusätzliche Integrationstests mit simulierten Google-/Push-Antworten:
 
