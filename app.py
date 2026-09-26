@@ -29,6 +29,7 @@ from lina import Lina
 from vouchers import Vouchers
 from speech import Speech
 from offline import Offline
+from work_calendar import add_blocks
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -314,7 +315,7 @@ def create_app(db_path=None, demo=None, origin=None):
             appointments = [dict(r) for r in conn.execute('SELECT * FROM appointments WHERE day BETWEEN ? AND ? ORDER BY day,kind', (str(first), str(last)))]
             proposals = [dict(r) for r in conn.execute("SELECT p.*,a.day,a.kind,a.owner AS current_owner FROM proposals p JOIN appointments a ON a.id=p.appointment_id WHERE p.state='pending' ORDER BY p.deadline")]
             issues = [dict(r) for r in conn.execute("SELECT i.*,a.day,a.kind FROM issues i LEFT JOIN appointments a ON a.id=i.appointment_id WHERE i.state='open' ORDER BY i.deadline")]
-            tasks = [dict(r) for r in conn.execute("SELECT * FROM tasks WHERE state IN ('open','done') ORDER BY state DESC,due,id DESC LIMIT 200")]
+            tasks = add_blocks(conn, [dict(r) for r in conn.execute("SELECT * FROM tasks WHERE state IN ('open','done') ORDER BY state DESC,due,id DESC LIMIT 200")])
             planning = planning_mode(conn, request)
             history = [dict(r) for r in conn.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 30')]
             nanny_shifts = [dict(r) for r in conn.execute("SELECT id,day,start,end,state FROM nanny_shifts WHERE day BETWEEN ? AND ? AND state IN ('wish','requested','confirmed') ORDER BY day,start", (str(first), str(last)))]

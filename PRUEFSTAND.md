@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-175 Tests bestanden (`python -m unittest discover -s tests -v`):
+178 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -56,6 +56,15 @@ Nanny-Planung (Migration 2):
 - Monatsplanung: mehrere Tage atomar (Überschneidung → nichts gespeichert), nur ein Monat,
   eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
 - Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
+
+Outlook-Übergabe (B-17):
+
+- Nur die Aufgabe der Person, die einen Block neu eintragen muss, erhält Outlook-Daten; nicht das
+  Entfernen, nicht an bestätigten Tagen ohne Krippe, nicht für die andere Person.
+- Zeiten: App-Link in Ortszeit, Web-Link in UTC, korrekt über Sommer-/Winterzeit.
+- Links enthalten nur Titel und Zeit, Leerzeichen als %20 (kein „+“ im Betreff).
+- Browser (390 px): Vorschlag bestätigt → Aufgabe mit „In Outlook eintragen“.
+- Nicht geprüft: Verhalten der Outlook-App auf echten iPhones (inoffizielle Links, evtl. Intune-Richtlinie).
 
 Offline-Lesekopie (E-13, E-17):
 
@@ -209,7 +218,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-19 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
+21 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft
