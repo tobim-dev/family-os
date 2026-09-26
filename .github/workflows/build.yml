@@ -41,6 +41,7 @@ jobs:
           node --check static/meals.js
           node --check static/nanny.js
           node --check static/closures.js
+          node --check static/lina.js
           node --test tests/*.cjs
           python scripts/check_unraid.py
       - name: Build production image

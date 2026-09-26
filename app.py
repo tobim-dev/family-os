@@ -25,6 +25,7 @@ from nanny import Nanny
 from backups import AutoBackup
 from meal_reminders import MealReminders
 from closures import Closures, CONFIRMED_DAYS_SQL
+from lina import Lina
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -215,6 +216,10 @@ def create_app(db_path=None, demo=None, origin=None):
     integrations.periodic.append(MealReminders(db, demo).periodic)
     closures = Closures(db)
     closures.routes(app, identity, validate_planning, require_household)
+    lina = Lina(db, demo)
+    app.state.lina = lina
+    integrations.periodic.append(lina.periodic)
+    lina.routes(app, identity)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):

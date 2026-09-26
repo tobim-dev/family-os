@@ -100,6 +100,30 @@ CREATE TABLE day_closures(
  confirmed TEXT);
 CREATE INDEX day_closures_batch ON day_closures(batch);
 '''),
+    (4, 'Lina: Windelvorrat, Kleidung und Wechselkleidung', '''
+CREATE TABLE lina_diapers(
+ id INTEGER PRIMARY KEY,
+ kind TEXT NOT NULL CHECK(kind IN ('opened','bought','set')),
+ packs INTEGER NOT NULL DEFAULT 1 CHECK(packs BETWEEN 0 AND 50),
+ actor TEXT NOT NULL REFERENCES users(id),
+ created TEXT NOT NULL);
+CREATE TABLE lina_items(
+ id INTEGER PRIMARY KEY,
+ list TEXT NOT NULL CHECK(list IN ('need','nursery','sort_out')),
+ text TEXT NOT NULL,
+ size TEXT NOT NULL DEFAULT '',
+ urgency TEXT CHECK(urgency IN ('urgent','season','later')),
+ destination TEXT CHECK(destination IN ('sell','give','keep')),
+ details TEXT NOT NULL DEFAULT '',
+ state TEXT NOT NULL DEFAULT 'open' CHECK(state IN ('open','done','dropped')),
+ owner TEXT NOT NULL REFERENCES users(id),
+ creator TEXT NOT NULL REFERENCES users(id),
+ task_id INTEGER REFERENCES tasks(id),
+ version INTEGER NOT NULL DEFAULT 1,
+ created TEXT NOT NULL,
+ updated TEXT NOT NULL);
+CREATE INDEX lina_items_list_state ON lina_items(list,state);
+'''),
 ]
 
 LATEST = 1 + len(MIGRATIONS)

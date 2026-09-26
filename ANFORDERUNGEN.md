@@ -35,7 +35,7 @@ gewählte erste Funktionsbereiche.
 
 | ID | Anforderung oder Kontext | Stand / überprüfbares Ergebnis |
 | --- | --- | --- |
-| Z-01 | Eine zentrale Anlaufstelle für die Familienplanung schaffen, damit weniger vergessen wird und Informationen ohne Suchen in Nachrichten auffindbar sind. | Teilweise: Betreuung, Aufgaben und Essen vorhanden; übrige Bereiche fehlen. |
+| Z-01 | Eine zentrale Anlaufstelle für die Familienplanung schaffen, damit weniger vergessen wird und Informationen ohne Suchen in Nachrichten auffindbar sind. | Teilweise: Betreuung, Aufgaben, Essen, Nanny und Lina (Kleidung/Windeln) vorhanden; Gutscheine, Sprache und Offline fehlen. |
 | Z-02 | Hoher Grad an Automation und Proaktivität soll den Alltag entlasten. Zuverlässigkeit und Ergebnisqualität haben Vorrang; Fehler dürfen keine zusätzliche Alltagsarbeit verursachen. | Teilweise: Kalenderabgleich, Aufgaben und Mitteilungen; weitere Routinen ausstehend. Keine Behauptung absoluter Fehlerfreiheit. |
 | Z-03 | Tobi und Britta sind die Nutzer. Lina wird mitgeplant. Die Anwendung soll zunächst innerhalb der Familie bleiben. | Rahmen / vorhanden: zwei persönliche Konten; kein Nanny-Konto als Voraussetzung. |
 | Z-04 | Bedienung so einfach wie möglich, mit erkennbarem Nutzen und möglichst wenig laufender Datenpflege. | Rahmen: insbesondere bei Vorräten keine Einzelverbrauchserfassung verlangen. |
@@ -152,13 +152,13 @@ Quelle: Aufgabenbereich Britta und Konkretisierung des bisherigen Ad-hoc-Ablaufs
 
 | ID | Anforderung oder Kontext | Stand / überprüfbares Ergebnis |
 | --- | --- | --- |
-| K-01 | Britta verantwortet die Koordination von Linas Kleidung. | Ausstehend als eigener Bereich; Verantwortung berücksichtigen. |
-| K-02 | Aussortieren und erkennen, was nicht mehr passt; bisher ohne feste Bestandslisten und oft spontan. | Ausstehend: Unterstützung ohne aufwendige Pflichtinventur. |
-| K-03 | Pro Saison erkennen, was gebraucht wird und ob Kleidung gekauft werden muss. Manche Käufe sind dringend, andere länger planbar. | Ausstehend: Bedarf und Dringlichkeit unterscheiden; keine Mengen-/Größenregeln erfunden. |
-| K-04 | Ausreichende Wechselkleidung in der Krippe im Blick behalten. Personal meldet Bedarf meist beim Abholen; Eltern planen zusätzlich proaktiv. | Ausstehend: Meldung erfassen und Nachfüllaufgabe mit Verantwortung ermöglichen. |
-| K-05 | Verkauf aussortierter Kleidung auf Vinted unterstützen; Bilder und Artikelbeschreibungen sind Teil des gewünschten Umfangs. Britta nutzt hierfür bereits KI im Chat. | Ausstehend: konkreter Bildbearbeitungsumfang und Veröffentlichungsablauf offen. Kein autonomes Einstellen oder Verkaufen voraussetzen. |
-| K-06 | Windelvorrat zuhause berücksichtigen; die Krippe stellt ihre Windeln selbst. | Ausstehend: keinen elterlichen Windelbestand für die Krippe verlangen. |
-| K-07 | Einfache Erfassung wie „Neue Windelpackung geöffnet“ reicht. Genaue Verbrauchsmengen und jede einzelne Entnahme zu protokollieren wäre zu aufwendig. | Ausstehend: ereignisbasierte Unterstützung statt Stückbuchhaltung; Schwellen und Nachkauflogik offen. |
+| K-01 | Britta verantwortet die Koordination von Linas Kleidung. | Vorhanden (vorläufig): Bereich „Lina“; Kleidungsbedarf und Aussortiertes liegen bei Britta. |
+| K-02 | Aussortieren und erkennen, was nicht mehr passt; bisher ohne feste Bestandslisten und oft spontan. | Teilweise (vorläufig): Liste „Aussortiert“ mit Ziel verkaufen/verschenken/aufbewahren, ohne Bestandsliste. |
+| K-03 | Pro Saison erkennen, was gebraucht wird und ob Kleidung gekauft werden muss. Manche Käufe sind dringend, andere länger planbar. | Teilweise (vorläufig): Bedarf mit Dringlichkeit (dringend/diese Saison/später), nur Dringendes wird zur Aufgabe. Keine Mengen-/Größenregeln; Saisonplanung mit Britta offen. |
+| K-04 | Ausreichende Wechselkleidung in der Krippe im Blick behalten. Personal meldet Bedarf meist beim Abholen; Eltern planen zusätzlich proaktiv. | Vorhanden (vorläufig): Meldung der Krippe notieren → Aufgabe für die Person, die als Nächstes bringt (sonst Britta); alle vier Wochen proaktive Prüfaufgabe für Britta. |
+| K-05 | Verkauf aussortierter Kleidung auf Vinted unterstützen; Bilder und Artikelbeschreibungen sind Teil des gewünschten Umfangs. Britta nutzt hierfür bereits KI im Chat. | Teilweise (vorläufig): Text zum Kopieren nur aus eigenen Angaben, kein automatisches Veröffentlichen. Bildbearbeitung und Ablauf mit Britta offen. |
+| K-06 | Windelvorrat zuhause berücksichtigen; die Krippe stellt ihre Windeln selbst. | Vorhanden (vorläufig): nur Vorrat zuhause; für die Krippe wird nichts erfasst. |
+| K-07 | Einfache Erfassung wie „Neue Windelpackung geöffnet“ reicht. Genaue Verbrauchsmengen und jede einzelne Entnahme zu protokollieren wäre zu aufwendig. | Vorhanden (vorläufig): „Neue Packung geöffnet“, „gekauft“, „Vorrat zählen“; Aufgabe „Windeln kaufen“ ab Schwelle (Vorgabe 1 Packung, an Tobi, einstellbar); Reichweite aus dem Öffnungsabstand geschätzt. |
 
 ## 7. Eingaben, Aufgaben und Mitteilungen
 
@@ -214,6 +214,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | Erinnerungszeiten | Aktuell Tages-/Wochenübersicht 19 Uhr, normale Erinnerungen ab 9 Uhr, normale Nachtruhe 21–7 Uhr. Sonntagabend/Vorabend und sofortige Terminabstimmungen sind Nutzeranforderungen; die übrigen exakten Uhrzeiten sind hier als Implementierungsstand vermerkt. Essensplanung Do 9 Uhr, Einkaufsliste Fr 9 Uhr (E-02). |
 | Google | Eigene Family-OS-Einträge im bestehenden Zielkalender; kein Import beliebiger fremder Google-Termine. Ob solche Termine künftig in einer Gesamtübersicht benötigt werden, ist offen. |
 | Nanny im Kalender | Angefragte Termine vorläufig, bestätigte fest im bestehenden Gemeinschaftskalender, ohne Zeitblockade; Wünsche bleiben lokal, Absagen werden entfernt. Vorläufige Implementierungsentscheidung zu O-04. |
+| Lina | Windeln ereignisbasiert (geöffnet/gekauft/gezählt), Nachkaufaufgabe ab 1 Packung an Tobi; Wechselkleidung an die Person, die als Nächstes bringt, plus Prüfaufgabe alle vier Wochen für Britta; Kleidungsbedarf und Aussortiertes bei Britta, Vinted-Text nur aus eigenen Angaben. Vorläufige Implementierungsentscheidung zu O-08; Brittas Rückmeldung (O-01) steht aus. |
 | Cookidoo | Inoffizielle Bibliothek, verschlüsselte Tokens, getrennte Anmeldung/Erstabruf, gezielte Änderungen, Diagnose und manuelle Prüfung unklarer Schreibvorgänge. Grenzen in COOKIDOO.md. |
 | Offline | Manuell speicherbare HTML-Einkaufskopie ist ein Zwischenstand, keine vollständige Offline-App und kein automatischer Rückabgleich. |
 | Backups | Manuelle Sicherung sowie tägliche automatische Sicherung (ab 3 Uhr, 14 Tage, mit Integritätsprüfung und Fehlermeldung) im NAS-Datenordner. Vorläufige Implementierungsentscheidung; ein getrenntes Sicherungsziel und Wiederherstellungsziele sind nicht festgelegt. |
@@ -230,7 +231,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | O-05 | Teilweise umgesetzt (E-15) mit vorläufigen Implementierungsregeln: Vegetarisch per Zutaten-/Kategorieprüfung (keine Garantie, Hinweis „bitte prüfen“), keine Wiederholung aus vier Wochen, Mo–Fr 45 / Sa–So 90 Minuten als änderbare Vorgabe. Offen: weitere Familienpräferenzen, Abneigungen, Wiederholungsfenster bestätigen. | E-04–E-08 |
 | O-06 | Geklärt 26.09.2026 → E-16. Offen bleibt nur das Abhaken mehrdeutiger Einzelartikel (weiter direkt in Cookidoo). | E-09–E-12 |
 | O-07 | Quellen und Kriterien für PAYBACK-Aktionen, Erinnerungszeitpunkt, Gutscheinrestbeträge, PDF-/E-Mail-/iCloud-Zugriff und Automatisierungsgrenzen. | G-01–G-07 |
-| O-08 | Saisonbedarf und einfache Kleidungs-/Windel-Erfassung, Nachkaufschwellen und Vinted-Bild-/Text-/Veröffentlichungsablauf mit Britta konkretisieren. | K-01–K-07 |
+| O-08 | Teilweise umgesetzt mit vorläufigen Regeln (Bereich „Lina“, Abschnitt 9). Mit Britta bestätigen: Schwellen, Zuständigkeiten, Saisonbedarf, Vinted-Bilder/Ablauf. | K-01–K-07 |
 | O-09 | Spracherkennung lokal oder extern, erlaubte Inhalte, Kontrolle des Texts und Löschung bei Fehlern. | A-01–A-02, D-02 |
 | O-10 | Kalender/Einkauf bei NAS- oder Netzausfall: lesend/schreibend, Dauer, iPhone-Verhalten, Wiederabgleich und Konflikte. | V-01, E-13 |
 | O-11 | Teilweise: Claude API für Essensvorschläge freigegeben (26.09.2026), Modell Claude Haiku 4.5, Monatslimit 40 Anfragen, Token-Verbrauch in der App sichtbar. Offen: tatsächliche Kosten nach einigen Wochen gegen T-07 prüfen; API-Konto/Schlüssel richtet Tobi ein. | Z-05, D-02, T-07 |

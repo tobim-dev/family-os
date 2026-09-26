@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-144 Tests bestanden (`python -m unittest discover -s tests -v`):
+154 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -56,6 +56,20 @@ Nanny-Planung (Migration 2):
 - Monatsplanung: mehrere Tage atomar (Überschneidung → nichts gespeichert), nur ein Monat,
   eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
 - Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
+
+Lina (Migration 4):
+
+- Migration mit bestehenden Schließtagen und Aufgaben verlustfrei; Sicherung vorher.
+- Windelvorrat folgt den Ereignissen; unbekannt, bis einmal gezählt oder gekauft.
+- Aufgabe „Windeln kaufen“ genau einmal beim Erreichen der Schwelle, an die eingestellte Person
+  (mit Größe); Kauf über der Schwelle schließt sie. Reichweite aus Öffnungsabständen.
+- Wechselkleidung: Aufgabe an die Person, die am nächsten Krippentag bringt (fällig zur Bringzeit);
+  bestätigte Schließtage werden übersprungen, ohne Zuordnung Britta.
+- Kleidungsbedarf: Dringlichkeit Pflicht, nur „dringend“ erzeugt eine Aufgabe für Britta;
+  Erledigen schließt die Aufgabe; veraltete Version wird abgewiesen. Aussortiertes braucht ein Ziel.
+- Proaktive Prüfaufgabe nur werktags 9–20 Uhr, alle vier Wochen, nicht doppelt.
+- Browser (1300 px, 390 px): Packung geöffnet, Wechselkleidung notiert, Vinted-Text; neun
+  Navigationspunkte auf 390 px ohne Überbreite.
 
 Tage ohne Krippe (Migration 3):
 
