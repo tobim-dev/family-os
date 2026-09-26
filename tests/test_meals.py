@@ -123,6 +123,44 @@ class MealTests(unittest.TestCase):
         self.assertEqual(s['days'][-1]['recipes'][0]['id'], 'r3')
         self.assertEqual(self.client.get('/api/meals?start=2026-11-01').status_code, 422)
 
+    def test_duplicate_ids_load_without_losing_quantities_or_checked_states(self):
+        self.remote.ingredients.extend([Item('old', 'Vorrat', False, '300 g'), Item('old', 'Vorrat', True, '200 g')])
+        self.remote.additional.append(Item('own', 'Anderer Artikel', True))
+        self.remote.recipes.append(deepcopy(self.remote.recipes[0]))
+        result = self.sync()
+        s = result['snapshot']
+        self.assertEqual(len(s['ingredients']), 3)
+        self.assertEqual(len(s['additional']), 2)
+        self.assertEqual(len(s['shopping_recipes']), 2)
+        self.assertEqual(s['duplicate_ids'], {'ingredients':['old'], 'additional':['own'], 'shopping_recipes':['r1']})
+        self.assertEqual(sum(i['is_owned'] for i in s['ingredients']), 2)
+        self.remote.ingredients.reverse()
+        self.remote.additional.reverse()
+        self.assertEqual(result['revision'], self.sync()['revision'])
+        exported = self.client.get('/api/meals/shopping.html').text
+        self.assertEqual(exported.count('200 g'), 2)
+        self.assertIn('300 g', exported)
+
+    def test_ambiguous_items_cannot_be_written_but_other_operations_work(self):
+        self.remote.ingredients.append(Item('old', 'Weiterer Vorrat', False, '300 g'))
+        self.sync()
+        for action, fields in [('check_ingredient', {'item_id':'old','owned':False}), ('ingredients_remove', {'recipe_id':'r1'})]:
+            response = self.client.post('/api/meals/change', json=self.payload(action, **fields))
+            self.assertEqual(response.status_code, 409)
+        self.assertEqual(self.remote.calls, [])
+        self.change()  # Calendar planning does not depend on ingredient ID uniqueness.
+        self.assertEqual(self.client.post('/api/meals/change', json=self.payload('ingredients_add',recipe_id='r2')).status_code, 409)
+        self.change('check_additional', item_id='own', owned=True)
+        self.change('additional_add', name='Brot')
+        self.assertEqual(len(self.remote.ingredients), 2)
+
+    def test_ambiguous_custom_item_cannot_be_checked(self):
+        self.remote.additional.append(deepcopy(self.remote.additional[0]))
+        self.sync()
+        response = self.client.post('/api/meals/change', json=self.payload('check_additional',item_id='own',owned=True))
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(self.remote.calls, [])
+
     def test_plan_add_retry_is_idempotent_and_remove_preserves_shopping(self):
         p = self.payload()
         for _ in range(2): self.assertEqual(self.client.post('/api/meals/change', json=p).status_code, 200)

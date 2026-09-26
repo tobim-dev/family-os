@@ -5,6 +5,7 @@ login. Rotated tokens are encrypted with the existing NAS integration key.
 """
 import asyncio
 from contextlib import asynccontextmanager
+from collections import Counter
 from dataclasses import asdict, replace
 from datetime import date, datetime, timedelta
 import hashlib
@@ -79,14 +80,16 @@ async def snapshot(client, start, progress=lambda stage: None):
     ingredients = [asdict(i) for i in await client.get_ingredient_items()]
     progress('additional_items')
     additional = [asdict(i) for i in await client.get_additional_items()]
-    for items in (shopping_recipes, ingredients, additional):
-        if len({i['id'] for i in items}) != len(items):
-            raise ValueError('Ambiguous IDs')
-        items.sort(key=lambda i: i['id'])
+    # Provider IDs are not necessarily unique in flattened recipe ingredients.
+    # Preserve every occurrence and quantity; never silently merge by ID.
+    duplicates = {}
+    for group, items in (('shopping_recipes', shopping_recipes), ('ingredients', ingredients), ('additional', additional)):
+        duplicates[group] = sorted(key for key, count in Counter(i['id'] for i in items).items() if count > 1)
+        items.sort(key=lambda i: (i['id'], dump(i)))
     for day in days.values():
         day['recipes'].sort(key=lambda r: r['id'])
         day['custom_ids'].sort()
-    return {'start': str(start), 'days': sorted(days.values(), key=lambda d: d['day']), 'shopping_recipes': shopping_recipes, 'ingredients': ingredients, 'additional': additional}
+    return {'start': str(start), 'days': sorted(days.values(), key=lambda d: d['day']), 'shopping_recipes': shopping_recipes, 'ingredients': ingredients, 'additional': additional, 'duplicate_ids': duplicates}
 
 
 class Connection(BaseModel):
@@ -283,6 +286,9 @@ class Meals:
             if data.action == 'plan_remove' and data.recipe_id not in ids:
                 raise HTTPException(409, 'Diese Zuordnung besteht nicht mehr.')
         elif data.action.startswith('ingredients_'):
+            duplicates = before.get('duplicate_ids', {})
+            if duplicates.get('ingredients') or duplicates.get('shopping_recipes'):
+                raise HTTPException(409, 'Cookidoo liefert mehrdeutige Einkaufskennungen. Bitte Rezeptzutaten vorerst direkt in Cookidoo bearbeiten; die vollständige Liste bleibt hier sichtbar.')
             if not data.recipe_id:
                 raise HTTPException(422, 'Rezept fehlt.')
             exists = any(r['id'] == data.recipe_id for r in before['shopping_recipes'])
@@ -292,6 +298,8 @@ class Meals:
                 raise HTTPException(409, 'Bitte das Rezept zuerst für diese Woche planen.')
         elif data.action.startswith('check_'):
             group = 'ingredients' if data.action == 'check_ingredient' else 'additional'
+            if sum(i['id'] == data.item_id for i in before[group]) > 1:
+                raise HTTPException(409, 'Diese Kennung gehört zu mehreren Einkaufspositionen. Bitte diesen Artikel direkt in Cookidoo abhaken.')
             if data.owned is None or not any(i['id'] == data.item_id for i in before[group]):
                 raise HTTPException(409, 'Der Einkaufsartikel hat sich geändert. Bitte neu laden.')
         elif not data.name or not data.name.strip():
@@ -315,9 +323,10 @@ class Meals:
             else:
                 items = await api.get_additional_items()
                 method = api.edit_additional_items_ownership
-            item = next((i for i in items if i.id == data.item_id), None)
-            if not item:
-                raise ValueError('Item vanished')
+            matches = [i for i in items if i.id == data.item_id]
+            if len(matches) != 1:
+                raise ValueError('Item vanished or became ambiguous')
+            item = matches[0]
             await method([replace(item, is_owned=data.owned)])
 
     def effect(self, data, after, before):

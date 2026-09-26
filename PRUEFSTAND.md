@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-64 Tests bestanden (`python -m unittest discover -s tests -v`):
+67 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -57,6 +57,8 @@ Zusätzliche Cookidoo-Tests mit simulierten Antworten:
 - Gemeinsam verwendete Zutaten bleiben beim Entfernen eines Rezepts vorhanden.
 - Unerwarteter Verlust anderer Artikel wird erkannt und als Prüfhinweis gespeichert.
 - Einzeln abhaken, eigene Artikel ergänzen, Zugriffsschutz und HTML-Escaping im Export.
+- Mehrfache Kennungen werden samt allen Mengen/Häkchen geladen und exportiert; wechselnde Reihenfolge verändert die Revision nicht.
+- Mehrdeutige Artikel und Rezeptzutaten werden vor dem Schreiben gesperrt; unabhängige Änderungen bleiben möglich.
 - Neustart während einer Übertragung erfordert eine Prüfung; parallele Anfragen werden abgewiesen.
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.

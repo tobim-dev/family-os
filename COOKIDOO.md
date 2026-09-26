@@ -103,3 +103,19 @@ Start-Eintrag, muss als Nächstes geprüft werden, ob die Anfrage diesen Contain
 
 Ein HTTP 502 ohne diese Diagnose beweist keine falschen Zugangsdaten. Es kann auch der
 Reverse Proxy antworten. Seine konkrete Ursache muss anhand des neuen Versuchs geprüft werden.
+
+## Mehrfach vorkommende Einkaufskennungen
+
+Cookidoo kann dieselbe Kennung mehrfach liefern, insbesondere beim Zusammenführen
+von Zutaten aus mehreren Rezepten. Family OS erhält alle gelieferten Positionen,
+Mengen und Häkchen. Es fasst solche Einträge nicht still zusammen und bricht den
+Ladevorgang deshalb nicht mehr ab. Die Reihenfolge gleichnamiger Kennungen wird
+stabil sortiert, damit eine andere Lieferreihenfolge keinen falschen Konflikt erzeugt.
+
+Ein Hinweis kennzeichnet diesen Fall. Häkchen mit mehrfacher Kennung werden in
+Family OS gesperrt und müssen direkt in Cookidoo geändert werden. Bei mehrfachen
+Rezept- oder Zutatenkennungen werden auch das Hinzufügen und Entfernen von
+Rezeptzutaten angehalten, da deren vollständiger Erhalt über die Kennung allein
+nicht eindeutig überprüfbar ist. Wochenplanung, eindeutig zugeordnete Artikel
+und das Ergänzen eigener Artikel bleiben verfügbar. Der Schutz gilt auch auf
+dem Server, nicht nur für die Schaltflächen.
