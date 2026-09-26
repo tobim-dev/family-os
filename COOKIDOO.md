@@ -81,3 +81,25 @@ Doppelanfragen, externer Änderung, Erhalt von Häkchen und eigenen Artikeln. Ei
 End-to-End-Test dieser Oberfläche am echten Konto steht nach dem NAS-Update noch aus.
 Die Schnittstelle kann sich unabhängig von Family OS ändern; zusätzliche Logins oder
 CAPTCHAs werden nicht umgangen.
+
+## Wenn das Verbinden fehlschlägt
+
+Anmeldung und erstes Laden erfolgen in getrennten Anfragen. Eine bestätigte Anmeldung
+wird auch dann als erfolgreich bezeichnet, wenn danach die Wochenplanung nicht geladen
+werden kann. **Planung erneut laden** wiederholt nur den Abruf. Das Passwortfeld wird
+nach erfolgreicher Anmeldung geleert. Einzelne Vorgänge werden nach insgesamt 45 Sekunden
+abgebrochen; unklare Schreibvorgänge bleiben dabei zur Prüfung angehalten.
+
+Die Anwendung zeigt eine Diagnosekennung sowie den betroffenen Schritt an und speichert
+die letzte Diagnose lokal. So bleibt sie über die Essensansicht abrufbar, auch wenn ein
+Reverse Proxy die HTTP-Fehlerantwort ersetzt. Erfolgreiche Vorgänge löschen den alten Hinweis.
+
+Unter **Unraid → Docker → Family-OS-Symbol → Logs** stehen Einträge wie `Cookidoo started`,
+`Cookidoo completed` oder `Cookidoo failed`, jeweils mit Diagnosekennung. Fehler nennen
+Schritt, feste Fehlerkategorie und gegebenenfalls HTTP-Status des Anbieters. Ausnahme-
+texte, Antwortinhalte, URLs und Zugangsdaten werden nicht protokolliert. Normale
+Zugriffslogs bleiben ausgeschaltet. Fehlt nach einem erneuten Versuch selbst der
+Start-Eintrag, muss als Nächstes geprüft werden, ob die Anfrage diesen Container erreicht.
+
+Ein HTTP 502 ohne diese Diagnose beweist keine falschen Zugangsdaten. Es kann auch der
+Reverse Proxy antworten. Seine konkrete Ursache muss anhand des neuen Versuchs geprüft werden.

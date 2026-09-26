@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-59 Tests bestanden (`python -m unittest discover -s tests -v`):
+64 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -61,7 +61,7 @@ Zusätzliche Cookidoo-Tests mit simulierten Antworten:
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-Vier JavaScript-Tests für die Fehlerdarstellung bestehen. Oberfläche, neuer
+Sechs JavaScript-Tests für Fehlerdarstellung und Cookidoo-Verbindung bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft

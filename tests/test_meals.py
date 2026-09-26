@@ -269,5 +269,65 @@ class MealTests(unittest.TestCase):
         with self.assertRaises(Exception): self.meals.run(operation())
         self.assertEqual(self.meals.status(date.fromisoformat(self.start))['reviews'][0]['state'], 'review')
 
+    def test_login_is_separate_from_initial_snapshot(self):
+        from unittest.mock import AsyncMock
+        with patch('meals.snapshot', new_callable=AsyncMock) as read:
+            response = self.client.post('/api/meals/connect', json={'email':'test@example.org','password':'example'})
+        self.assertEqual(response.status_code, 200)
+        read.assert_not_awaited()
+
+    def test_auth_diagnostic_is_safe_and_available_after_proxy_replaces_response(self):
+        from cookidoo_api.exceptions import CookidooAuthException
+        @asynccontextmanager
+        async def unavailable(credentials=None):
+            self.meals.progress('login')
+            raise CookidooAuthException('provider body: private@example.org password=secret refresh_token=secret')
+            yield
+        self.meals.adapter = unavailable
+        with self.assertLogs('uvicorn.error.family_os.cookidoo', level='INFO') as logged:
+            response = self.client.post('/api/meals/connect', json={'email':'private@example.org','password':'secret'})
+        self.assertEqual(response.status_code, 502)
+        state = self.client.get('/api/meals?start='+self.start).json()
+        self.assertEqual(state['diagnostic']['category'], 'authentication')
+        self.assertEqual(state['diagnostic']['phase'], 'login')
+        self.assertIn(state['diagnostic']['id'], response.json()['detail'])
+        self.assertIn(state['diagnostic']['id'], '\n'.join(logged.output))
+        for secret in ('private@example.org', 'password=', 'refresh_token=', 'secret', 'provider body'):
+            self.assertNotIn(secret, str(state)+response.text+str(logged.output))
+
+    def test_login_http_status_extracted_without_logging_provider_text(self):
+        from cookidoo_api.exceptions import CookidooAuthException
+        async def fail():
+            self.meals.progress('login')
+            raise CookidooAuthException('Login flow failed: could not reach login page (status 403).')
+        with self.assertLogs('uvicorn.error.family_os.cookidoo'), self.assertRaises(Exception):
+            self.meals.run(fail())
+        self.assertEqual(self.meals.status(date.fromisoformat(self.start))['diagnostic']['upstream_status'], 403)
+
+    def test_wrapped_dns_error_and_success_clears_stale_diagnostic(self):
+        import socket
+        from cookidoo_api.exceptions import CookidooRequestException
+        async def fail():
+            self.meals.progress('login')
+            try: raise socket.gaierror('hostname-with-private-data')
+            except socket.gaierror as error: raise CookidooRequestException('provider body') from error
+        with self.assertLogs('uvicorn.error.family_os.cookidoo'), self.assertRaises(Exception):
+            self.meals.run(fail())
+        self.assertEqual(self.meals.status(date.fromisoformat(self.start))['diagnostic']['category'], 'dns')
+        self.sync()
+        self.assertIsNone(self.meals.status(date.fromisoformat(self.start))['error'])
+
+    def test_whole_operation_has_bounded_timeout_and_retains_write_review(self):
+        async def slow():
+            self.meals.progress('write')
+            with self.app.state.db() as c:
+                c.execute("INSERT INTO meal_operations VALUES(?, 'tobi', '{}', 'sending', '', 0)", (str(uuid4()),))
+            await asyncio.sleep(1)
+        with patch('meals.REQUEST_TIMEOUT', .01), self.assertLogs('uvicorn.error.family_os.cookidoo'), self.assertRaises(Exception):
+            self.meals.run(slow())
+        state = self.meals.status(date.fromisoformat(self.start))
+        self.assertEqual(state['diagnostic']['category'], 'timeout')
+        self.assertEqual(state['reviews'][0]['state'], 'review')
+
 
 if __name__ == '__main__': unittest.main()

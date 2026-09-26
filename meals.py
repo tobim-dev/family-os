@@ -14,10 +14,14 @@ import logging
 import re
 import threading
 import time
+import socket
+import ssl
+from uuid import uuid4
 from typing import Literal
 
 import aiohttp
 from cookidoo_api import Cookidoo
+from cookidoo_api.exceptions import CookidooAuthException, CookidooParseException, CookidooRequestException
 from cookidoo_api.types import CookidooAuthData, CookidooConfig, CookidooLocalizationConfig
 from fastapi import HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -26,6 +30,9 @@ from integrations import dump, TZ
 
 for name in ('cookidoo_api.cookidoo', 'cookidoo_api.well_known', 'cookidoo_api.helpers'):
     logging.getLogger(name).disabled = True
+
+LOG = logging.getLogger('uvicorn.error.family_os.cookidoo')
+REQUEST_TIMEOUT = 45
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS meal_cache(key TEXT PRIMARY KEY, value TEXT NOT NULL, updated REAL NOT NULL);
@@ -55,8 +62,9 @@ def recipe(row):
     return {'id': row.id, 'name': row.name, 'total_time': getattr(row, 'total_time', None)}
 
 
-async def snapshot(client, start):
+async def snapshot(client, start, progress=lambda stage: None):
     days = {}
+    progress('calendar')
     for anchor in (start, start + timedelta(days=6)):
         for day in await client.get_recipes_in_calendar_week(anchor):
             parsed = date.fromisoformat(day.id)
@@ -65,8 +73,11 @@ async def snapshot(client, start):
     for offset in range(7):
         day = str(start + timedelta(days=offset))
         days.setdefault(day, {'day': day, 'recipes': [], 'custom_ids': []})
+    progress('shopping_recipes')
     shopping_recipes = [{**recipe(r), 'ingredient_ids': sorted(i.id for i in r.ingredients)} for r in await client.get_shopping_list_recipes()]
+    progress('ingredients')
     ingredients = [asdict(i) for i in await client.get_ingredient_items()]
+    progress('additional_items')
     additional = [asdict(i) for i in await client.get_additional_items()]
     for items in (shopping_recipes, ingredients, additional):
         if len({i['id'] for i in items}) != len(items):
@@ -109,6 +120,9 @@ class Meals:
         self.integrations = integrations
         self.db, self.demo = integrations.db, integrations.demo
         self.lock = threading.Lock()
+        self.phase = 'prepare'
+        self.diagnostic_id = None
+        self.started = 0
         with self.db() as conn:
             conn.executescript(SCHEMA)
             conn.execute("UPDATE meal_operations SET state='review',message='Der Server wurde während der Übertragung neu gestartet. Bitte in Cookidoo prüfen.' WHERE state='sending'")
@@ -127,10 +141,13 @@ class Meals:
                 localization=CookidooLocalizationConfig(country_code='de', language='de-DE', url='https://cookidoo.de/foundation/de-DE'))
             api = Cookidoo(session, cfg=cfg, on_auth_data_update=lambda auth: self.integrations.save_secret('cookidoo', asdict(auth)))
             if credentials:
+                self.progress('login')
                 await api.login()
+                self.progress('save_tokens')
                 with self.db() as conn:
                     conn.execute("INSERT OR REPLACE INTO metadata VALUES('cookidoo_account',?)", (account,))
             else:
+                self.progress('restore_tokens')
                 token = self.integrations.secret('cookidoo')
                 if not token:
                     raise HTTPException(409, 'Bitte zuerst Cookidoo verbinden.')
@@ -141,18 +158,71 @@ class Meals:
                 if api.auth_data:
                     self.integrations.save_secret('cookidoo', asdict(api.auth_data))
 
+    def progress(self, phase):
+        self.phase = phase
+
+    def diagnose(self, error):
+        # Never log exception text, repr, URLs, tracebacks or provider response bodies.
+        chain, current = [], error
+        while current is not None and len(chain) < 8 and all(current is not e for e in chain):
+            chain.append(current)
+            current = current.__cause__ or current.__context__
+        status = next((e.status for e in chain if isinstance(e, aiohttp.ClientResponseError) and 100 <= e.status <= 599), None)
+        for e in chain:
+            if isinstance(e, CookidooAuthException):
+                match = re.fullmatch(r'(?:Login flow failed: could not reach login page \(status |Token exchange failed \(status )(\d{3})\)\.', str(e))
+                if match and 100 <= int(match[1]) <= 599:
+                    status = int(match[1])
+        if any(isinstance(e, TimeoutError) for e in chain):
+            category, hint = 'timeout', 'Cookidoo hat nicht rechtzeitig geantwortet.'
+        elif any(isinstance(e, socket.gaierror) for e in chain):
+            category, hint = 'dns', 'Das NAS konnte den Cookidoo-Servernamen nicht auflösen. Bitte DNS und Internetverbindung des Containers prüfen.'
+        elif any(isinstance(e, (ssl.SSLError, aiohttp.ClientSSLError)) for e in chain):
+            category, hint = 'tls', 'Die verschlüsselte Verbindung zu Cookidoo konnte nicht hergestellt werden. Bitte NAS-Uhrzeit und Zertifikatsprüfung prüfen.'
+        elif any(isinstance(e, CookidooAuthException) for e in chain):
+            category, hint = 'authentication', 'Cookidoo hat die Anmeldung oder Zugangserneuerung nicht bestätigt. Zugang bitte direkt bei Cookidoo prüfen; auch eine zusätzliche Anmeldeprüfung kann die Ursache sein.'
+        elif any(isinstance(e, CookidooParseException) for e in chain):
+            category, hint = 'response_format', 'Die Cookidoo-Antwort konnte nicht verarbeitet werden. Die Schnittstelle oder Anmeldeseite könnte sich geändert haben.'
+        elif any(isinstance(e, (aiohttp.ClientError, CookidooRequestException)) for e in chain):
+            category, hint = 'connection', 'Die Verbindung vom NAS zu Cookidoo ist fehlgeschlagen.'
+        else:
+            category, hint = 'internal', 'Beim Verarbeiten der Cookidoo-Verbindung ist ein interner Fehler aufgetreten.'
+        labels = {'login':'Anmeldung', 'save_tokens':'Zugang speichern', 'restore_tokens':'Zugang laden', 'calendar':'Wochenplanung laden', 'shopping_recipes':'Einkaufsrezepte laden', 'ingredients':'Zutaten laden', 'additional_items':'Eigene Artikel laden', 'write':'Änderung übertragen', 'search':'Rezeptsuche', 'details':'Rezept laden', 'prepare':'Vorbereitung'}
+        detail = f"{labels.get(self.phase, 'Cookidoo-Abgleich')}: {hint} Diagnose {self.diagnostic_id}."
+        if status:
+            detail += f' Cookidoo-HTTP-Status: {status}.'
+        frame, line = error.__traceback__, None
+        while frame is not None:
+            if frame.tb_frame.f_code.co_filename == __file__:
+                line = frame.tb_lineno
+            frame = frame.tb_next
+        error_type = type(error).__name__ if type(error) in (ValueError, TypeError, KeyError, AttributeError) else category
+        diagnostic = {'source_line':line, 'error_type':error_type, 'id':self.diagnostic_id, 'phase':self.phase, 'category':category, 'upstream_status':status, 'time':datetime.now(TZ).isoformat(), 'detail':detail}
+        LOG.error('Cookidoo failed diagnostic=%s phase=%s category=%s error_type=%s source_line=%s upstream_status=%s elapsed_ms=%d', self.diagnostic_id, self.phase, category, error_type, line or '-', status or '-', int((time.monotonic()-self.started)*1000))
+        with self.db() as conn:
+            conn.execute("INSERT OR REPLACE INTO metadata VALUES('cookidoo_diagnostic',?)", (dump(diagnostic),))
+        return detail
+
     def run(self, coroutine):
         if not self.lock.acquire(blocking=False):
             coroutine.close()
             raise HTTPException(409, 'Cookidoo wird gerade abgeglichen. Bitte kurz warten.')
+        self.diagnostic_id, self.started, self.phase = uuid4().hex[:12], time.monotonic(), 'prepare'
+        LOG.info('Cookidoo started diagnostic=%s', self.diagnostic_id)
         try:
-            return asyncio.run(asyncio.wait_for(coroutine, timeout=150))
+            result = asyncio.run(asyncio.wait_for(coroutine, timeout=REQUEST_TIMEOUT))
+            with self.db() as conn:
+                conn.execute("DELETE FROM metadata WHERE key IN ('cookidoo_diagnostic','cookidoo_sync_error')")
+            LOG.info('Cookidoo completed diagnostic=%s elapsed_ms=%d', self.diagnostic_id, int((time.monotonic()-self.started)*1000))
+            return result
         except HTTPException:
+            LOG.info('Cookidoo stopped diagnostic=%s phase=%s', self.diagnostic_id, self.phase)
             raise
-        except Exception:
+        except Exception as error:
+            detail = self.diagnose(error)
             with self.db() as conn:
                 conn.execute("UPDATE meal_operations SET state='review',message='Antwort von Cookidoo unklar. Bitte vor einem erneuten Schreibzugriff prüfen.' WHERE state='sending'")
-            raise HTTPException(502, 'Cookidoo konnte den Vorgang nicht eindeutig bestätigen. Bitte den Verbindungs- und Übertragungsstatus prüfen.')
+            raise HTTPException(502, detail) from None
         finally:
             self.lock.release()
 
@@ -166,32 +236,38 @@ class Meals:
             row = conn.execute('SELECT * FROM meal_cache WHERE key=?', ('week:' + str(start),)).fetchone()
             latest = conn.execute("SELECT * FROM meal_cache WHERE key='shopping'").fetchone()
             error = conn.execute("SELECT value FROM metadata WHERE key='cookidoo_sync_error'").fetchone()
+            diagnostic = conn.execute("SELECT value FROM metadata WHERE key='cookidoo_diagnostic'").fetchone()
             connected = bool(conn.execute("SELECT 1 FROM integration_secrets WHERE key='cookidoo'").fetchone())
             reviews = [dict(r) for r in conn.execute("SELECT id,state,message,created FROM meal_operations WHERE state IN ('sending','review') ORDER BY created")]
         data = json.loads(row['value']) if row else None
+        diagnostic = json.loads(diagnostic[0]) if diagnostic else None
         # A snapshot has one coherent revision; don't splice a newer shopping list into it.
-        return {'error': error[0] if error else None, 'connected': connected and not self.demo, 'demo': self.demo, 'snapshot': data, 'revision': revision(data) if data else None,
+        return {'diagnostic': diagnostic, 'error': diagnostic['detail'] if diagnostic else error[0] if error else None, 'connected': connected and not self.demo, 'demo': self.demo, 'snapshot': data, 'revision': revision(data) if data else None,
                 'updated': row['updated'] if row else None, 'reviews': reviews,
                 'shopping_updated': latest['updated'] if latest else None}
 
     async def sync(self, start):
         async with self.adapter() as api:
-            value = await snapshot(api, start)
+            value = await snapshot(api, start, self.progress)
             self.store(value)
             return self.status(start)
 
     async def connect(self, credentials, start):
-        async with self.adapter(credentials) as api:
-            self.store(await snapshot(api, start))
+        # Login and reading the list are separate HTTP requests. A slow first
+        # sync must not make a successful login appear to have failed.
+        async with self.adapter(credentials):
+            pass
         return self.status(start)
 
     async def search(self, data):
         async with self.adapter() as api:
+            self.progress('search')
             found = await api.search_recipes(query=data.query.strip(), languages='de', total_time=data.max_minutes * 60, page_size=12)
             return {'recipes': [recipe(r) for r in found.recipes], 'total': found.total}
 
     async def details(self, rid):
         async with self.adapter() as api:
+            self.progress('details')
             r = await api.get_recipe_details(rid)
             return {**recipe(r), 'serving_size': r.serving_size, 'ingredients': [asdict(i) for i in r.ingredients],
                     'categories': [c.name for c in r.categories], 'nutrition': [asdict(g) for g in r.nutrition_groups]}
@@ -295,7 +371,7 @@ class Meals:
         if old:
             return self.status(start)
         async with self.adapter() as api:
-            before = await snapshot(api, start)
+            before = await snapshot(api, start, self.progress)
             self.store(before)
             if revision(before) != data.revision:
                 raise HTTPException(409, 'Cookidoo wurde zwischenzeitlich geändert. Bitte den aktualisierten Stand laden und erneut auswählen.')
@@ -303,15 +379,17 @@ class Meals:
             with self.db() as conn:
                 conn.execute('INSERT INTO meal_operations VALUES(?,?,?,\'sending\',\'\',?)', (data.id, actor, dump(data.model_dump(mode='json')), time.time()))
             try:
+                self.progress('write')
                 await self.apply(api, data)
-                after = await snapshot(api, start)
+                after = await snapshot(api, start, self.progress)
                 self.store(after)
                 if not self.effect(data, after, before) or not self.unaffected(data, before, after):
                     raise ValueError('Readback did not match')
-            except Exception:
+            except Exception as error:
+                diagnostic = self.diagnose(error)
                 with self.db() as conn:
                     conn.execute("UPDATE meal_operations SET state='review',message='Ergebnis unklar oder parallele Änderung erkannt. Bitte Cookidoo öffnen und den Stand prüfen; nicht blind wiederholen.' WHERE id=?", (data.id,))
-                raise HTTPException(502, 'Cookidoo-Ergebnis muss geprüft werden. Der Vorgang wird nicht automatisch wiederholt.')
+                raise HTTPException(502, 'Cookidoo-Ergebnis muss geprüft werden. Der Vorgang wird nicht automatisch wiederholt. ' + diagnostic) from None
             with self.db() as conn:
                 conn.execute("UPDATE meal_operations SET state='confirmed' WHERE id=?", (data.id,))
                 conn.execute('INSERT INTO audit(actor,action,details,created) VALUES(?,?,?,?)', (actor, 'Cookidoo aktualisiert', data.action, datetime.now(TZ).isoformat()))
@@ -412,7 +490,7 @@ class Meals:
                     if not row:
                         raise HTTPException(409, 'Dieser Vorgang benötigt keine Prüfung mehr.')
                 # Always read first; acknowledgement never replays the previous write.
-                result = asyncio.run(asyncio.wait_for(self.sync(week_start(json.loads(row['payload'])['start'])), 150))
+                result = asyncio.run(asyncio.wait_for(self.sync(week_start(json.loads(row['payload'])['start'])), REQUEST_TIMEOUT))
                 with self.db() as conn:
                     conn.execute("UPDATE meal_operations SET state='reviewed',message='Manuell in Cookidoo geprüft' WHERE id=?", (operation_id,))
                     conn.execute('INSERT INTO audit(actor,action,details,created) VALUES(?,?,?,?)', (user, 'Cookidoo-Vorgang geprüft', operation_id, datetime.now(TZ).isoformat()))
