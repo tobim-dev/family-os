@@ -54,6 +54,24 @@ def event_body(row, tentative, installation):
             'reminders': {'useDefault': False}, 'extendedProperties': {'private': {'familyOS': installation}}}
 
 
+def nanny_event_body(row, name, installation):
+    """Nanny shift in the shared calendar: requested = tentative, confirmed = fixed.
+
+    Wishes are not sent; the parents keep them local until they ask the nanny.
+    The parents are not blocked by the event (they still pick Lina up earlier).
+    """
+    tentative = row['state'] == 'requested'
+    who = 'Nanny' if not name or name == 'Nanny' else 'Nanny ' + name
+    description = ('Family OS · Bei der Nanny angefragt, Zusage steht noch aus.' if tentative
+                   else 'Family OS · Von der Nanny bestätigt. Lina an diesem Tag früher abholen; Übergabe zuhause zu Beginn.')
+    return {'summary': ('[Vorläufig] ' if tentative else '') + who + ' · Lina',
+            'description': description,
+            'start': {'dateTime': datetime.fromisoformat(row['day'] + 'T' + row['start']).replace(tzinfo=TZ).isoformat(), 'timeZone': 'Europe/Berlin'},
+            'end': {'dateTime': datetime.fromisoformat(row['day'] + 'T' + row['end']).replace(tzinfo=TZ).isoformat(), 'timeZone': 'Europe/Berlin'},
+            'status': 'tentative' if tentative else 'confirmed', 'transparency': 'transparent',
+            'reminders': {'useDefault': False}, 'extendedProperties': {'private': {'familyOS': installation}}}
+
+
 def matches(remote, desired):
     if not remote or not desired or remote.get('status') == 'cancelled':
         return False
@@ -69,7 +87,7 @@ def matches(remote, desired):
 
 
 class CalendarReview(BaseModel):
-    key: str = Field(pattern=r'^(slot|proposal)-[0-9]+$')
+    key: str = Field(pattern=r'^(slot|proposal|nanny)-[0-9]+$')
     etag: str | None = Field(default=None, max_length=512)
     desired: str | None = Field(default=None, max_length=8192)
 
@@ -188,6 +206,9 @@ class Integrations:
                 desired['slot-' + str(row['id'])] = dump(event_body(row, False, self.installation))
             for row in conn.execute("SELECT p.*,a.day,a.kind FROM proposals p JOIN appointments a ON a.id=p.appointment_id WHERE p.state='pending'"):
                 desired['proposal-' + str(row['id'])] = dump(event_body(row, True, self.installation))
+            name = conn.execute("SELECT value FROM metadata WHERE key='nanny_name'").fetchone()
+            for row in conn.execute("SELECT * FROM nanny_shifts WHERE state IN ('requested','confirmed')"):
+                desired['nanny-' + str(row['id'])] = dump(nanny_event_body(row, name[0] if name else '', self.installation))
             existing = {r['key']: dict(r) for r in conn.execute('SELECT * FROM calendar_targets')}
             for key in desired.keys() | existing.keys():
                 body = desired.get(key)

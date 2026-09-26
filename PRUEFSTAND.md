@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-129 Tests bestanden (`python -m unittest discover -s tests -v`):
+130 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -84,6 +84,7 @@ Zusätzliche Integrationstests mit simulierten Google-/Push-Antworten:
 - Push-Fehler bleiben ausstehend; abgelaufene Abonnements werden deaktiviert.
 - Push-Annahme erzeugt keine falsche Lesebestätigung.
 - Kalenderabweichung lässt sich nur nach Prüfung des aktuellen Stands erneut übertragen.
+- Nanny-Termine: Wunsch nicht übertragen, angefragt vorläufig, bestätigt fest (mit Namen), Absage entfernt den Eintrag.
 
 Wochenvorschläge (simulierte Cookidoo- und Claude-Antworten):
 
@@ -193,7 +194,7 @@ Cookidoo-Oberfläche dieser Etappe:
 - Cookidoo-End-to-End-Test dieser neuen Oberfläche am echten Konto steht aus, einschließlich
   Wochenwechsel: Verhalten der echten Schnittstelle bei gemeinsam genutzten Zutaten (getrennte
   Einträge oder zusammengeführte Menge) ist nicht belegt.
-- Nanny-Termine im Google-Kalender, echter Claude-Aufruf mit eurem Schlüssel, automatischer Offline-Abgleich und Sprache folgen später.
+- Nanny-Termine im echten Google-Kalender prüfen; echter Claude-Aufruf mit eurem Schlüssel, automatischer Offline-Abgleich und Sprache folgen später.
 
 Die Entwickler-Testbibliothek meldet eine Abkündigung ihres bisherigen HTTP-Test-
 Adapters. Die Tests sind erfolgreich; die Meldung betrifft nicht den laufenden

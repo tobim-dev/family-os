@@ -40,7 +40,7 @@ gewählte erste Funktionsbereiche.
 | Z-03 | Tobi und Britta sind die Nutzer. Lina wird mitgeplant. Die Anwendung soll zunächst innerhalb der Familie bleiben. | Rahmen / vorhanden: zwei persönliche Konten; kein Nanny-Konto als Voraussetzung. |
 | Z-04 | Bedienung so einfach wie möglich, mit erkennbarem Nutzen und möglichst wenig laufender Datenpflege. | Rahmen: insbesondere bei Vorräten keine Einzelverbrauchserfassung verlangen. |
 | Z-05 | KI nur dort einsetzen, wo sie sinnvoll unterstützt; zuverlässige Automation bleibt der Schwerpunkt. | Rahmen: kein KI-Zwang, kein bereits festgelegter Anbieter. |
-| Z-06 | Erste fachliche Priorität: Betreuungsplanung mit Klärungspunkten, Nanny-Planung einschließlich Stundenübersicht sowie Essensplanung und Einkauf. | Teilweise: alle drei Bereiche in erster Ausbaustufe vorhanden; Nanny noch ohne Google-Kalender. |
+| Z-06 | Erste fachliche Priorität: Betreuungsplanung mit Klärungspunkten, Nanny-Planung einschließlich Stundenübersicht sowie Essensplanung und Einkauf. | Vorhanden in erster Ausbaustufe: alle drei Bereiche, Nanny-Termine auch im Gemeinschaftskalender. |
 | Z-07 | Auf der vom Nutzer positiv bewerteten Demo aufbauen. | Vorhanden: bestehende Gestaltung und Bedienstruktur werden fortgeführt. |
 | Z-08 | Brittas eigene Rückmeldung zunächst zurückstellen, technische Machbarkeit zuerst prüfen. | Rahmen: zurückgestellt bedeutet nicht abgenommen oder dauerhaft ausgeschlossen. |
 
@@ -212,6 +212,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | Faire Monatsverteilung | Werktage × zwei Wege als Bezugsgröße, halbe Wegezahl als Ziel, Abholungen getrennt; keine komplette Lastgewichtung. |
 | Erinnerungszeiten | Aktuell Tages-/Wochenübersicht 19 Uhr, normale Erinnerungen ab 9 Uhr, normale Nachtruhe 21–7 Uhr. Sonntagabend/Vorabend und sofortige Terminabstimmungen sind Nutzeranforderungen; die übrigen exakten Uhrzeiten sind hier als Implementierungsstand vermerkt. |
 | Google | Eigene Family-OS-Einträge im bestehenden Zielkalender; kein Import beliebiger fremder Google-Termine. Ob solche Termine künftig in einer Gesamtübersicht benötigt werden, ist offen. |
+| Nanny im Kalender | Angefragte Termine vorläufig, bestätigte fest im bestehenden Gemeinschaftskalender, ohne Zeitblockade; Wünsche bleiben lokal, Absagen werden entfernt. Vorläufige Implementierungsentscheidung zu O-04. |
 | Cookidoo | Inoffizielle Bibliothek, verschlüsselte Tokens, getrennte Anmeldung/Erstabruf, gezielte Änderungen, Diagnose und manuelle Prüfung unklarer Schreibvorgänge. Grenzen in COOKIDOO.md. |
 | Offline | Manuell speicherbare HTML-Einkaufskopie ist ein Zwischenstand, keine vollständige Offline-App und kein automatischer Rückabgleich. |
 | Backups | Manuelle Sicherung sowie tägliche automatische Sicherung (ab 3 Uhr, 14 Tage, mit Integritätsprüfung und Fehlermeldung) im NAS-Datenordner. Vorläufige Implementierungsentscheidung; ein getrenntes Sicherungsziel und Wiederherstellungsziele sind nicht festgelegt. |
@@ -224,7 +225,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | O-01 | Brittas Rückmeldung nachholen, ohne den bisherigen Aufschub als Zustimmung zu allen Details zu behandeln. | Z-08, K-01–K-07 |
 | O-02 | Brittas Zeitblöcke, Urlaub, Feiertage, Krankheit und Krippenschließtage; Bewertung ungleicher Abhol-/Nachmittagslast und Nanny-Ausnahmen. | B-04–B-09 |
 | O-03 | Geklärt 26.09.2026 → N-08. | N-01–N-03 |
-| O-04 | Weitgehend geklärt 26.09.2026 → N-09, N-10. Offen: Monatsunterlagen für den Minijob, Korrektur nach Überweisung, Nanny im Google-Kalender. | N-04–N-07 |
+| O-04 | Weitgehend geklärt 26.09.2026 → N-09, N-10. Offen: Monatsunterlagen für den Minijob, Korrektur nach Überweisung. Nanny im Google-Kalender als vorläufige Implementierungsentscheidung umgesetzt (Abschnitt 9). | N-04–N-07 |
 | O-05 | Teilweise umgesetzt (E-15) mit vorläufigen Implementierungsregeln: Vegetarisch per Zutaten-/Kategorieprüfung (keine Garantie, Hinweis „bitte prüfen“), keine Wiederholung aus vier Wochen, Mo–Fr 45 / Sa–So 90 Minuten als änderbare Vorgabe. Offen: weitere Familienpräferenzen, Abneigungen, Wiederholungsfenster bestätigen. | E-04–E-08 |
 | O-06 | Geklärt 26.09.2026 → E-16. Offen bleibt nur das Abhaken mehrdeutiger Einzelartikel (weiter direkt in Cookidoo). | E-09–E-12 |
 | O-07 | Quellen und Kriterien für PAYBACK-Aktionen, Erinnerungszeitpunkt, Gutscheinrestbeträge, PDF-/E-Mail-/iCloud-Zugriff und Automatisierungsgrenzen. | G-01–G-07 |

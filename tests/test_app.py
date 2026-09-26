@@ -163,7 +163,7 @@ class PlanningTests(unittest.TestCase):
         self.assertEqual(len(s['tasks']), 1)
         self.app.state.integrations.reconcile()
         with self.app.state.db() as conn:
-            targets = conn.execute('SELECT key FROM calendar_targets').fetchall()
+            targets = conn.execute("SELECT key FROM calendar_targets WHERE key NOT LIKE 'nanny-%'").fetchall()
             self.assertEqual([r[0] for r in targets], ['slot-' + str(s['appointments'][0]['id'])])
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM notifications WHERE dedupe LIKE 'proposal:%'").fetchone()[0], 0)
         self.assertEqual(self.proposal(planning_session=mode,owner='britta',expected_version=1).status_code,200)

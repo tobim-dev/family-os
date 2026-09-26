@@ -89,6 +89,15 @@ stattdessen die Änderung aus Google gelten, sie zuerst im Family OS vorschlagen
 und gemeinsam bestätigen. Ein zwischenzeitlich erneut geänderter Stand muss neu
 geprüft werden. Andere Kalendereinträge werden nicht angefasst.
 
+### Nanny-Termine im Kalender
+
+Nanny-Termine erscheinen im selben Gemeinschaftskalender, sobald sie angefragt sind:
+angefragte als „[Vorläufig] Nanny · Lina“ (Status „vorläufig“), bestätigte als
+„Nanny · Lina“ bzw. mit dem eingestellten Namen der Nanny. Die Einträge blockieren eure
+Zeit nicht. Reine Wünsche bleiben nur im Family OS. Abgesagte oder abgelehnte Termine
+werden aus Google entfernt. Änderungen direkt in Google halten auch hier die Übertragung
+zur Prüfung an.
+
 ## 4. iPhones aktivieren
 
 Auf jedem iPhone mit dem eigenen Konto anmelden, die Anwendung über Safari zum

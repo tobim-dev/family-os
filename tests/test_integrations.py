@@ -52,6 +52,28 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual({b['status'] for b in self.remote.values()},{'tentative','confirmed'})
         self.assertNotIn('Private Adresse',json.dumps(self.remote))
         self.assertIn('+02:00',next(iter(self.remote.values()))['start']['dateTime'])
+    def test_nanny_shift_follows_its_state_in_google(self):
+        with self.app.state.db() as c:
+            c.execute("DELETE FROM nanny_shifts")
+            c.execute("INSERT INTO nanny_shifts(id,day,start,end,state,creator,created,updated) VALUES(7,'2027-03-30','16:00','18:00','wish','tobi','x','x')")
+        self.service.reconcile()
+        with self.app.state.db() as c:
+            self.assertIsNone(c.execute("SELECT 1 FROM calendar_targets WHERE key='nanny-7'").fetchone())
+        def state(value):
+            with self.app.state.db() as c:c.execute('UPDATE nanny_shifts SET state=? WHERE id=7',(value,))
+            self.service.reconcile();self.sync('nanny-7')
+        state('requested')
+        event=self.remote[self.target('nanny-7')['event_id']]
+        self.assertEqual((event['status'],event['summary']),('tentative','[Vorläufig] Nanny · Lina'))
+        self.assertEqual(event['transparency'],'transparent')
+        with self.app.state.db() as c:c.execute("INSERT INTO metadata VALUES('nanny_name','Mia')")
+        state('confirmed')
+        event=self.remote[self.target('nanny-7')['event_id']]
+        self.assertEqual((event['status'],event['summary']),('confirmed','Nanny Mia · Lina'))
+        self.assertIn('früher abholen',event['description'])
+        state('cancelled')
+        self.assertNotIn(self.target('nanny-7')['event_id'],self.remote)
+        self.assertEqual(self.target('nanny-7')['state'],'synced')
     def test_lost_insert_response_recovers_after_restart_without_duplicate(self):
         def interrupted(method,*args,**kwargs):
             result=self.google(method,*args,**kwargs)
