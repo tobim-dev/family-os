@@ -210,7 +210,7 @@ class MigrationTests(unittest.TestCase):
                              "VALUES(?,?,'Arbeitskalender aktualisieren',?,'2026-10-01','2026-10-01T10:00:00+02:00',?)",
                              (appointment, owner, details, state))
         conn.close()
-        self.assertEqual(migrate(self.path), [6])
+        self.assertEqual(migrate(self.path, migrations.MIGRATIONS[:5]), [6])
         with sqlite3.connect(self.path) as conn:
             items = conn.execute('SELECT owner,appointment_id,action,day,start,end,text FROM work_calendar_items ORDER BY id').fetchall()
             states = conn.execute('SELECT state FROM tasks ORDER BY id').fetchall()

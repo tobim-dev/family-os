@@ -24,6 +24,7 @@ from fastapi import HTTPException, Request
 from pydantic import BaseModel, Field
 
 from integrations import TZ, PEOPLE, notify
+import minijob
 
 BILLING_OWNER = 'tobi'
 DEFAULT_RATE_CENTS = 2000
@@ -117,6 +118,13 @@ class Settings(BaseModel):
     name: str = Field(min_length=1, max_length=60)
     phone: str = Field(default='', max_length=20, pattern=r'^(\+?[0-9 ]{8,19})?$')
     rate_cents: int = Field(ge=100, le=10000)
+
+
+class LevySettings(BaseModel):
+    rates: dict[str, int]
+    rv_exempt: bool = True
+    tax_by_employer: bool = True
+    limit_cents: int = Field(default=minijob.LIMIT_CENTS, ge=10000, le=200000)
 
 
 class StatementAction(BaseModel):
@@ -234,14 +242,38 @@ class Nanny:
             data = dict(stored)
             data['lines'] = json.loads(data['lines'])
             data['state'] = 'paid' if stored['paid'] else 'closed'
+            if data.get('levies'):
+                data['minijob'] = json.loads(data['levies'])
+            else:
+                # Closed before levies were recorded: shown with the current rates.
+                data['minijob'] = {**minijob.compute(data['amount_cents'], minijob.settings(conn)), 'estimated': True}
+            data.pop('levies', None)
+            data['half_year'] = self.half_year(conn, month)
             return data
         lines = self.lines(conn, month)
         rate = self.settings(conn)['rate_cents']
         total = sum(line['minutes'] for line in lines)
         first, last = month_range(month)
         unresolved = conn.execute("SELECT COUNT(*) FROM nanny_shifts WHERE day BETWEEN ? AND ? AND state IN ('wish','requested')", (str(first), str(last))).fetchone()[0]
-        return {'month': month, 'state': 'open', 'rate_cents': rate, 'minutes': total, 'amount_cents': amount_cents(total, rate),
-                'lines': lines, 'unresolved': unresolved, 'month_over': datetime.now(TZ).date() > last}
+        amount = amount_cents(total, rate)
+        return {'month': month, 'state': 'open', 'rate_cents': rate, 'minutes': total, 'amount_cents': amount,
+                'lines': lines, 'unresolved': unresolved, 'month_over': datetime.now(TZ).date() > last,
+                'minijob': minijob.compute(amount, minijob.settings(conn)), 'half_year': self.half_year(conn, month)}
+
+    def half_year(self, conn, month):
+        """Wages of the half year up to ``month`` and the levies collected for it."""
+        months, collection = minijob.half_year(month)
+        gross = 0
+        for item in months[:months.index(month) + 1]:
+            stored = self.closed(conn, item)
+            if stored:
+                gross += stored['amount_cents']
+            else:
+                rate = self.settings(conn)['rate_cents']
+                gross += amount_cents(sum(line['minutes'] for line in self.lines(conn, item)), rate)
+        result = minijob.compute(gross, minijob.settings(conn))
+        return {'months': f'{month_label(months[0])} – {month_label(months[-1])}', 'until': month_label(month),
+                'gross': gross, 'collected': result['collected'], 'collection': collection}
 
     # --- background ------------------------------------------------------
 
@@ -299,6 +331,7 @@ class Nanny:
                 identity(request, conn)
                 shifts = [dict(r) for r in conn.execute('SELECT * FROM nanny_shifts WHERE day BETWEEN ? AND ? ORDER BY day,start', (str(first), str(last)))]
                 return {'month': month, 'shifts': shifts, 'statement': self.statement(conn, month), 'settings': self.settings(conn),
+                        'levies': minijob.settings(conn),
                         'billing_owner': BILLING_OWNER, 'today': str(datetime.now(TZ).date())}
 
         @app.post('/api/nanny/shifts')
@@ -410,6 +443,20 @@ class Nanny:
                            label(row) + (f' → tatsächlich {data.actual_start}–{data.actual_end}' if data.actual_start else ' → wie geplant'))
             return {'ok': True}
 
+        @app.post('/api/nanny/levies')
+        def save_levies(data: LevySettings, request: Request):
+            keys = {key for key, _, _ in minijob.LEVIES}
+            if set(data.rates) != keys or any(not 0 <= v <= 3000 for v in data.rates.values()):
+                raise HTTPException(422, 'Bitte alle Abgabensätze zwischen 0 und 30 % angeben.')
+            with db() as conn:
+                actor = identity(request, conn)
+                value = {**minijob.settings(conn), 'rates': data.rates, 'rv_exempt': data.rv_exempt,
+                         'tax_by_employer': data.tax_by_employer, 'limit_cents': data.limit_cents}
+                conn.execute("INSERT OR REPLACE INTO metadata VALUES('nanny_levies',?)", (json.dumps(value),))
+                total = sum(data.rates.values())
+                self.audit(conn, actor, 'Minijob-Abgaben geändert', f'{total // 100},{total % 100:02d} % zusätzlich zum Lohn')
+            return {'ok': True}
+
         @app.post('/api/nanny/settings')
         def save_settings(data: Settings, request: Request):
             with db() as conn:
@@ -434,11 +481,13 @@ class Nanny:
                     preview = self.statement(conn, month)
                     if preview['unresolved']:
                         raise HTTPException(409, f"Noch {preview['unresolved']} Nanny-Termine ohne Bestätigung oder Absage. Bitte zuerst klären.")
-                    conn.execute('INSERT INTO nanny_statements(month,rate_cents,minutes,amount_cents,lines,closed_by,closed) VALUES(?,?,?,?,?,?,?)',
-                                 (month, preview['rate_cents'], preview['minutes'], preview['amount_cents'], json.dumps(preview['lines'], ensure_ascii=False), actor, now()))
+                    conn.execute('INSERT INTO nanny_statements(month,rate_cents,minutes,amount_cents,lines,closed_by,closed,levies) VALUES(?,?,?,?,?,?,?,?)',
+                                 (month, preview['rate_cents'], preview['minutes'], preview['amount_cents'], json.dumps(preview['lines'], ensure_ascii=False), actor, now(),
+                                  json.dumps(preview['minijob'], ensure_ascii=False)))
                     conn.execute("UPDATE tasks SET state='superseded' WHERE owner=? AND title='Nanny-Abrechnung' AND state='open' AND details LIKE ?", (BILLING_OWNER, month + ':%'))
-                    amount = f"{preview['amount_cents'] / 100:.2f}".replace('.', ',')
-                    if preview['amount_cents']:
+                    # The transfer is the payout (full wage while exempt and the family bears the tax).
+                    amount = f"{preview['minijob']['payout'] / 100:.2f}".replace('.', ',')
+                    if preview['minijob']['payout']:
                         conn.execute('INSERT INTO tasks(owner,title,details,due,created) VALUES(?,?,?,?,?)',
                                      (BILLING_OWNER, 'Nanny-Lohn überweisen', f'{month}: {amount} EUR überweisen und danach in der Abrechnung als überwiesen markieren.', now(), now()))
                     self.audit(conn, actor, 'Nanny-Monat abgeschlossen', f"{month}: {preview['minutes']} Minuten · {amount} EUR")

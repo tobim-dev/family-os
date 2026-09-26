@@ -52,3 +52,4 @@ dialog{border:0;padding:0;border-radius:15px;box-shadow:0 24px 100px #102a4050;w
   .tour-card{bottom:calc(92px + env(safe-area-inset-bottom))}
   #toast{bottom:calc(92px + env(safe-area-inset-bottom))}
 }
+.minijob{display:grid;gap:6px;margin:14px 0;padding-top:12px;border-top:1px solid var(--line)}.minijob-payout{font-size:1rem}.minijob-payout strong{font-size:1.25rem;color:var(--green)}.minijob-details summary{cursor:pointer;font-size:.875rem;color:var(--muted);padding:4px 0}

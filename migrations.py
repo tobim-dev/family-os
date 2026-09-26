@@ -187,6 +187,9 @@ CREATE TABLE voucher_uses(
  created TEXT NOT NULL);
 '''),
     (6, 'Arbeitskalender: Einträge je Person in einer Aufgabe bündeln', work_calendar_items),
+    (7, 'Nanny-Abrechnung: Minijob-Abgaben beim Abschluss festhalten', '''
+ALTER TABLE nanny_statements ADD COLUMN levies TEXT;
+'''),
 ]
 
 LATEST = 1 + len(MIGRATIONS)

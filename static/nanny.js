@@ -125,6 +125,55 @@ function shiftRow(shift, locked) {
   </div>`;
 }
 
+// Minijob im Privathaushalt (minijob.py, N-12): transfer to the nanny and the
+// levies the Minijob-Zentrale collects twice a year.
+function percentText(rate) {
+  return (rate / 100).toLocaleString('de-DE', {maximumFractionDigits: 2}) + ' %';
+}
+
+function minijobHTML(statement) {
+  const m = statement.minijob;
+  if (!m) return '';
+  const total = m.levies.reduce((sum, l) => sum + l.rate, 0);
+  const rows = m.levies.map(l => `<div class="row between nanny-line"><span>${esc(l.label)} · ${percentText(l.rate)}</span><span>${euro(l.cents)}</span></div>`).join('');
+  const deductions = m.deductions.map(d => `<div class="row between nanny-line"><span>− ${esc(d.label)}</span><span>${euro(d.cents)}</span></div>`).join('');
+  const half = statement.half_year;
+  const status = m.rv_exempt ? 'Von der Rentenversicherung befreit' : 'Rentenversicherungspflichtig';
+  return `<div class="minijob">
+      <div class="row between minijob-payout"><span>Überweisen an ${esc(nannyState.settings.name)}</span><strong>${euro(m.payout)}</strong></div>
+      ${deductions}
+      <div class="row between minijob-levy"><span>Abgaben an die Minijob-Zentrale</span><strong>${euro(m.collected)}</strong></div>
+      <details class="minijob-details"><summary>Zusammensetzung (${percentText(total)} vom Lohn)</summary>${rows}
+        <p class="small">${status} · Pauschsteuer ${m.tax_by_employer ? 'tragt ihr' : 'trägt die Nanny'}.
+        <button class="btn ghost" data-nanny-levies>Sätze anpassen</button></p></details>
+      <div class="row between nanny-line"><span>Kosten für euch insgesamt</span><span>${euro(m.family_total)}</span></div>
+      ${m.over_limit ? `<div class="error-banner">Über der Minijob-Grenze von ${euro(m.limit_cents)} im Monat. Bitte prüfen; ein gelegentliches Überschreiten ist nur begrenzt erlaubt.</div>` : ''}
+      ${m.estimated ? '<p class="small">Vor Einführung der Abgabenberechnung abgeschlossen: mit den aktuellen Sätzen geschätzt.</p>' : ''}
+      ${half ? `<p class="small">${esc(half.months)}: bisher ${euro(half.gross)} Lohn bis ${esc(half.until)}. Die Minijob-Zentrale zieht dafür ${half.collection} etwa ${euro(half.collected)} ein (Lastschrift, maßgeblich ist ihr Bescheid).</p>` : ''}
+    </div>`;
+}
+
+function nannyLevyDialog() {
+  const s = nannyState.levies;
+  const labels = {kv: 'Krankenversicherung', rv: 'Rentenversicherung', tax: 'Pauschsteuer', u1: 'Umlage U1 (Krankheit)',
+                  u2: 'Umlage U2 (Mutterschaft)', uv: 'Unfallversicherung'};
+  const fields = Object.entries(labels).map(([key, label]) => `<div class="field"><label for="lv-${key}">${label} in %</label>
+    <input id="lv-${key}" name="${key}" type="number" min="0" max="30" step="0.01" required value="${(s.rates[key] / 100).toFixed(2)}"></div>`).join('');
+  dialog('Minijob-Abgaben', `Minijob im Privathaushalt · Sätze ${s.year}`, `<form>
+    <div class="field-pair">${fields}</div>
+    <div class="field"><label for="lv-limit">Minijob-Grenze pro Monat in Euro</label><input id="lv-limit" name="limit" type="number" min="100" max="2000" step="1" value="${s.limit_cents / 100}"></div>
+    <label class="choice"><input type="checkbox" name="rv_exempt" ${s.rv_exempt ? 'checked' : ''}> Nanny ist von der Rentenversicherung befreit</label>
+    <label class="choice"><input type="checkbox" name="tax_by_employer" ${s.tax_by_employer ? 'checked' : ''}> Pauschsteuer tragen wir</label>
+    <p class="note">Die Sätze ändern sich meist zum Jahreswechsel; bitte mit dem Beitragsbescheid oder dem Haushaltsscheck-Rechner der Minijob-Zentrale abgleichen. Abgeschlossene Monate behalten ihre Werte.</p>
+    <div class="dialog-footer"><button class="btn primary" type="submit">Speichern</button></div></form>`);
+  submitForm(modal.querySelector('form'), async data => {
+    const rates = Object.fromEntries(Object.keys(labels).map(key => [key, Math.round(Number(data[key]) * 100)]));
+    await api('/nanny/levies', {rates, rv_exempt: data.rv_exempt === 'on', tax_by_employer: data.tax_by_employer === 'on',
+                                limit_cents: Math.round(Number(data.limit) * 100)});
+    await loadNanny();
+  });
+}
+
 function statementHTML(statement) {
   const lines = statement.lines.map(line => `<div class="row between nanny-line">
       <span>${nannyDay(line.day)}${line.cancelled_paid ? ' · Ausfall bezahlt' : line.corrected ? ' · korrigiert' : ''}</span>
@@ -152,7 +201,8 @@ function statementHTML(statement) {
     <div class="panel-body">
       <div class="nanny-total"><strong>${euro(statement.amount_cents)}</strong><small>${hoursText(statement.minutes)} × ${euro(statement.rate_cents)}</small></div>
       ${lines || '<p class="small">Noch keine abrechenbaren Termine.</p>'}
-      <p class="note">Geplante Zeiten zählen, sofern keine Abweichung eingetragen ist. Nur Lohn, keine Minijob-Abgaben oder Meldungen.</p>
+      ${minijobHTML(statement)}
+      <p class="note">Geplante Zeiten zählen, sofern keine Abweichung eingetragen ist.</p>
       ${footer}
     </div>
   </section>`;
@@ -405,8 +455,8 @@ function nannySettingsDialog() {
 function nannyStatementDialog(action) {
   const statement = nannyState.statement;
   const texts = {
-    close: ['Monat abschließen', `${hoursText(statement.minutes)} · ${euro(statement.amount_cents)}. Danach sind die Termine dieses Monats gesperrt. Tobi erhält die Aufgabe zur Überweisung.`, 'Abschließen'],
-    paid: ['Überweisung bestätigen', `${euro(statement.amount_cents)} für ${monthName(month)} überwiesen? Danach ist der Monat endgültig.`, 'Ja, ist überwiesen'],
+    close: ['Monat abschließen', `${hoursText(statement.minutes)} · Überweisung ${euro(statement.minijob.payout)}. Lohn und Abgaben werden festgehalten, die Termine dieses Monats gesperrt. Tobi erhält die Aufgabe zur Überweisung.`, 'Abschließen'],
+    paid: ['Überweisung bestätigen', `${euro(statement.minijob.payout)} für ${monthName(month)} überwiesen? Danach ist der Monat endgültig.`, 'Ja, ist überwiesen'],
     reopen: ['Abrechnung wieder öffnen', 'Die Termine lassen sich dann wieder bearbeiten. Beim erneuten Abschluss gilt der aktuelle Stundenlohn.', 'Wieder öffnen'],
   }[action];
   dialog(texts[0], monthName(month), `<form><p>${texts[1]}</p><div class="dialog-footer"><button type="submit" class="btn ${action === 'reopen' ? '' : 'primary'}">${texts[2]}</button></div></form>`);
@@ -429,4 +479,5 @@ function bindNanny() {
   on('[data-nanny-cancel]', b => nannyCancelDialog(nannyShift(b.dataset.nannyCancel)));
   on('[data-nanny-correct]', b => nannyCorrectDialog(nannyShift(b.dataset.nannyCorrect)));
   on('[data-nanny-statement]', b => nannyStatementDialog(b.dataset.nannyStatement));
+  app.querySelector('[data-nanny-levies]')?.addEventListener('click', nannyLevyDialog);
 }

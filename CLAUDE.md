@@ -29,6 +29,7 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
 - `closures.py`: Tage ohne Krippe (Schließtag, Feiertag, Urlaub, Krankheit) mit Bestätigung; setzt Wege aus.
 - `lina.py`: Windelvorrat (ereignisbasiert), Wechselkleidung Krippe, Kleidungsbedarf, Aussortiertes.
 - `vouchers.py`: Einkaufsgutscheine (PDF unter `vouchers/` auf dem NAS, Restbetrag, Donnerstags-Erinnerung).
+- `minijob.py`: Minijob im Privathaushalt – Überweisung an die Nanny und Abgaben an die Minijob-Zentrale (Sätze einstellbar, beim Abschluss eingefroren).
 - `nanny.py`: Nanny-Termine, WhatsApp-Anfragen (nur vorbereiteter Text), Stunden, Monatsabrechnung.
 - `speech.py`: lokale Spracherkennung (faster-whisper, Deutsch), Aufnahme nur im Arbeitsspeicher, Text nur zur Kontrolle ins Feld.
 - `offline.py` + `static/sw.js`, `offline-sync.js`, `offline.html/.js`: Lesekopie von Einkaufsliste und Gutscheinen auf dem Gerät (nur diese Daten werden im Browser gespeichert).

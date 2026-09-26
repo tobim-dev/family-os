@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-191 Tests bestanden (`python -m unittest discover -s tests -v`):
+199 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -38,6 +38,16 @@ Schema-Migrationen:
 - Vor einer Migration mit Daten entsteht eine geschützte Kopie mit altem Stand.
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
+
+Minijob-Abgaben (N-12, Migration 7):
+
+- Sätze 2026: 200,00 € → KV/RV je 10,00, Pauschsteuer 4,00, U1 1,60, U2 0,44, UV 3,20 = 29,24 € (14,62 %);
+  Überweisung voller Lohn; Rundung je Bestandteil kaufmännisch auf Cent.
+- Ohne Befreiung 13,6 % Eigenanteil, Pauschsteuer durch die Nanny: Abzüge vom Lohn, Einzug entsprechend höher.
+- Minijob-Grenze 603 €: Warnung ab 603,01 €. Halbjahr Jan–Jun (Einzug Juli) bzw. Jul–Dez (Einzug Januar).
+- Abschluss hält Abgaben fest, spätere Satzänderung verändert den Monat nicht; Aufgabe „Nanny-Lohn überweisen“ nennt die Überweisung.
+- Migration 7: bestehende Abrechnungen bleiben unverändert und werden mit aktuellen Sätzen als geschätzt angezeigt.
+- Browser (390 px): 40,00 € Lohn → 40,00 € Überweisung, 5,85 € Abgaben.
 
 Nanny-Planung (Migration 2):
 
