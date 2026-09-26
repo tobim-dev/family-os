@@ -30,7 +30,7 @@ function mealsHTML(){
   const ambiguityNotice=Object.values(duplicateIds).some(ids=>ids.length)?'<div class="note">Cookidoo liefert einige Kennungen mehrfach. Alle Positionen und Mengen bleiben sichtbar. Markierte Artikel bitte direkt in Cookidoo abhaken. Rezeptzutaten lassen sich weiter hinzufügen und entfernen; jede Änderung wird Position für Position nachgezählt.</div>':'';
   const open=items.filter(i=>!i.is_owned),done=items.filter(i=>i.is_owned);
   const itemHTML=i=>`<div class="list-row meal-item"><input type="checkbox" aria-label="${esc(i.name)} als ${i.is_owned?'noch benötigt':'vorhanden oder gekauft'} markieren" data-shop-item="${esc(i.id)}" data-shop-group="${i.group}" ${i.is_owned?'checked':''} ${m.demo||ambiguous(i)?'disabled':''}><div><b class="${i.is_owned?'done':''}">${esc(i.name)}</b><p>${esc(i.description||'Eigener Einkaufsartikel')}</p>${ambiguous(i)?'<small>Mehrfache Kennung · bitte in Cookidoo abhaken</small>':''}</div></div>`;
-  return `${reviews}${ambiguityNotice}${m.error?`<div class="error-banner">${esc(m.error)}</div>`:''}<div class="meal-toolbar"><div><b>Samstag bis Freitag</b><p>${fmt(mealStart)} – ${fmt(iso(end))}</p><small>${status}</small></div><div class="actions"><a class="btn" href="#meal-shopping">Zur Einkaufsliste</a><button class="btn" data-meal-week="-7" aria-label="Vorherige Essenswoche">${icon('left')}</button><button class="btn" data-meal-week="7" aria-label="Nächste Essenswoche">${icon('arrow')}</button>${s||m.demo?`<button class="btn primary" data-meal-suggest>${icon('meal')}Woche vorschlagen</button>`:''}${!m.demo&&m.connected?'<button class="btn" data-meal-sync>Mit Cookidoo abgleichen</button>':''}${!m.demo&&state.user==='tobi'?`<button class="btn ${m.connected?'':'primary'}" data-meal-connect>${m.connected?'Zugang erneuern':'Cookidoo verbinden'}</button>`:''}</div></div><div class="content-grid"><div class="stack">${suggestionHTML(m)}<section class="panel"><div class="panel-head"><h2>Was essen wir diese Woche?</h2></div>${s?s.days.map(d=>`<div class="meal-day"><div><strong>${fmt(d.day,{weekday:'long'})}</strong><small>${fmt(d.day,{day:'numeric',month:'short'})}</small></div><div>${d.recipes.map(r=>`<div class="meal-recipe">${recipeImage(m.images?.[r.id])}<div class="meal-recipe-body"><h3>${esc(r.name)}</h3><small>${r.total_time?Math.round(r.total_time/60)+' Min. Gesamtzeit':''}</small><div class="actions">${recipeURL(r.id)?`<a class="btn ghost" href="${recipeURL(r.id)}" target="_blank" rel="noopener noreferrer">In Cookidoo öffnen</a>`:''}${!m.demo?`<button class="btn ghost" data-meal-remove="${esc(r.id)}" data-meal-day="${d.day}">Aus diesem Tag entfernen</button>`:''}</div></div></div>`).join('')}${d.custom_ids.length?'<p class="note">Eigene Cookidoo-Rezepte vorhanden. Bitte direkt in Cookidoo bearbeiten.</p>':''}${!d.recipes.length&&!d.custom_ids.length?`<p class="muted">Noch kein Abendessen geplant.</p>${!m.demo?`<button class="btn" data-meal-search="${d.day}">${icon('plus')}Rezept auswählen</button>`:''}`:''}</div></div>`).join(''):`<div class="empty-state"><b>${m.connected?'Diese Woche wurde noch nicht geladen.':'Verbindet zuerst euren Cookidoo-Zugang.'}</b><p>${m.connected?'Bitte mit Cookidoo abgleichen.':'Danach erscheinen „Meine Woche“ und eure Einkaufsliste hier.'}</p></div>`}</section>${s?`<section class="panel"><div class="panel-head"><h2>Rezepte für den Einkauf</h2></div>${weekSwitchSummary(m)}<div class="panel-body"><p>Für diese Woche geplante Rezepte gezielt hinzufügen. Bereits enthaltene Rezepte werden nicht erneut hinzugefügt.</p>${[...new Map(s.days.flatMap(d=>d.recipes).map(r=>[r.id,r])).values()].map(r=>`<div class="row between meal-shopping-recipe"><span>${esc(r.name)}</span>${s.shopping_recipes.some(x=>x.id===r.id)?'<span class="status">Auf der Einkaufsliste</span>':m.demo?'<span class="status gray">Beispiel</span>':`<button class="btn" data-meal-ingredients="${esc(r.id)}">Zutaten hinzufügen</button>`}</div>`).join('')}</div></section>`:''}</div><aside class="rail">${typeof vouchersPanel==='function'?vouchersPanel():''}<section class="panel"><div class="panel-head"><h2>Euer Rahmen</h2></div><div class="panel-body"><p>Vegetarisch, gerne proteinreich. Unter der Woche möglichst bis 45 Minuten Gesamtzeit. Die üblichen vier Portionen reichen für euch drei.</p><p class="note">Suche und Originalzutaten helfen bei der Auswahl. Suchbegriffe sind keine verlässliche Ernährungskennzeichnung; bitte die vegetarische Eignung prüfen. Portionsmengen werden unverändert aus Cookidoo übernommen.</p></div></section><section class="panel" id="meal-shopping"><div class="panel-head"><h2>Einkaufsliste</h2><span class="status amber">${open.length} offen</span></div>${s?`<div class="panel-body"><div class="actions">${!m.demo?'<button class="btn" data-shop-add>Artikel ergänzen</button>':''}<a class="btn ghost" href="/api/meals/shopping.html" download>Als Datei speichern</a></div><p class="small">${m.demo?'Vorschau mit Beispieldaten.':'Häkchen werden gezielt mit Cookidoo abgeglichen.'} Liste und aktive Gutscheine sind auf diesem Gerät automatisch auch ohne Verbindung lesbar. Abhaken unterwegs in der Cookidoo-App.</p></div>${open.map(itemHTML).join('')||'<div class="empty-state">Aktuell nichts offen.</div>'}${done.length?`<details class="meal-done"><summary>Vorhanden / gekauft (${done.length})</summary>${done.map(itemHTML).join('')}</details>`:''}${s.shopping_recipes.length?`<details class="meal-done"><summary>Enthaltene Rezepte (${s.shopping_recipes.length})</summary>${s.shopping_recipes.map(r=>`<div class="list-row"><div><b>${esc(r.name)}</b>${!m.demo&&/^r\d+$/.test(r.id)?`<div class="actions"><button class="btn ghost" data-shop-remove-recipe="${esc(r.id)}">Diese Rezeptzutaten entfernen</button></div>`:''}</div></div>`).join('')}</details>`:''}`:'<div class="empty-state">Noch keine Einkaufsliste geladen.</div>'}</section></aside></div>`;
+  return `${reviews}${ambiguityNotice}${m.error?`<div class="error-banner">${esc(m.error)}</div>`:''}<div class="meal-toolbar"><div><b>Samstag bis Freitag</b><p>${fmt(mealStart)} – ${fmt(iso(end))}</p><small>${status}</small></div><div class="actions"><a class="btn" href="#meal-shopping">Zur Einkaufsliste</a><button class="btn" data-meal-week="-7" aria-label="Vorherige Essenswoche">${icon('left')}</button><button class="btn" data-meal-week="7" aria-label="Nächste Essenswoche">${icon('arrow')}</button>${s||m.demo?`<button class="btn primary" data-meal-suggest>${icon('meal')}Woche vorschlagen</button>`:''}${!m.demo&&m.connected?'<button class="btn" data-meal-sync>Mit Cookidoo abgleichen</button>':''}${!m.demo&&state.user==='tobi'?`<button class="btn ${m.connected?'':'primary'}" data-meal-connect>${m.connected?'Zugang erneuern':'Cookidoo verbinden'}</button>`:''}</div></div><div class="content-grid"><div class="stack">${suggestionHTML(m)}<section class="panel"><div class="panel-head"><h2>Was essen wir diese Woche?</h2></div>${s?s.days.map(d=>`<div class="meal-day"><div><strong>${fmt(d.day,{weekday:'long'})}</strong><small>${fmt(d.day,{day:'numeric',month:'short'})}</small></div><div>${d.recipes.map(r=>`<div class="meal-recipe">${recipeImage(m.images?.[r.id])}<div class="meal-recipe-body"><h3>${esc(r.name)}</h3><small>${r.total_time?Math.round(r.total_time/60)+' Min. Gesamtzeit':''}</small><div class="actions">${recipeURL(r.id)?`<a class="btn ghost" href="${recipeURL(r.id)}" target="_blank" rel="noopener noreferrer">In Cookidoo öffnen</a>`:''}${!m.demo?`<button class="btn ghost" data-meal-remove="${esc(r.id)}" data-meal-day="${d.day}">Aus diesem Tag entfernen</button>`:''}</div></div></div>`).join('')}${d.custom_ids.length?'<p class="note">Eigene Cookidoo-Rezepte vorhanden. Bitte direkt in Cookidoo bearbeiten.</p>':''}${!d.recipes.length&&!d.custom_ids.length?`<p class="muted">Noch kein Abendessen geplant.</p>${!m.demo?`<button class="btn" data-meal-search="${d.day}">${icon('plus')}Rezept auswählen</button>`:''}`:''}</div></div>`).join(''):`<div class="empty-state"><b>${m.connected?'Diese Woche wurde noch nicht geladen.':'Verbindet zuerst euren Cookidoo-Zugang.'}</b><p>${m.connected?'Bitte mit Cookidoo abgleichen.':'Danach erscheinen „Meine Woche“ und eure Einkaufsliste hier.'}</p></div>`}</section>${s?`<section class="panel"><div class="panel-head"><h2>Rezepte für den Einkauf</h2></div>${weekSwitchSummary(m)}<div class="panel-body"><p>Für diese Woche geplante Rezepte gezielt hinzufügen. Bereits enthaltene Rezepte werden nicht erneut hinzugefügt.</p>${[...new Map(s.days.flatMap(d=>d.recipes).map(r=>[r.id,r])).values()].map(r=>`<div class="row between meal-shopping-recipe"><span>${esc(r.name)}</span>${m.shopped?'<span class="status gray">Eingekauft</span>':s.shopping_recipes.some(x=>x.id===r.id)?'<span class="status">Auf der Einkaufsliste</span>':m.demo?'<span class="status gray">Beispiel</span>':`<button class="btn" data-meal-ingredients="${esc(r.id)}">Zutaten hinzufügen</button>`}</div>`).join('')}</div></section>`:''}</div><aside class="rail">${typeof vouchersPanel==='function'?vouchersPanel():''}<section class="panel"><div class="panel-head"><h2>Euer Rahmen</h2></div><div class="panel-body"><p>Vegetarisch, gerne proteinreich. Unter der Woche möglichst bis 45 Minuten Gesamtzeit. Die üblichen vier Portionen reichen für euch drei.</p><p class="note">Suche und Originalzutaten helfen bei der Auswahl. Suchbegriffe sind keine verlässliche Ernährungskennzeichnung; bitte die vegetarische Eignung prüfen. Portionsmengen werden unverändert aus Cookidoo übernommen.</p></div></section><section class="panel" id="meal-shopping"><div class="panel-head"><h2>Einkaufsliste</h2><span class="status amber">${open.length} offen</span></div>${s?`<div class="panel-body"><div class="actions">${!m.demo?'<button class="btn" data-shop-add>Artikel ergänzen</button>':''}<a class="btn ghost" href="/api/meals/shopping.html" download>Als Datei speichern</a></div><p class="small">${m.demo?'Vorschau mit Beispieldaten.':'Häkchen werden gezielt mit Cookidoo abgeglichen.'} Liste und aktive Gutscheine sind auf diesem Gerät automatisch auch ohne Verbindung lesbar. Abhaken unterwegs in der Cookidoo-App.</p></div>${open.map(itemHTML).join('')||'<div class="empty-state">Aktuell nichts offen.</div>'}${done.length?`<details class="meal-done"><summary>Vorhanden / gekauft (${done.length})</summary>${done.map(itemHTML).join('')}</details>`:''}${s.shopping_recipes.length?`<details class="meal-done"><summary>Enthaltene Rezepte (${s.shopping_recipes.length})</summary>${s.shopping_recipes.map(r=>`<div class="list-row"><div><b>${esc(r.name)}</b>${!m.demo&&/^r\d+$/.test(r.id)?`<div class="actions"><button class="btn ghost" data-shop-remove-recipe="${esc(r.id)}">Diese Rezeptzutaten entfernen</button></div>`:''}</div></div>`).join('')}</details>`:''}`:'<div class="empty-state">Noch keine Einkaufsliste geladen.</div>'}</section></aside></div>`;
 }
 function mealConnection(){let authenticated=false;dialog('Cookidoo verbinden','Anmeldung bei Cookidoo Deutschland',`<form><p>Die Zugangsdaten werden vom NAS an Cookidoo/Vorwerk übermittelt. Nach der Anmeldung speichert das NAS nur verschlüsselte Zugangstokens. Das Passwort wird nicht dauerhaft gespeichert.</p><div class="field"><label for="cook-email">Cookidoo-E-Mail</label><input id="cook-email" name="email" type="email" required autocomplete="username"></div><div class="field"><label for="cook-password">Cookidoo-Passwort</label><input id="cook-password" name="password" type="password" required autocomplete="current-password" maxlength="512"></div><p class="note">Die Anbindung verwendet die bereits getestete inoffizielle Schnittstelle. Bei einer zusätzlichen Anmeldung oder CAPTCHA bitte direkt Cookidoo verwenden.</p><div class="dialog-footer"><button class="btn primary" type="submit">Verbinden und Planung laden</button></div></form>`);mealSubmit(modal.querySelector('form'),async data=>{if(!authenticated){await api('/meals/connect',data);authenticated=true;modal.querySelector('#cook-password').value='';modal.querySelector('#cook-password').disabled=true;modal.querySelector('#cook-email').disabled=true;}modal.querySelector('[type=submit]').textContent='Angemeldet · Planung wird geladen …';try{return await api('/meals/sync',{start:mealStart});}catch(e){modal.querySelector('[type=submit]').textContent='Planung erneut laden';throw new Error('Die Anmeldung wurde bestätigt, aber die Planung konnte noch nicht geladen werden. '+e.message);}});}
 function mealSubmit(form,operation){form.onsubmit=async e=>{e.preventDefault();const b=form.querySelector('[type=submit]');b.disabled=true;try{await operation(Object.fromEntries(new FormData(form)));modal.close();await loadMeals();toast('Mit Cookidoo abgeglichen.');}catch(error){formError(form,error.message);b.disabled=false;await loadMeals();}};}
@@ -58,6 +58,7 @@ function bindMeals(){
 // prepared candidates. Nothing is written to Cookidoo without a click here.
 
 let suggesting = false;
+let suggestingDay = null;
 
 function vegLabel(veg) {
   return veg === 'ok' ? 'In Cookidoo als vegetarisch gekennzeichnet' : 'Keine Fleisch- oder Fischzutat gefunden · bitte prüfen';
@@ -76,7 +77,8 @@ function suggestionHTML(m) {
     const done = planned.has(d.day);
     const r = d.recipe;
     const head = `<div><strong>${fmt(d.day, {weekday: 'long'})}</strong><small>bis ${d.max_minutes} Min.</small></div>`;
-    if (!r) return `<div class="meal-day">${head}<p class="muted">Kein passender Kandidat gefunden.</p></div>`;
+    const other = done || m.demo && !r ? '' : `<button class="btn ghost" data-suggest-other="${d.day}" ${suggestingDay ? 'disabled' : ''}>${suggestingDay === d.day ? 'Sucht …' : 'Anderes Gericht'}</button>`;
+    if (!r) return `<div class="meal-day">${head}<div><p class="muted">Kein passender Kandidat gefunden.</p>${other}</div></div>`;
     const facts = [Math.round(r.total_time / 60) + ' Min.', r.protein ? r.protein + ' g Eiweiß' : null].filter(Boolean).join(' · ');
     return `<div class="meal-day ${done ? 'suggestion-done' : ''}">${head}<div class="meal-recipe">${recipeImage(r.image)}<div class="meal-recipe-body">
       <h3>${esc(r.name)}</h3><small>${facts}</small>
@@ -84,6 +86,7 @@ function suggestionHTML(m) {
       <small class="suggestion-veg ${r.veg}">${vegLabel(r.veg)}</small>
       <div class="actions">${done ? '<span class="status green">Tag ist geplant</span>'
         : !m.demo ? `<button class="btn green" data-suggest-accept="${d.day}">Übernehmen</button>` : ''}
+        ${other}
         ${recipeURL(r.id) ? `<a class="btn ghost" href="${recipeURL(r.id)}" target="_blank" rel="noopener noreferrer">In Cookidoo ansehen</a>` : ''}</div>
     </div></div></div>`;
   }).join('');
@@ -92,7 +95,7 @@ function suggestionHTML(m) {
     ${suggestion.notice ? `<div class="note suggestion-note">${esc(suggestion.notice)}</div>` : ''}
     ${rows}
     <div class="calendar-foot"><small>Noch nichts in Cookidoo geändert. Erst „Übernehmen“ plant das Rezept in „Meine Woche“.</small>
-      <div class="actions">${suggestion.sent ? '<button class="btn ghost" data-suggest-sent>Gesendete Daten</button>' : ''}
+      <div class="actions">${suggestion.sent || suggestion.sent_days?.length ? '<button class="btn ghost" data-suggest-sent>Gesendete Daten</button>' : ''}
         <button class="btn" data-meal-suggest>Neu vorschlagen</button>
         ${open.length > 1 && !m.demo ? `<button class="btn green" data-suggest-accept-all>Alle ${open.length} übernehmen</button>` : ''}</div></div>
   </section>`;
@@ -154,8 +157,25 @@ async function acceptSuggestion(days) {
   if (done) toast(done === 1 ? 'Rezept in Cookidoo eingeplant.' : `${done} Rezepte in Cookidoo eingeplant.`);
 }
 
+async function suggestOther(day) {
+  suggestingDay = day;
+  render();
+  try {
+    const useAi = mealState.suggestion.source === 'claude';
+    const result = await api('/meals/suggest/day', {start: mealStart, day, use_ai: useAi});
+    mealState = {...mealState, suggestion: result};
+    toast(result.notice || `Neuer Vorschlag für ${fmt(day, {weekday: 'long'})}.`);
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    suggestingDay = null;
+    render();
+  }
+}
+
 function bindSuggestions() {
   app.querySelectorAll('[data-meal-suggest]').forEach(b => { b.onclick = suggestDialog; });
+  app.querySelectorAll('[data-suggest-other]').forEach(b => { b.onclick = () => suggestOther(b.dataset.suggestOther); });
   app.querySelectorAll('[data-suggest-accept]').forEach(b => {
     b.onclick = () => { b.disabled = true; acceptSuggestion([b.dataset.suggestAccept]); };
   });
@@ -171,7 +191,9 @@ function bindSuggestions() {
     };
   }
   app.querySelector('[data-suggest-sent]')?.addEventListener('click', () => {
-    dialog('An Claude gesendete Daten', 'Genau dieser Inhalt hat den NAS verlassen', `<pre class="sent-data">${esc(JSON.stringify(mealState.suggestion.sent, null, 2))}</pre>`);
+    const sent = [mealState.suggestion.sent, ...(mealState.suggestion.sent_days || [])].filter(Boolean);
+    dialog('An Claude gesendete Daten', 'Genau dieser Inhalt hat den NAS verlassen',
+      sent.map(item => `<pre class="sent-data">${esc(JSON.stringify(item, null, 2))}</pre>`).join(''));
   });
 }
 
@@ -180,18 +202,30 @@ function bindSuggestions() {
 // click. Cookidoo removes ingredients per recipe only. Each step is a single
 // verified change with a fresh revision; the first failure stops the run.
 
+// "Already shopped for this week" (E-18): no week change, no "add ingredients".
+function shoppedHTML(m) {
+  if (!m.shopped) return '';
+  return `<div class="panel-body week-switch"><span class="status green">Für diese Woche eingekauft</span>
+    <p class="small">${names[m.shopped.by] || ''} · ${deadlineText(m.shopped.at)}. Die Einkaufsliste wird für diese Woche nicht mehr vorbereitet.</p>
+    <div class="actions"><button class="btn ghost" data-meal-shopped="0">Zurücknehmen</button></div></div>`;
+}
+
 function weekSwitchSummary(m) {
+  if (m.shopped) return shoppedHTML(m);
   const plan = m.week_switch;
-  if (m.demo || !plan || plan.start !== mealStart) return '';
+  const done = '<button class="btn ghost" data-meal-shopped="1">Schon eingekauft</button>';
+  if (m.demo || !plan || plan.start !== mealStart) {
+    return m.snapshot ? `<div class="panel-body week-switch"><div class="actions">${done}</div></div>` : '';
+  }
   if (!plan.remove.length && !plan.add.length) {
-    return '<div class="panel-body week-switch"><span class="status green">Einkaufsliste passt zu dieser Woche</span></div>';
+    return `<div class="panel-body week-switch"><span class="status green">Einkaufsliste passt zu dieser Woche</span><div class="actions">${done}</div></div>`;
   }
   const parts = [];
   if (plan.remove.length) parts.push(`${plan.remove.length} ${plan.remove.length === 1 ? 'altes Rezept' : 'alte Rezepte'} entfernen`);
   if (plan.add.length) parts.push(`${plan.add.length} ${plan.add.length === 1 ? 'Rezept' : 'Rezepte'} hinzufügen`);
   return `<div class="panel-body week-switch">
     <p><b>Wochenwechsel:</b> ${parts.join(' · ')}. Eigene Artikel bleiben unverändert.</p>
-    <div class="actions"><button class="btn primary" data-week-switch>Einkaufsliste für diese Woche vorbereiten</button></div>
+    <div class="actions"><button class="btn primary" data-week-switch>Einkaufsliste für diese Woche vorbereiten</button>${done}</div>
   </div>`;
 }
 
@@ -292,4 +326,18 @@ function weekSwitchDone(count) {
 
 function bindWeekSwitch() {
   app.querySelector('[data-week-switch]')?.addEventListener('click', weekSwitchDialog);
+  app.querySelectorAll('[data-meal-shopped]').forEach(button => {
+    button.onclick = async () => {
+      const shopped = button.dataset.mealShopped === '1';
+      button.disabled = true;
+      try {
+        mealState = await api('/meals/shopped', {start: mealStart, shopped});
+        render();
+        toast(shopped ? 'Als eingekauft vermerkt.' : 'Zurückgenommen.');
+      } catch (error) {
+        toast(error.message);
+        button.disabled = false;
+      }
+    };
+  });
 }

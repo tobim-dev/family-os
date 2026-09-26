@@ -213,5 +213,75 @@ class SuggestionTests(unittest.TestCase):
         self.assertIn('Demo', result['notice'])
 
 
+    # --- single day (E-19) -------------------------------------------------
+
+    def other(self, day, use_ai=False, expect=200):
+        response = self.client.post('/api/meals/suggest/day', json={'start': self.start, 'day': day, 'use_ai': use_ai})
+        self.assertEqual(response.status_code, expect, response.text)
+        return response.json()
+
+    def test_one_day_is_replaced_from_the_pool_without_new_search(self):
+        self.meals.suggestions.api_key = ''
+        week = self.suggest()
+        before = self.chosen(week)
+        day = next(iter(before))
+        searches, details = len(self.remote.queries), len(self.remote.detail_calls)
+        result = self.other(day)
+        after = self.chosen(result)
+        self.assertNotEqual(after[day], before[day])
+        self.assertEqual({d: r for d, r in after.items() if d != day}, {d: r for d, r in before.items() if d != day})
+        self.assertNotIn(after[day], [r for d, r in before.items() if d != day])  # no duplicate in the week
+        self.assertNotIn(after[day], ('r10', 'r13', 'r16'))  # planned, meat, fish
+        self.assertEqual((len(self.remote.queries), len(self.remote.detail_calls)), (searches, details))
+        self.assertIn(before[day], result['rejected'])
+        # The rejected dish does not come back for that day.
+        again = self.chosen(self.other(day))
+        self.assertNotIn(again[day], (before[day], after[day]))
+
+    def test_used_up_pool_searches_again_and_then_reports_clearly(self):
+        self.meals.suggestions.api_key = ''
+        week = self.suggest()
+        day = next(d['day'] for d in week['days'] if d['recipe'])
+        seen = set()
+        for _ in range(10):
+            response = self.client.post('/api/meals/suggest/day', json={'start': self.start, 'day': day, 'use_ai': False})
+            if response.status_code != 200:
+                break
+            seen.add(self.chosen(response.json())[day])
+        self.assertEqual(response.status_code, 502)
+        self.assertIn('Kein weiteres passendes Gericht', response.json()['detail'])
+        self.assertTrue(any(q for q in self.remote.queries))
+
+    def test_claude_gets_one_day_and_only_the_other_dish_names(self):
+        self.claude_reply = lambda p: [{'tag': t['tag'], 'id': p['kandidaten'][i]['id'], 'grund': 'Abwechslung'} for i, t in enumerate(p['tage'])]
+        week = self.suggest()
+        day = next(d['day'] for d in week['days'] if d['recipe'])
+        names = sorted(d['recipe']['name'] for d in week['days'] if d['recipe'] and d['day'] != day)
+        self.requests.clear()
+        result = self.other(day, use_ai=True)
+        [(request, body)] = self.requests
+        sent = json.loads(body['messages'][0]['content'])
+        self.assertEqual(set(sent), {'tage', 'kandidaten', 'bereits_geplant'})
+        self.assertEqual(len(sent['tage']), 1)
+        self.assertEqual(sorted(sent['bereits_geplant']), names)
+        text = json.dumps(sent, ensure_ascii=False)
+        for forbidden in ('Tobi', 'Britta', 'Lina', '2026', 'r1'):
+            self.assertNotIn(forbidden, text)
+        self.assertEqual(result['sent_days'], [sent])
+        entry = next(d for d in result['days'] if d['day'] == day)
+        self.assertEqual(entry['source'], 'claude')
+
+    def test_single_day_respects_monthly_limit_and_planned_days(self):
+        week = self.suggest(use_ai=False)
+        day = next(d['day'] for d in week['days'] if d['recipe'])
+        self.meals.suggestions.monthly_calls = 0
+        result = self.other(day, use_ai=True)
+        self.assertIn('Limit', result['notice'])
+        self.assertEqual(self.requests, [])
+        self.remote.days[day] = [Row(id='r12', name='Tofu-Pfanne', total_time=1500)]
+        self.client.post('/api/meals/sync', json={'start': self.start})
+        self.assertIn('bereits in Cookidoo geplant', self.other(day, expect=409)['detail'])
+        self.assertIn('keinen Vorschlag', self.other('2026-11-02', expect=409)['detail'])
+
 if __name__ == '__main__':
     unittest.main()

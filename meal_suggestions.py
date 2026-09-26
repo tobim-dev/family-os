@@ -59,6 +59,7 @@ Regeln:
 - Nur vegetarische Gerichte: Enthält eine Zutat Fleisch oder Fisch, wähle den Kandidaten nicht.
 - Bevorzuge eiweißreiche Gerichte ("eiweiss_g" pro Portion, falls angegeben).
 - Sorge für Abwechslung bei Hauptzutat und Küchenstil über die Woche.
+- Falls "bereits_geplant" angegeben ist: Diese Gerichte stehen schon fest; wähle etwas mit anderer Hauptzutat.
 - Findest du für einen Tag keinen passenden Kandidaten, lass den Tag weg.
 Begründe jede Wahl in höchstens zwölf Wörtern auf Deutsch."""
 
@@ -225,10 +226,12 @@ class MealSuggestions:
 
     # --- Claude ----------------------------------------------------------
 
-    async def ask_claude(self, slots, candidates):
+    async def ask_claude(self, slots, candidates, fixed=()):
         aliases = {f'k{i + 1}': c for i, c in enumerate(candidates)}
         payload = {
             'tage': [{'tag': slot['label'], 'max_minuten': slot['max_minutes']} for slot in slots],
+            # Only recipe names of the other days (single-day re-suggestion), nothing else.
+            **({'bereits_geplant': list(fixed)} if fixed else {}),
             'kandidaten': [{'id': alias, 'name': c['name'], 'minuten': c['minutes'],
                             **({'eiweiss_g': c['protein']} if c['protein'] else {}), 'zutaten': c['ingredients'][:15]}
                            for alias, c in aliases.items()],
@@ -313,10 +316,112 @@ class MealSuggestions:
                          'recipe': {'id': c['id'], 'name': c['name'], 'total_time': c['minutes'] * 60, 'protein': c['protein'],
                                     'veg': c['veg'], 'image': images.get(c['id'])}})
         result = {'start': str(start), 'created': time.time(), 'source': source, 'notice': notice, 'sent': sent,
-                  'model': self.model if source == 'claude' else None, 'days': days}
+                  'model': self.model if source == 'claude' else None, 'days': days,
+                  # Local only: candidate pool and wishes for re-suggesting single days.
+                  'pool': [c['id'] for c in candidates], 'topics': {c['id']: c['topic'] for c in candidates},
+                  'wishes': wishes, 'rejected': []}
         with self.db() as conn:
             conn.execute('INSERT OR REPLACE INTO meal_cache VALUES(?,?,?)', ('suggestion:' + str(start), json.dumps(result, ensure_ascii=False), time.time()))
         return result
+
+    # --- single day ------------------------------------------------------
+
+    def save(self, start, suggestion):
+        with self.db() as conn:
+            conn.execute('INSERT OR REPLACE INTO meal_cache VALUES(?,?,?)',
+                         ('suggestion:' + str(start), json.dumps(suggestion, ensure_ascii=False), time.time()))
+
+    def pool(self, suggestion, slot, excluded):
+        """Remaining candidates from the week's pool (details cached on the NAS)."""
+        result = []
+        for rid in suggestion.get('pool', []):
+            detail = self.cached_detail(rid)
+            if not detail or rid in excluded or not detail.get('minutes') or detail['minutes'] > slot['max_minutes']:
+                continue
+            veg = vegetarian(detail)
+            if veg != 'no':
+                result.append({**detail, 'veg': veg, 'topic': suggestion.get('topics', {}).get(rid, '')})
+        return result
+
+    async def suggest_day(self, start, day, use_ai):
+        """Replace the suggestion for one day (E-19). Other days stay unchanged."""
+        suggestion = self.stored(start)
+        entry = next((d for d in (suggestion or {}).get('days', []) if d['day'] == day), None)
+        if not entry:
+            raise HTTPException(409, 'Für diesen Tag gibt es keinen Vorschlag. Bitte zuerst die Woche vorschlagen lassen.')
+        snapshot = self.meals.status(start)['snapshot']
+        if snapshot and any(d['day'] == day and (d['recipes'] or d['custom_ids']) for d in snapshot['days']):
+            raise HTTPException(409, 'Dieser Tag ist bereits in Cookidoo geplant.')
+        weekday = date.fromisoformat(day).weekday()
+        slot = {'day': day, 'label': WEEKDAYS[weekday], 'max_minutes': entry['max_minutes']}
+        others = [d for d in suggestion['days'] if d['day'] != day and d.get('recipe')]
+        rejected = set(suggestion.get('rejected', []))
+        if entry.get('recipe'):
+            rejected.add(entry['recipe']['id'])
+        planned = {r['id'] for d in (snapshot or {}).get('days', []) for r in d['recipes']}
+        excluded = rejected | planned | {d['recipe']['id'] for d in others} | self.history(start)
+        candidates = self.pool(suggestion, slot, excluded)
+        if not candidates:
+            # Pool used up: search Cookidoo again (same wishes, this day's time limit).
+            async with self.meals.adapter() as api:
+                candidates = await self.candidates(api, start, slot['max_minutes'], suggestion.get('wishes', []), excluded)
+            candidates = [c for c in candidates if c['id'] not in excluded]
+            suggestion['pool'] = list(dict.fromkeys(suggestion.get('pool', []) + [c['id'] for c in candidates]))
+            suggestion.setdefault('topics', {}).update({c['id']: c['topic'] for c in candidates})
+        if not candidates:
+            raise HTTPException(502, 'Kein weiteres passendes Gericht gefunden. Bitte andere Wünsche oder mehr Kochzeit versuchen.')
+        choice, sent, notice = None, None, ''
+        if use_ai:
+            if not self.api_key:
+                notice = 'Kein Claude-Schlüssel hinterlegt; lokal ausgewählt.'
+            elif self.usage()['calls'] >= self.monthly_calls:
+                notice = f'Monatliches Limit von {self.monthly_calls} Claude-Vorschlägen erreicht; lokal ausgewählt.'
+            else:
+                self.meals.progress('suggest_claude')
+                try:
+                    picked, sent = await self.ask_claude([slot], candidates[:MAX_CANDIDATES], [d['recipe']['name'] for d in others])
+                    choice = picked.get(day)
+                    if not choice:
+                        notice = 'Claude hat kein passendes Gericht gewählt; lokal ausgewählt.'
+                except Exception as error:
+                    LOG.warning('Claude-Tagesvorschlag fehlgeschlagen reason=%s', type(error).__name__)
+                    notice = 'Claude war nicht erreichbar oder antwortete ungültig; lokal ausgewählt.'
+        if not choice:
+            choice = local_plan([slot], candidates, taken=excluded).get(day)
+        if not choice:
+            raise HTTPException(502, 'Kein weiteres passendes Gericht gefunden.')
+        c = next(x for x in candidates if x['id'] == choice['id'])
+        image = self.meals.images.available([c['id']]).get(c['id'])
+        entry.update({'reason': choice['reason'], 'source': choice['source'],
+                      'recipe': {'id': c['id'], 'name': c['name'], 'total_time': c['minutes'] * 60, 'protein': c['protein'],
+                                 'veg': c['veg'], 'image': image}})
+        suggestion['rejected'] = sorted(rejected)
+        suggestion['notice'] = notice
+        if sent:
+            suggestion.setdefault('sent_days', []).append(sent)
+        self.save(start, suggestion)
+        return suggestion
+
+    def demo_day(self, start, day):
+        """Demo: swap one day for another sample dish; no Cookidoo or Claude."""
+        suggestion = self.stored(start)
+        entry = next((d for d in (suggestion or {}).get('days', []) if d['day'] == day), None)
+        if not entry:
+            raise HTTPException(409, 'Für diesen Tag gibt es keinen Vorschlag.')
+        samples = [('Linsen-Bolognese mit Vollkornspaghetti', 35, 23), ('Tofu-Curry mit Brokkoli', 30, 25),
+                   ('Kichererbsen-Spinat-Pfanne', 25, 18), ('Bohnen-Chili sin Carne', 40, 20)]
+        used = {d['recipe']['name'] for d in suggestion['days'] if d.get('recipe')} | set(suggestion.get('rejected', []))
+        options = [s for s in samples if s[0] not in used and s[1] <= entry['max_minutes']]
+        if not options:
+            raise HTTPException(409, 'Demo: keine weiteren Beispielgerichte.')
+        name, minutes, protein = options[0]
+        if entry.get('recipe'):
+            suggestion.setdefault('rejected', []).append(entry['recipe']['name'])
+        entry.update({'reason': f'{minutes} Min., {protein} g Eiweiß', 'source': 'lokal',
+                      'recipe': {'id': 'demo-x' + str(len(used)), 'name': name, 'total_time': minutes * 60,
+                                 'protein': protein, 'veg': 'likely', 'image': None}})
+        self.save(start, suggestion)
+        return suggestion
 
     def demo(self, start, weekday_minutes, weekend_minutes, planned=()):
         """Local-only preview for the demo; no Cookidoo or Claude calls."""

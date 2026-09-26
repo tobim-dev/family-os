@@ -87,7 +87,9 @@ class MealReminders:
                             due, instant)
 
             shop_task = self.task(conn, 'shop', start)
-            ready = self.list_ready(snapshot)
+            # Already shopped for this week (E-18): nothing left to prepare.
+            shopped = conn.execute('SELECT 1 FROM metadata WHERE key=?', ('meal_shopped:' + str(start),)).fetchone()
+            ready = bool(shopped) or self.list_ready(snapshot)
             if shop_task and ready:
                 self.close(conn, shop_task)
             elif not shop_task and not ready and today == friday and instant.hour >= 9:

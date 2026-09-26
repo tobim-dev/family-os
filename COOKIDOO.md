@@ -58,6 +58,13 @@ Danach folgt der Hinweis, die Vorräte durchzugehen und Vorhandenes abzuhaken.
 Cookidoo entfernt Zutaten nur pro Rezept, nicht einzeln. Zutaten, die ein verbleibendes Rezept
 ebenfalls braucht, bleiben erhalten; ihre Mengenangabe darf Cookidoo dabei neu berechnen.
 
+## Schon eingekauft
+
+**Schon eingekauft** (unter „Rezepte für den Einkauf“) vermerkt für die angezeigte Woche, dass der
+Einkauf erledigt ist, etwa wenn die Liste danach in Cookidoo schon geleert wurde. Dann erscheinen
+weder der Wochenwechsel noch „Zutaten hinzufügen“, und die Freitags-Aufgabe entfällt. Cookidoo
+wird dabei nicht verändert. **Zurücknehmen** hebt den Vermerk auf.
+
 ## Erinnerungen
 
 Bei verbundenem Cookidoo erhält Tobi donnerstags ab 9 Uhr die Aufgabe **Essen planen**
@@ -81,6 +88,12 @@ Cookidoo-IDs, Verläufe oder Wünsche. „Gesendete Daten“ zeigt den genauen I
 geprüft; ungültige Auswahl wird verworfen und vom NAS ergänzt. Ohne Schlüssel, bei Fehlern oder nach dem
 Monatslimit (`FOS_CLAUDE_MONTHLY_CALLS`, Vorgabe 40) entsteht ein lokaler Vorschlag. Modell über
 `FOS_CLAUDE_MODEL` (Vorgabe `claude-haiku-4-5-20251001`).
+
+**Anderes Gericht** tauscht den Vorschlag für einen einzelnen Tag aus; die übrigen Tage bleiben.
+Abgelehnte Gerichte kommen in dieser Woche nicht wieder. Gewählt wird zuerst aus den schon geprüften
+Kandidaten der Woche, erst danach wird Cookidoo erneut durchsucht. War der Wochenvorschlag mit Claude,
+entscheidet Claude auch hier; zusätzlich zu den Kandidaten gehen nur die Namen der übrigen Gerichte
+der Woche mit, damit sich die Hauptzutat nicht wiederholt („Gesendete Daten“ zeigt beides).
 
 Vorschläge ändern Cookidoo nicht. „Übernehmen“ bzw. „Alle übernehmen“ nutzt den abgesicherten Weg
 mit Revisionsprüfung je Rezept und hält bei einer Abweichung an.

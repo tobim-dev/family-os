@@ -111,6 +111,17 @@ class SearchInput(BaseModel):
     max_minutes: int = Field(default=45, ge=5, le=180)
 
 
+class ShoppedInput(BaseModel):
+    start: str
+    shopped: bool
+
+
+class SuggestDayInput(BaseModel):
+    start: str
+    day: date
+    use_ai: bool = False
+
+
 class SuggestInput(BaseModel):
     start: str
     weekday_minutes: int = Field(default=45, ge=15, le=120)
@@ -265,8 +276,15 @@ class Meals:
         return {'diagnostic': diagnostic, 'error': diagnostic['detail'] if diagnostic else error[0] if error else None, 'connected': connected and not self.demo, 'demo': self.demo, 'snapshot': data, 'revision': revision(data) if data else None,
                 'updated': row['updated'] if row else None, 'reviews': reviews, 'images': self.images.available(recipe_ids),
                 'suggestion': self.suggestions.stored(start), 'ai': self.suggestions.info(),
+                'shopped': self.shopped(start),
                 'week_switch': shopping_week.plan(data) if data else None,
                 'shopping_updated': latest['updated'] if latest else None}
+
+    def shopped(self, start):
+        """Marked as already shopped for this week (E-18): who and when, or None."""
+        with self.db() as conn:
+            row = conn.execute('SELECT value FROM metadata WHERE key=?', ('meal_shopped:' + str(start),)).fetchone()
+        return json.loads(row[0]) if row else None
 
     async def sync(self, start):
         async with self.adapter() as api:
@@ -508,6 +526,30 @@ class Meals:
                     conn.execute('INSERT OR REPLACE INTO meal_cache VALUES(?,?,?)', ('suggestion:' + str(start), dump(result), time.time()))
                 return result
             return self.run(self.suggestions.suggest(start, data.weekday_minutes, data.weekend_minutes, wishes, data.use_ai), timeout=150)
+
+        @app.post('/api/meals/suggest/day')
+        def suggest_day(data: SuggestDayInput, request: Request):
+            actor(request)
+            start = week_start(data.start)
+            if self.demo:
+                return self.suggestions.demo_day(start, str(data.day))
+            return self.run(self.suggestions.suggest_day(start, str(data.day), data.use_ai), timeout=150)
+
+        @app.post('/api/meals/shopped')
+        def shopped(data: ShoppedInput, request: Request):
+            user = actor(request)
+            start = week_start(data.start)
+            key = 'meal_shopped:' + str(start)
+            with self.db() as conn:
+                if data.shopped:
+                    conn.execute('INSERT OR REPLACE INTO metadata VALUES(?,?)',
+                                 (key, dump({'by': user, 'at': datetime.now(TZ).isoformat(timespec='seconds')})))
+                else:
+                    conn.execute('DELETE FROM metadata WHERE key=?', (key,))
+                conn.execute('INSERT INTO audit(actor,action,details,created) VALUES(?,?,?,?)',
+                             (user, 'Für die Woche eingekauft' if data.shopped else 'Einkauf zurückgenommen',
+                              f'Woche ab {start.strftime("%d.%m.")}', datetime.now(TZ).isoformat()))
+            return self.status(start)
 
         @app.get('/api/meals/image/{rid}')
         def image(rid: str, request: Request):

@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-183 Tests bestanden (`python -m unittest discover -s tests -v`):
+190 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -141,6 +141,16 @@ Tage ohne Krippe (Migration 3):
 - Nur Werktage, keine Überschneidungen, höchstens 31 Tage; Monatsentwurf lässt die Tage aus.
 - Browser (1300 px, 390 px): Eintragen als Tobi, Bestätigen als Britta, Tage „entfällt“,
   Verteilung rechnet mit weniger Werktagen; keine Überbreite.
+
+Schon eingekauft (E-18) und Anderes Gericht (E-19):
+
+- „Schon eingekauft“ gilt je Woche, speichert Person und Zeit, ist zurücknehmbar und schreibt nichts nach Cookidoo;
+  die Freitags-Aufgabe entsteht dann nicht bzw. schließt sich.
+- Anderes Gericht: nur der gewählte Tag ändert sich, keine Doppelung, abgelehnte Gerichte kommen nicht wieder,
+  aus dem vorhandenen Kandidatenpool ohne neuen Cookidoo-Abruf; ist er aufgebraucht, neue Suche, danach klare Meldung.
+- Mit Claude: genau ein Tag, zusätzlich nur `bereits_geplant` (Rezeptnamen), keine Namen/Daten/IDs; Monatslimit
+  führt zur lokalen Auswahl; bereits in Cookidoo geplanter Tag wird abgewiesen.
+- Browser (Demo, 390 px): Gericht eines Tages getauscht, Woche als eingekauft markiert.
 
 Erinnerungen Essen und Einkauf (E-02):
 

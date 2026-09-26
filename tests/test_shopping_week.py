@@ -234,6 +234,19 @@ class WeekSwitchTests(unittest.TestCase):
         self.step('ingredients_add', 'r4', expect=409)
         self.assertEqual(self.remote.calls, [])
 
+    def test_already_shopped_is_stored_per_week_and_can_be_undone(self):
+        self.sync()
+        response = self.client.post('/api/meals/shopped', json={'start': self.start, 'shopped': True})
+        self.assertEqual(response.status_code, 200)
+        shopped = response.json()['shopped']
+        self.assertEqual(shopped['by'], 'tobi')
+        other_week = self.client.get('/api/meals', params={'start': '2026-11-07'}).json()
+        self.assertIsNone(other_week['shopped'])
+        self.assertEqual(self.remote.calls, [])  # nothing written to Cookidoo
+        undone = self.client.post('/api/meals/shopped', json={'start': self.start, 'shopped': False}).json()
+        self.assertIsNone(undone['shopped'])
+        self.assertEqual(self.client.post('/api/meals/shopped', json={'start': '2026-11-01', 'shopped': True}).status_code, 422)
+
 
 class PlanTests(unittest.TestCase):
     def snapshot(self, **changes):

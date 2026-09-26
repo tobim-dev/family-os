@@ -79,6 +79,21 @@ class MealReminderTests(unittest.TestCase):
         self.reminders.periodic(self.at(2, 11))
         self.assertEqual(self.tasks()[0]['state'], 'superseded')
 
+    def test_already_shopped_week_needs_no_list_preparation(self):
+        self.cache(snapshot(planned=7, on_list=['r99']))
+        with self.db() as conn:
+            conn.execute("INSERT INTO metadata VALUES('meal_shopped:2026-10-03','{}')")
+        self.reminders.periodic(self.at(2, 9))
+        self.assertEqual(self.tasks(), [])
+
+    def test_marking_shopped_closes_open_list_task(self):
+        self.cache(snapshot(planned=7, on_list=['r99']))
+        self.reminders.periodic(self.at(2, 9))
+        with self.db() as conn:
+            conn.execute("INSERT INTO metadata VALUES('meal_shopped:2026-10-03','{}')")
+        self.reminders.periodic(self.at(2, 10))
+        self.assertEqual(self.tasks()[0]['state'], 'superseded')
+
     def test_completed_task_is_not_recreated(self):
         self.reminders.periodic(self.at(1, 9))  # no snapshot yet: still reminds
         with self.db() as conn:
