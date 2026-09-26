@@ -24,6 +24,7 @@ from migrations import migrate
 from nanny import Nanny
 from backups import AutoBackup
 from meal_reminders import MealReminders
+from closures import Closures, CONFIRMED_DAYS_SQL
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -212,6 +213,8 @@ def create_app(db_path=None, demo=None, origin=None):
     integrations.backups = backups
     integrations.periodic.append(backups.periodic)
     integrations.periodic.append(MealReminders(db, demo).periodic)
+    closures = Closures(db)
+    closures.routes(app, identity, validate_planning, require_household)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):
@@ -298,7 +301,8 @@ def create_app(db_path=None, demo=None, origin=None):
             planning = planning_mode(conn, request)
             history = [dict(r) for r in conn.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 30')]
             nanny_shifts = [dict(r) for r in conn.execute("SELECT id,day,start,end,state FROM nanny_shifts WHERE day BETWEEN ? AND ? AND state IN ('wish','requested','confirmed') ORDER BY day,start", (str(first), str(last)))]
-        return {'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
+            closed_days = closures.listing(conn, first, last)
+        return {'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
 
     @app.post('/api/proposals')
     def propose(data: ProposalInput, request: Request):
@@ -309,6 +313,8 @@ def create_app(db_path=None, demo=None, origin=None):
             actor = identity(request, conn)
             require_household(conn)
             joint = validate_planning(conn, request, data.planning_session)
+            if conn.execute(f'SELECT 1 FROM ({CONFIRMED_DAYS_SQL}) WHERE day=?', (str(data.day),)).fetchone():
+                raise HTTPException(409, 'An diesem Tag ist keine Krippenbetreuung eingetragen. Bitte zuerst die Eintragung aufheben.')
             conn.execute('INSERT OR IGNORE INTO appointments(day,kind) VALUES(?,?)', (str(data.day), data.kind))
             slot = conn.execute('SELECT * FROM appointments WHERE day=? AND kind=?', (str(data.day), data.kind)).fetchone()
             if slot['version'] != data.expected_version:
@@ -394,9 +400,10 @@ def create_app(db_path=None, demo=None, origin=None):
             if conn.execute('SELECT id FROM appointments WHERE day BETWEEN ? AND ?', (str(first), str(last))).fetchone():
                 raise HTTPException(409, 'Der Monat enthält bereits Termine. Bitte einzeln ergänzen.')
             created = 0
+            free = {r[0] for r in conn.execute('SELECT day FROM day_closures WHERE day BETWEEN ? AND ?', (str(first), str(last)))}
             day = first
             while day <= last:
-                if day.weekday() < 5:
+                if day.weekday() < 5 and str(day) not in free:
                     for kind in ('bring', 'pickup'):
                         # Alternate responsibilities across days, five each per complete week.
                         owner = 'tobi' if (day.weekday() + (kind == 'pickup')) % 2 == 0 else 'britta'

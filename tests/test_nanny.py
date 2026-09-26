@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from fastapi.testclient import TestClient
 
 from app import create_app
-from migrations import migrate, statements, BASELINE
+from migrations import migrate, statements, BASELINE, MIGRATIONS
 from nanny import amount_cents
 
 TZ = ZoneInfo('Europe/Berlin')
@@ -280,7 +280,7 @@ class NannyMigrationTests(unittest.TestCase):
                 conn.execute("INSERT INTO tasks(owner,title,details,due,created) VALUES('tobi','Arbeitskalender aktualisieren','d','2026-10-01','x')")
                 conn.execute('PRAGMA user_version=1')
             conn.close()
-            self.assertEqual(migrate(path), [2])
+            self.assertEqual(migrate(path, MIGRATIONS[:1]), [2])  # the migration under test only
             with sqlite3.connect(path) as conn:
                 self.assertEqual(conn.execute('SELECT title,nanny_shift_id FROM tasks').fetchall(), [('Arbeitskalender aktualisieren', None)])
             conn.close()

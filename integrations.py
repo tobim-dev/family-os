@@ -202,9 +202,11 @@ class Integrations:
     def reconcile(self):
         with self.db() as conn:
             desired = {}
-            for row in conn.execute('SELECT * FROM appointments WHERE owner IS NOT NULL'):
+            # Days without nursery care suspend their assignments (closures.py).
+            closed = "SELECT day FROM day_closures WHERE state='confirmed'"
+            for row in conn.execute(f'SELECT * FROM appointments WHERE owner IS NOT NULL AND day NOT IN ({closed})'):
                 desired['slot-' + str(row['id'])] = dump(event_body(row, False, self.installation))
-            for row in conn.execute("SELECT p.*,a.day,a.kind FROM proposals p JOIN appointments a ON a.id=p.appointment_id WHERE p.state='pending'"):
+            for row in conn.execute(f"SELECT p.*,a.day,a.kind FROM proposals p JOIN appointments a ON a.id=p.appointment_id WHERE p.state='pending' AND a.day NOT IN ({closed})"):
                 desired['proposal-' + str(row['id'])] = dump(event_body(row, True, self.installation))
             name = conn.execute("SELECT value FROM metadata WHERE key='nanny_name'").fetchone()
             for row in conn.execute("SELECT * FROM nanny_shifts WHERE state IN ('requested','confirmed')"):
@@ -298,7 +300,7 @@ class Integrations:
                     periods.append(('week', instant.date() + timedelta(days=1), 7))
                 for kind, start, days in periods:
                     end = start + timedelta(days=days - 1)
-                    slots = conn.execute('SELECT day,kind,start,end FROM appointments WHERE owner=? AND day BETWEEN ? AND ? ORDER BY day,start', (owner, str(start), str(end))).fetchall()
+                    slots = conn.execute("SELECT day,kind,start,end FROM appointments WHERE owner=? AND day BETWEEN ? AND ? AND day NOT IN (SELECT day FROM day_closures WHERE state='confirmed') ORDER BY day,start", (owner, str(start), str(end))).fetchall()
                     tasks = conn.execute("SELECT COUNT(*) FROM tasks WHERE owner=? AND state='open' AND substr(due,1,10)<=?", (owner, str(end))).fetchone()[0]
                     pending = conn.execute("SELECT COUNT(*) FROM proposals WHERE creator!=? AND state='pending'", (owner,)).fetchone()[0]
                     nanny = conn.execute("SELECT day,start,end FROM nanny_shifts WHERE state='confirmed' AND day BETWEEN ? AND ? ORDER BY day,start", (str(start), str(end))).fetchall()

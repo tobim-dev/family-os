@@ -59,7 +59,7 @@ aktivem gemeinsamem Planungsmodus und monatlicher Ansicht „Gemeinsam getragen�
 | B-02 | Auf die Arbeitskalender darf wegen Company Policy nicht zugegriffen werden. | Rahmen: keine Firmenanbindung oder verdeckte Übernahme beruflicher Kalenderdaten vorsehen. |
 | B-03 | Den bestehenden gemeinsam genutzten Google-Kalender verwenden, keinen neuen separaten Familienkalender voraussetzen. | Vorhanden; Verbindung vom Nutzer bestätigt. |
 | B-04 | Betreuung montags bis freitags; offizielle Krippenzeit 08:00–17:00 Uhr. Übliche Abholung etwa 16:15 Uhr, also vor dem offiziellen Ende. | Rahmen: tatsächliche Betreuung und Arbeitskalenderblock unterscheiden. |
-| B-05 | Pro vollständiger Betreuungswoche zehn Wege: fünfmal bringen, fünfmal abholen. Möglichst gleichmäßig aufteilen, typischerweise fünf Wege je Person; keine festen Wochentage. | Teilweise: Verteilungslogik vorhanden; Ausnahmen wie Schließtage noch zu konkretisieren. |
+| B-05 | Pro vollständiger Betreuungswoche zehn Wege: fünfmal bringen, fünfmal abholen. Möglichst gleichmäßig aufteilen, typischerweise fünf Wege je Person; keine festen Wochentage. | Teilweise: Verteilungslogik vorhanden; Tage ohne Krippe (Schließtag, Feiertag, Urlaub, Krankheit) als vorläufige Implementierungsentscheidung (Abschnitt 9). Brittas Zeitblöcke und Lastgewichtung weiter offen (O-02). |
 | B-06 | Abholen bedeutet normalerweise auch Nachmittagsbetreuung bis zum Zubettgehen; Nanny-Betreuung ist eine Ausnahme. | Teilweise: Abholungen separat sichtbar; keine festgelegte numerische Gewichtung oder Nanny-Verrechnung. |
 | B-07 | „Gemeinsam getragen“ auf Monatsbasis statt Wochenbasis darstellen. | Vorhanden: spätere ausdrückliche Änderung; Wochenregel bleibt Orientierungswert, Auswertung ist monatlich. |
 | B-08 | Arbeitskalendereinträge heißen „Lina bringen“ bzw. „Lina abholen“ und werden dort als abwesend markiert. | Teilweise: manuelle Pflege durch die Eltern; keine automatische Kontrolle des Firmenkalenders. |
@@ -209,7 +209,8 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | --- | --- |
 | Technik | FastAPI, SQLite, einfache Weboberfläche; persistente Daten und Schlüssel im NAS-Datenverzeichnis. README.md und UNRAID.md. |
 | Gemeinsamer Planungsmodus | Bewusster Start, pro Anmeldung, Laufzeit zwei Stunden, endet bei Abmeldung oder manuellem Beenden. Nutzer wünschte den Modus; diese konkrete Geltung/Dauer ist Ausgestaltung. |
-| Faire Monatsverteilung | Werktage × zwei Wege als Bezugsgröße, halbe Wegezahl als Ziel, Abholungen getrennt; keine komplette Lastgewichtung. |
+| Faire Monatsverteilung | Werktage × zwei Wege als Bezugsgröße, halbe Wegezahl als Ziel, Abholungen getrennt; keine komplette Lastgewichtung. Bestätigte Tage ohne Krippe zählen nicht. |
+| Tage ohne Krippe | Zeitraum mit Grund (Krippe geschlossen, Feiertag, Urlaub, Lina krank) eintragen; die andere Person bestätigt (im gemeinsamen Planungsmodus sofort). Bestätigte Tage setzen Bringen/Abholen aus (nicht im Kalender, nicht in Verteilung und Abendübersicht) mit Aufgabe zum Arbeitskalender; Aufheben stellt den vorherigen Plan wieder her. Monatsentwurf lässt sie aus. Feiertage werden nicht automatisch ermittelt (Bundesland nicht festgelegt). Vorläufige Implementierungsentscheidung zu O-02. |
 | Erinnerungszeiten | Aktuell Tages-/Wochenübersicht 19 Uhr, normale Erinnerungen ab 9 Uhr, normale Nachtruhe 21–7 Uhr. Sonntagabend/Vorabend und sofortige Terminabstimmungen sind Nutzeranforderungen; die übrigen exakten Uhrzeiten sind hier als Implementierungsstand vermerkt. Essensplanung Do 9 Uhr, Einkaufsliste Fr 9 Uhr (E-02). |
 | Google | Eigene Family-OS-Einträge im bestehenden Zielkalender; kein Import beliebiger fremder Google-Termine. Ob solche Termine künftig in einer Gesamtübersicht benötigt werden, ist offen. |
 | Nanny im Kalender | Angefragte Termine vorläufig, bestätigte fest im bestehenden Gemeinschaftskalender, ohne Zeitblockade; Wünsche bleiben lokal, Absagen werden entfernt. Vorläufige Implementierungsentscheidung zu O-04. |
@@ -223,7 +224,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | ID | Noch zu klären / zu prüfen | Betroffene Anforderungen |
 | --- | --- | --- |
 | O-01 | Brittas Rückmeldung nachholen, ohne den bisherigen Aufschub als Zustimmung zu allen Details zu behandeln. | Z-08, K-01–K-07 |
-| O-02 | Brittas Zeitblöcke, Urlaub, Feiertage, Krankheit und Krippenschließtage; Bewertung ungleicher Abhol-/Nachmittagslast und Nanny-Ausnahmen. | B-04–B-09 |
+| O-02 | Teilweise umgesetzt: Tage ohne Krippe (Abschnitt 9, vorläufig). Offen: Brittas Zeitblöcke, Bewertung ungleicher Abhol-/Nachmittagslast und Nanny-Ausnahmen, automatische Feiertage (Bundesland). | B-04–B-09 |
 | O-03 | Geklärt 26.09.2026 → N-08. | N-01–N-03 |
 | O-04 | Weitgehend geklärt 26.09.2026 → N-09, N-10. Offen: Monatsunterlagen für den Minijob, Korrektur nach Überweisung. Nanny im Google-Kalender als vorläufige Implementierungsentscheidung umgesetzt (Abschnitt 9). | N-04–N-07 |
 | O-05 | Teilweise umgesetzt (E-15) mit vorläufigen Implementierungsregeln: Vegetarisch per Zutaten-/Kategorieprüfung (keine Garantie, Hinweis „bitte prüfen“), keine Wiederholung aus vier Wochen, Mo–Fr 45 / Sa–So 90 Minuten als änderbare Vorgabe. Offen: weitere Familienpräferenzen, Abneigungen, Wiederholungsfenster bestätigen. | E-04–E-08 |

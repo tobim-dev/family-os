@@ -86,6 +86,20 @@ CREATE TABLE nanny_statements(
  paid_by TEXT REFERENCES users(id));
 ALTER TABLE tasks ADD COLUMN nanny_shift_id INTEGER REFERENCES nanny_shifts(id);
 '''),
+    (3, 'Schließtage, Feiertage, Urlaub und Krankheit', '''
+CREATE TABLE day_closures(
+ id INTEGER PRIMARY KEY,
+ day TEXT NOT NULL UNIQUE,
+ kind TEXT NOT NULL CHECK(kind IN ('closed','holiday','vacation','sick')),
+ note TEXT NOT NULL DEFAULT '',
+ batch TEXT NOT NULL,
+ state TEXT NOT NULL DEFAULT 'pending' CHECK(state IN ('pending','confirmed')),
+ creator TEXT NOT NULL REFERENCES users(id),
+ created TEXT NOT NULL,
+ confirmed_by TEXT REFERENCES users(id),
+ confirmed TEXT);
+CREATE INDEX day_closures_batch ON day_closures(batch);
+'''),
 ]
 
 LATEST = 1 + len(MIGRATIONS)

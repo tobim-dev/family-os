@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-135 Tests bestanden (`python -m unittest discover -s tests -v`):
+144 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -56,6 +56,18 @@ Nanny-Planung (Migration 2):
 - Monatsplanung: mehrere Tage atomar (Überschneidung → nichts gespeichert), nur ein Monat,
   eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
 - Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
+
+Tage ohne Krippe (Migration 3):
+
+- Migration mit bestehenden Nanny-, Aufgaben- und Termindaten verlustfrei; Sicherung vorher.
+- Eintragung braucht die Bestätigung der anderen Person (im gemeinsamen Modus sofort);
+  Ablehnen/Zurückziehen lässt den Plan unverändert, jeweils nur durch die berechtigte Person.
+- Bestätigte Tage: Wege nicht im Google-Kalender und nicht in der Abendübersicht,
+  Aufgabe „Arbeitskalender aktualisieren“ für die betroffenen Eltern, keine neuen Vorschläge.
+- Aufheben stellt die zuvor bestätigte Zuordnung und die Kalendereinträge wieder her.
+- Nur Werktage, keine Überschneidungen, höchstens 31 Tage; Monatsentwurf lässt die Tage aus.
+- Browser (1300 px, 390 px): Eintragen als Tobi, Bestätigen als Britta, Tage „entfällt“,
+  Verteilung rechnet mit weniger Werktagen; keine Überbreite.
 
 Erinnerungen Essen und Einkauf (E-02):
 
@@ -147,7 +159,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-Elf JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel und Nanny-WhatsApp-Texte bestehen. Oberfläche, neuer
+14 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe und Nanny-WhatsApp-Texte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft
