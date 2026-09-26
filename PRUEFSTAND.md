@@ -73,10 +73,12 @@ Gebündelte Arbeitskalender-Aufgabe (B-18, Migration 6):
 Outlook-Übergabe (B-17):
 
 - Outlook-Knöpfe nur an Einträgen zum Eintragen in der eigenen Aufgabe, nicht beim Entfernen.
-- Zeiten: App-Link in Ortszeit, Web-Link in UTC, korrekt über Sommer-/Winterzeit.
+- Zeiten: beide Links in UTC (App-Link ohne „Z“, weil die Outlook-App zonenlose Zeiten als UTC liest),
+  korrekt über Sommer-/Winterzeit.
 - Links enthalten nur Titel und Zeit, Leerzeichen als %20 (kein „+“ im Betreff).
 - Browser (390 px): Vorschlag bestätigt → Aufgabe mit „In Outlook eintragen“.
-- Nicht geprüft: Verhalten der Outlook-App auf echten iPhones (inoffizielle Links, evtl. Intune-Richtlinie).
+- Auf Tobis iPhone (26.09.2026): Outlook-App öffnet den vorausgefüllten Termin; Zeit lag eine Stunde zu spät
+  (Ortszeit als UTC gelesen) → korrigiert, Bestätigung nach dem Update offen. Brittas iPhone und „Im Web“ ungetestet.
 
 Offline-Lesekopie (E-13, E-17):
 
@@ -230,7 +232,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-21 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
+22 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft

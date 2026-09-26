@@ -13,9 +13,11 @@ function outlookQuery(params) {
   }).join('&');
 }
 
+// The Outlook app reads times without zone as UTC (tested 26.09.2026: 15:30
+// local showed as 16:30). It therefore gets the UTC time, without "Z".
 function outlookLinks(block) {
   const app = 'ms-outlook://events/new?' + outlookQuery({
-    title: block.title, start: block.start_local, end: block.end_local});
+    title: block.title, start: block.start_utc.replace(/Z$/, ''), end: block.end_utc.replace(/Z$/, '')});
   const web = 'https://outlook.office.com/calendar/deeplink/compose?' + outlookQuery({
     path: '/calendar/action/compose', rru: 'addevent', subject: block.title,
     startdt: block.start_utc, enddt: block.end_utc});

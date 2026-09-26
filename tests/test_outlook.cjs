@@ -13,14 +13,15 @@ function context(user) {
 const block = {title: 'Lina abholen', start_local: '2027-03-29T15:45:00', end_local: '2027-03-29T17:30:00',
                start_utc: '2027-03-29T13:45:00Z', end_utc: '2027-03-29T15:30:00Z'};
 
-test('app link uses local time, web link uses UTC, text is encoded', () => {
+test('both links carry UTC (app without Z), text is encoded', () => {
   const links = context('britta').outlookLinks(block);
   const app = new URL(links.app);
-  assert.equal(links.app, 'ms-outlook://events/new?title=Lina%20abholen&start=2027-03-29T15:45:00&end=2027-03-29T17:30:00');
+  // The Outlook app reads zone-less times as UTC (15:45 CEST = 13:45 UTC).
+  assert.equal(links.app, 'ms-outlook://events/new?title=Lina%20abholen&start=2027-03-29T13:45:00&end=2027-03-29T15:30:00');
   assert.equal(app.protocol, 'ms-outlook:');
   assert.equal(app.searchParams.get('title'), 'Lina abholen');
-  assert.equal(app.searchParams.get('start'), '2027-03-29T15:45:00');
-  assert.equal(app.searchParams.get('end'), '2027-03-29T17:30:00');
+  assert.equal(app.searchParams.get('start'), '2027-03-29T13:45:00');
+  assert.equal(app.searchParams.get('end'), '2027-03-29T15:30:00');
   const web = new URL(links.web);
   assert.equal(web.host, 'outlook.office.com');
   assert.equal(web.searchParams.get('subject'), 'Lina abholen');
@@ -43,4 +44,12 @@ test('bundled task lists every entry; buttons only for own entries to add', () =
   assert.doesNotMatch(other, /In Outlook eintragen/);
   assert.equal(context('britta').outlookActions({owner: 'britta'}), '');
   assert.deepEqual(JSON.parse(JSON.stringify(context('britta').workCalendarUpto(task))), {upto: 7});
+});
+
+test('winter time is converted with the date of the entry', () => {
+  const winter = {title: 'Lina abholen', start_local: '2026-11-02T15:30:00', end_local: '2026-11-02T17:30:00',
+                  start_utc: '2026-11-02T14:30:00Z', end_utc: '2026-11-02T16:30:00Z'};
+  const app = new URL(context('tobi').outlookLinks(winter).app);
+  assert.equal(app.searchParams.get('start'), '2026-11-02T14:30:00');
+  assert.equal(app.searchParams.get('end'), '2026-11-02T16:30:00');
 });
