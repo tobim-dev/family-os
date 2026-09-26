@@ -23,6 +23,7 @@ from meals import Meals
 from migrations import migrate
 from nanny import Nanny
 from backups import AutoBackup
+from meal_reminders import MealReminders
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -210,6 +211,7 @@ def create_app(db_path=None, demo=None, origin=None):
     app.state.backups = backups
     integrations.backups = backups
     integrations.periodic.append(backups.periodic)
+    integrations.periodic.append(MealReminders(db, demo).periodic)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):

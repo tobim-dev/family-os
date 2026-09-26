@@ -111,7 +111,7 @@ Cookidoo-Erprobung. Die aktuellen technischen Einschränkungen stehen in COOKIDO
 | ID | Anforderung oder Kontext | Stand / überprüfbares Ergebnis |
 | --- | --- | --- |
 | E-01 | Für eine Woche im Voraus planen, Samstagabend bis Freitagabend, ein Gericht für jeden Abend. | Vorhanden als Wochenansicht; automatischer vollständiger Wochenvorschlag noch ausstehend. |
-| E-02 | Tobi plant gewöhnlich Donnerstag oder Freitagmittag. Einkauf normalerweise Freitagabend oder Samstagvormittag bei Kaufland. | Kontext für spätere rechtzeitige Unterstützung; keine feste Erinnerungsuhrzeit vereinbart. |
+| E-02 | Tobi plant gewöhnlich Donnerstag oder Freitagmittag. Einkauf normalerweise Freitagabend oder Samstagvormittag bei Kaufland. | Vorhanden als vorläufige Implementierungsentscheidung: Donnerstag ab 9 Uhr Aufgabe „Essen planen“ (fällig Fr 12 Uhr, nur wenn die Woche nicht voll geplant ist), Freitag ab 9 Uhr „Einkaufsliste vorbereiten“ (fällig Fr 17 Uhr); beide an Tobi, schließen sich selbst, sobald erledigt. Uhrzeiten nicht vereinbart, änderbar. |
 | E-03 | Ausschließlich Thermomix-Gerichte verwenden, Planung in Cookidoo „Meine Woche“. | Teilweise: Cookidoo-Anbindung vorhanden; zuverlässige Gesamtbedienung am realen Konto noch abzunehmen. |
 | E-04 | Britta und Tobi essen vegetarisch; Lina isst mit. | Rahmen: vegetarische Eignung ist fachliche Vorgabe, nicht allein durch ein Suchwort erfüllt. Weitere Unverträglichkeiten wurden nicht erhoben. |
 | E-05 | Gerichte dürfen bevorzugt proteinreich sein. | Vorhanden in den Wochenvorschlägen (E-15): Eiweiß pro Portion aus Cookidoo-Nährwerten als Rangkriterium; keine feste Proteinmenge vereinbart. |
@@ -210,7 +210,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | Technik | FastAPI, SQLite, einfache Weboberfläche; persistente Daten und Schlüssel im NAS-Datenverzeichnis. README.md und UNRAID.md. |
 | Gemeinsamer Planungsmodus | Bewusster Start, pro Anmeldung, Laufzeit zwei Stunden, endet bei Abmeldung oder manuellem Beenden. Nutzer wünschte den Modus; diese konkrete Geltung/Dauer ist Ausgestaltung. |
 | Faire Monatsverteilung | Werktage × zwei Wege als Bezugsgröße, halbe Wegezahl als Ziel, Abholungen getrennt; keine komplette Lastgewichtung. |
-| Erinnerungszeiten | Aktuell Tages-/Wochenübersicht 19 Uhr, normale Erinnerungen ab 9 Uhr, normale Nachtruhe 21–7 Uhr. Sonntagabend/Vorabend und sofortige Terminabstimmungen sind Nutzeranforderungen; die übrigen exakten Uhrzeiten sind hier als Implementierungsstand vermerkt. |
+| Erinnerungszeiten | Aktuell Tages-/Wochenübersicht 19 Uhr, normale Erinnerungen ab 9 Uhr, normale Nachtruhe 21–7 Uhr. Sonntagabend/Vorabend und sofortige Terminabstimmungen sind Nutzeranforderungen; die übrigen exakten Uhrzeiten sind hier als Implementierungsstand vermerkt. Essensplanung Do 9 Uhr, Einkaufsliste Fr 9 Uhr (E-02). |
 | Google | Eigene Family-OS-Einträge im bestehenden Zielkalender; kein Import beliebiger fremder Google-Termine. Ob solche Termine künftig in einer Gesamtübersicht benötigt werden, ist offen. |
 | Nanny im Kalender | Angefragte Termine vorläufig, bestätigte fest im bestehenden Gemeinschaftskalender, ohne Zeitblockade; Wünsche bleiben lokal, Absagen werden entfernt. Vorläufige Implementierungsentscheidung zu O-04. |
 | Cookidoo | Inoffizielle Bibliothek, verschlüsselte Tokens, getrennte Anmeldung/Erstabruf, gezielte Änderungen, Diagnose und manuelle Prüfung unklarer Schreibvorgänge. Grenzen in COOKIDOO.md. |

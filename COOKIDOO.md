@@ -58,6 +58,15 @@ Danach folgt der Hinweis, die Vorräte durchzugehen und Vorhandenes abzuhaken.
 Cookidoo entfernt Zutaten nur pro Rezept, nicht einzeln. Zutaten, die ein verbleibendes Rezept
 ebenfalls braucht, bleiben erhalten; ihre Mengenangabe darf Cookidoo dabei neu berechnen.
 
+## Erinnerungen
+
+Bei verbundenem Cookidoo erhält Tobi donnerstags ab 9 Uhr die Aufgabe **Essen planen**
+für die kommende Woche (fällig Freitag 12 Uhr), sofern noch nicht alle sieben Abende
+geplant sind. Freitags ab 9 Uhr folgt **Einkaufsliste vorbereiten** (fällig 17 Uhr).
+Beide Aufgaben schließen sich selbst, sobald die Woche voll geplant bzw. die Einkaufsliste
+zur Woche passt; dafür muss die Woche in Family OS einmal geladen sein. Eine erledigte
+Aufgabe wird nicht erneut angelegt.
+
 ## Wochenvorschläge
 
 „Woche vorschlagen“ sucht in Cookidoo nach vegetarischen, eiweißreichen Gerichten (plus optionale

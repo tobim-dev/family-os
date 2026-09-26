@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-130 Tests bestanden (`python -m unittest discover -s tests -v`):
+135 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -56,6 +56,13 @@ Nanny-Planung (Migration 2):
 - Monatsplanung: mehrere Tage atomar (Überschneidung → nichts gespeichert), nur ein Monat,
   eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
 - Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
+
+Erinnerungen Essen und Einkauf (E-02):
+
+- „Essen planen“ nur donnerstags ab 9 Uhr, einmal pro Woche, nicht bei voll geplanter Woche,
+  schließt sich nach vollständiger Planung selbst.
+- „Einkaufsliste vorbereiten“ freitags ab 9 Uhr, schließt sich, wenn der Wochenwechsel nichts mehr zu tun hat.
+- Erledigte Aufgaben werden nicht neu angelegt; ohne Cookidoo-Verbindung und in der Demo keine Aufgaben.
 
 Automatische Sicherung:
 

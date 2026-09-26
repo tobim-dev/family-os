@@ -23,6 +23,7 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
 - `integrations.py`: Google-Kalender, Mitteilungen, Web-Push, Hintergrund-Threads.
 - `meals.py`: Cookidoo (inoffizielle `cookidoo-api`), Einkaufsliste.
 - `shopping_week.py`: geführter Wochenwechsel der Einkaufsliste (Vorschau) und Zählprüfung bei mehrfachen Cookidoo-Kennungen.
+- `meal_reminders.py`: Erinnerungen Essen planen (Do) und Einkaufsliste vorbereiten (Fr).
 - `meal_suggestions.py`: Wochenvorschläge; harte Regeln lokal, Claude API optional mit minimalen anonymen Daten.
 - `recipe_images.py`: Rezeptbilder über den NAS (Host-Allowlist, Cache); Browser lädt nie extern.
 - `nanny.py`: Nanny-Termine, WhatsApp-Anfragen (nur vorbereiteter Text), Stunden, Monatsabrechnung.
