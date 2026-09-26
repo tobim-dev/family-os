@@ -27,7 +27,7 @@ const TOUR_STEPS = [
   {view: 'notifications', title: 'Mitteilungen',
    text: 'Neue Abstimmungen kommen sofort, abends um 19 Uhr eine Übersicht für morgen, sonntags für die Woche.'},
   {view: 'connections', highlight: '[data-enable-push]', title: 'Aufs iPhone holen',
-   text: 'In Safari „Teilen → Zum Home-Bildschirm“ wählen und Family OS von dort öffnen. Dann hier „Auf diesem Gerät aktivieren“ für Mitteilungen. In fast jedem Eingabefeld gibt es außerdem „Sprechen“.'},
+   text: 'In Safari „Teilen → Zum Home-Bildschirm“ wählen und Family OS von dort öffnen. Dann hier „Auf diesem Gerät aktivieren“ für Mitteilungen. In fast jedem Eingabefeld gibt es außerdem „Sprechen“. Wer mag, richtet hier auch ein Widget für den Home-Bildschirm ein (App „Scriptable“).'},
   {view: 'home', title: 'Fertig!',
    text: 'Das war der Überblick. Den Rundgang findest du jederzeit wieder über das „?“ oben rechts.'},
 ];

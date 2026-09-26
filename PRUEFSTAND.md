@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-201 Tests bestanden (`python -m unittest discover -s tests -v`):
+205 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -38,6 +38,18 @@ Schema-Migrationen:
 - Vor einer Migration mit Daten entsteht eine geschützte Kopie mit altem Stand.
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
+
+Home-Bildschirm-Widget (A-12):
+
+- Widget-Schlüssel nur mit Anmeldung und gültigem Ursprung erstellbar, nur als Hash gespeichert;
+  ein neuer Schlüssel ersetzt den alten, Widerruf sperrt sofort. Anmelde-Cookie allein öffnet
+  `/api/widget` nicht, der Schlüssel öffnet nichts außer `/api/widget` (z. B. `/api/state` → 401).
+- Zusammenfassung: Bringen/Abholen, Tag ohne Krippe ersetzt die Wege, bestätigte Nanny-Zeit,
+  Abendessen aus dem Cookidoo-Zwischenspeicher, eigene Sicht je Person, `no-store`.
+- Scriptable-Skript gegen nachgebildete Scriptable-Schnittstelle (Node): mittel/klein, offline mit
+  Markierung „Offline · Stand“, ungültiger Schlüssel und fehlende Verbindung mit klarer Meldung.
+- Browser (390 px): Einrichtung erzeugt Skript mit Adresse und Schlüssel, Abruf damit erfolgreich,
+  Status „Aktiv“. Auf dem echten iPhone mit Scriptable noch nicht geprüft.
 
 Nanny-Termine nachtragen (N-13):
 
@@ -270,7 +282,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-26 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
+31 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft

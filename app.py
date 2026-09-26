@@ -29,6 +29,7 @@ from lina import Lina
 from vouchers import Vouchers
 from speech import Speech
 from offline import Offline
+from widget import Widget
 import work_calendar
 
 ROOT = Path(__file__).parent
@@ -239,6 +240,7 @@ def create_app(db_path=None, demo=None, origin=None):
     integrations.speech = speech
     speech.routes(app, identity)
     Offline(db).routes(app, identity)
+    Widget(db).routes(app, identity)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):

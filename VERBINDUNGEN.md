@@ -123,3 +123,11 @@ Tobi hat den NAS-Betrieb, die Einrichtung beider Konten, die Google-Verbindung u
 die Terminzuordnung als funktionierend gemeldet. Das ist keine vollständige Abnahme
 aller Fehlerfälle. Noch zu prüfen sind insbesondere Push auf beiden iPhones,
 Neustart- und Ausfallverhalten sowie Wiederherstellung aus Sicherung.
+
+## Widget auf dem iPhone (Scriptable)
+
+Unter „Verbindungen“ → „Widget für den Home-Bildschirm“ erstellt jede Person einen eigenen,
+nur lesenden Schlüssel und kopiert das fertige Skript in die App Scriptable. Das Widget ruft
+nur `GET /api/widget` mit `Authorization: Bearer …` auf. Liegt vor Family OS eine zusätzliche
+Anmeldung am Reverse Proxy, muss dieser Pfad ohne diese Anmeldung erreichbar sein (der
+Schlüssel schützt ihn). Schlüssel verloren oder Handy weg: dort widerrufen oder neu erstellen.

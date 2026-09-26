@@ -48,6 +48,7 @@ jobs:
           node --check static/offline.js
           node --check static/outlook.js
           node --check static/tour.js
+          node --check static/widget.js
           node --test tests/*.cjs
           python scripts/check_unraid.py
       - name: Build production image
