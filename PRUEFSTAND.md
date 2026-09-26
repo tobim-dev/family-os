@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-78 Tests bestanden (`python -m unittest discover -s tests -v`):
+92 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -38,6 +38,21 @@ Schema-Migrationen:
 - Vor einer Migration mit Daten entsteht eine geschützte Kopie mit altem Stand.
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
+
+Nanny-Planung (Migration 2):
+
+- Bestehende Aufgaben bleiben bei der Migration erhalten; vorher entsteht eine Sicherung.
+- Wunsch erzeugt Aufgabe für Tobi und Mitteilung an die andere Person.
+- Ungültige, vergangene und überschneidende Wünsche werden abgewiesen.
+- Zustandswechsel nur in erlaubter Reihenfolge; veraltete Versionen werden abgewiesen.
+- Nur noch nicht angefragte Wünsche sind änderbar.
+- Absage eines bestätigten Termins verlangt die Entscheidung „bezahlt / nicht bezahlt“.
+- Abrechnung: geplante Zeit, korrigierte Zeit, bezahlte Absage; nicht bezahlte Absagen
+  und Absagen der Nanny zählen nicht. Rundung auf volle Cent.
+- Korrektur erst ab dem Termin, mit Grund, rücksetzbar.
+- Abschluss erst nach Monatsende und ohne ungeklärte Termine; danach eingefroren
+  (Stundenlohnänderung wirkt nicht), Termine gesperrt, Wiederöffnen bis zur Überweisung.
+- Abrechnungsaufgabe ab dem Monatsersten 9 Uhr genau einmal.
 
 Zusätzliche Integrationstests mit simulierten Google-/Push-Antworten:
 
@@ -75,7 +90,7 @@ Zusätzliche Cookidoo-Tests mit simulierten Antworten:
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-Sechs JavaScript-Tests für Fehlerdarstellung und Cookidoo-Verbindung bestehen. Oberfläche, neuer
+Neun JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung und Nanny-WhatsApp-Texte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft
@@ -98,6 +113,15 @@ Neue Oberfläche lokal geprüft:
 - Verbindungsansicht auf schmaler Breite visuell geprüft; Desktopbreite 1440 px ohne Seitenüberbreite.
 - Domain ist konfigurierbar; die Demo nennt die geplante Adresse.
 
+Nanny-Oberfläche (Playwright, Demo, 1440 px und 390 px):
+
+- Wunsch angelegt, WhatsApp-Anfrage geöffnet (Link mit vollständigem Text), als angefragt
+  markiert, Zusage eingetragen, tatsächliche Zeit korrigiert; Summe 4,5 Std. = 90,00 €.
+- Aufgabe „Nanny anfragen“ verschwindet nach der Anfrage.
+- Abholhinweis erscheint im Monatskalender; keine horizontale Überbreite, acht
+  Navigationspunkte auf 390 px Breite. Keine JavaScript-Fehler.
+- Echte WhatsApp-Übergabe auf dem iPhone noch nicht geprüft.
+
 Cookidoo-Oberfläche dieser Etappe:
 
 - Beispielwoche und Einkaufsartikel im Desktop-Browser geprüft.
@@ -115,7 +139,7 @@ Cookidoo-Oberfläche dieser Etappe:
 - Google-Verbindung und Terminzuordnung wurden vom Nutzer als funktionierend bestätigt.
 - Push-Zustellung, Berechtigungen und Fokusverhalten auf beiden echten iPhones: offen.
 - Cookidoo-End-to-End-Test dieser neuen Oberfläche am echten Konto steht aus.
-- Nanny, automatische Menüvorschläge, automatischer Offline-Abgleich und Sprache folgen später.
+- Nanny-Termine im Google-Kalender, automatische Menüvorschläge, automatischer Offline-Abgleich und Sprache folgen später.
 
 Die Entwickler-Testbibliothek meldet eine Abkündigung ihres bisherigen HTTP-Test-
 Adapters. Die Tests sind erfolgreich; die Meldung betrifft nicht den laufenden

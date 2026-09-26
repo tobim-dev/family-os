@@ -22,9 +22,10 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
   Vorschläge/Freigaben, Klärungspunkte, Aufgaben, gemeinsamer Planungsmodus.
 - `integrations.py`: Google-Kalender, Mitteilungen, Web-Push, Hintergrund-Threads.
 - `meals.py`: Cookidoo (inoffizielle `cookidoo-api`), Einkaufsliste.
+- `nanny.py`: Nanny-Termine, WhatsApp-Anfragen (nur vorbereiteter Text), Stunden, Monatsabrechnung.
 - `migrations.py`: versioniertes SQLite-Schema (`PRAGMA user_version`).
 - `manage.py`: Konten einrichten, Backups. `docker-entrypoint.py`: Unraid-Rechte.
-- `static/`: Vanilla-JS-PWA ohne Build-Schritt, strikte CSP (keine Inline-Skripte/-Styles,
+- `static/`: Vanilla-JS-PWA ohne Build-Schritt (`app.js` Kern, `meals.js`, `nanny.js` je Bereich), strikte CSP (keine Inline-Skripte/-Styles,
   keine externen Ressourcen).
 
 ## Datenbank-Regeln

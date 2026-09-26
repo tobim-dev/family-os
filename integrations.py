@@ -108,6 +108,7 @@ class Integrations:
         self.calendar = os.getenv('FOS_GOOGLE_CALENDAR_ID', '').strip()
         self.client_file = os.getenv('FOS_GOOGLE_CLIENT_FILE', '')
         self.stop = threading.Event()
+        self.periodic = []  # callables run on every background tick
         self.lock = threading.Lock()
         with db() as conn:
             conn.execute("INSERT OR IGNORE INTO metadata VALUES('installation',?)", (secrets.token_hex(16),))
@@ -278,8 +279,10 @@ class Integrations:
                     slots = conn.execute('SELECT day,kind,start,end FROM appointments WHERE owner=? AND day BETWEEN ? AND ? ORDER BY day,start', (owner, str(start), str(end))).fetchall()
                     tasks = conn.execute("SELECT COUNT(*) FROM tasks WHERE owner=? AND state='open' AND substr(due,1,10)<=?", (owner, str(end))).fetchone()[0]
                     pending = conn.execute("SELECT COUNT(*) FROM proposals WHERE creator!=? AND state='pending'", (owner,)).fetchone()[0]
+                    nanny = conn.execute("SELECT day,start,end FROM nanny_shifts WHERE state='confirmed' AND day BETWEEN ? AND ? ORDER BY day,start", (str(start), str(end))).fetchall()
+                    nanny_text = (' Nanny: ' + '; '.join(f"{datetime.fromisoformat(r['day']).strftime('%d.%m.')} {r['start']}–{r['end']}" for r in nanny) + ' (früher abholen).') if nanny else ''
                     notify(conn, owner, f'{kind}:{start}:{owner}', 'Dein nächster Tag' if kind == 'day' else 'Deine nächste Woche',
-                           f"{len(slots)} bestätigte Wege: " + ('; '.join(f"{datetime.fromisoformat(r['day']).strftime('%d.%m.')} {'Bringen' if r['kind']=='bring' else 'Abholen'} {r['start']}–{r['end']}" for r in slots) or 'keine') + f'. {tasks} fällige Aufgaben zur Arbeitskalenderpflege · {pending} Vorschläge warten auf dich.', False, instant)
+                           f"{len(slots)} bestätigte Wege: " + ('; '.join(f"{datetime.fromisoformat(r['day']).strftime('%d.%m.')} {'Bringen' if r['kind']=='bring' else 'Abholen'} {r['start']}–{r['end']}" for r in slots) or 'keine') + '.' + nanny_text + f' {tasks} fällige Aufgaben · {pending} Vorschläge warten auf dich.', False, instant)
 
     def reminders(self, instant):
         with self.db() as conn:
@@ -322,6 +325,12 @@ class Integrations:
         try:
             self.reconcile()
             self.summaries()
+            for hook in self.periodic:
+                try:
+                    hook()
+                except Exception:
+                    import logging
+                    logging.getLogger('family-os').error('Periodische Aufgabe fehlgeschlagen; erneuter Versuch folgt.')
             if not self.demo and self.secret('google'):
                 with self.db() as conn:
                     rows = [dict(r) for r in conn.execute("SELECT * FROM calendar_targets WHERE state!='conflict' AND next_try<=? AND (state!='synced' OR (desired IS NOT NULL AND checked<?)) ORDER BY desired IS NULL,key LIMIT 8", (time.time(), time.time() - 900))]

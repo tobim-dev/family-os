@@ -94,7 +94,7 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(migrate(self.path, steps), [LATEST + 1])
         self.assertIn('note', column_names(self.path, 'appointments'))
         self.assertEqual(user_version(self.path), LATEST + 1)
-        [backup] = self.backups()
+        [backup] = [b for b in self.backups() if b.name.startswith(f'pre-migration-v{LATEST}-v{LATEST + 1}-')]
         self.assertEqual(user_version(backup), LATEST)
         self.assertNotIn('note', column_names(backup, 'appointments'))
         self.assertEqual(backup.stat().st_mode & 0o777, 0o600)

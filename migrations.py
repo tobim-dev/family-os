@@ -56,7 +56,37 @@ CREATE TABLE IF NOT EXISTS meal_operations(id TEXT PRIMARY KEY, actor TEXT NOT N
 # Append new schema changes here as (version, description, migration).
 # ``migration`` is either an SQL script (str) or a callable taking the
 # connection. Versions must be consecutive, starting at 2.
-MIGRATIONS = []
+MIGRATIONS = [
+    (2, 'Nanny-Termine und Monatsabrechnung', '''
+CREATE TABLE nanny_shifts(
+ id INTEGER PRIMARY KEY,
+ day TEXT NOT NULL,
+ start TEXT NOT NULL,
+ end TEXT NOT NULL,
+ state TEXT NOT NULL DEFAULT 'wish' CHECK(state IN ('wish','requested','confirmed','declined','cancelled')),
+ paid_cancel INTEGER CHECK(paid_cancel IN (0,1)),
+ actual_start TEXT,
+ actual_end TEXT,
+ correction_note TEXT NOT NULL DEFAULT '',
+ note TEXT NOT NULL DEFAULT '',
+ creator TEXT NOT NULL REFERENCES users(id),
+ version INTEGER NOT NULL DEFAULT 1,
+ created TEXT NOT NULL,
+ updated TEXT NOT NULL);
+CREATE INDEX nanny_shifts_day ON nanny_shifts(day);
+CREATE TABLE nanny_statements(
+ month TEXT PRIMARY KEY,
+ rate_cents INTEGER NOT NULL,
+ minutes INTEGER NOT NULL,
+ amount_cents INTEGER NOT NULL,
+ lines TEXT NOT NULL,
+ closed_by TEXT NOT NULL REFERENCES users(id),
+ closed TEXT NOT NULL,
+ paid TEXT,
+ paid_by TEXT REFERENCES users(id));
+ALTER TABLE tasks ADD COLUMN nanny_shift_id INTEGER REFERENCES nanny_shifts(id);
+'''),
+]
 
 LATEST = 1 + len(MIGRATIONS)
 

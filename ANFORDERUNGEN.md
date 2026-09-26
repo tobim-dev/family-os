@@ -40,7 +40,7 @@ gewählte erste Funktionsbereiche.
 | Z-03 | Tobi und Britta sind die Nutzer. Lina wird mitgeplant. Die Anwendung soll zunächst innerhalb der Familie bleiben. | Rahmen / vorhanden: zwei persönliche Konten; kein Nanny-Konto als Voraussetzung. |
 | Z-04 | Bedienung so einfach wie möglich, mit erkennbarem Nutzen und möglichst wenig laufender Datenpflege. | Rahmen: insbesondere bei Vorräten keine Einzelverbrauchserfassung verlangen. |
 | Z-05 | KI nur dort einsetzen, wo sie sinnvoll unterstützt; zuverlässige Automation bleibt der Schwerpunkt. | Rahmen: kein KI-Zwang, kein bereits festgelegter Anbieter. |
-| Z-06 | Erste fachliche Priorität: Betreuungsplanung mit Klärungspunkten, Nanny-Planung einschließlich Stundenübersicht sowie Essensplanung und Einkauf. | Teilweise: Nanny gehört ausdrücklich zu dieser Priorität und ist trotz bisheriger Bau-Reihenfolge noch ausstehend. |
+| Z-06 | Erste fachliche Priorität: Betreuungsplanung mit Klärungspunkten, Nanny-Planung einschließlich Stundenübersicht sowie Essensplanung und Einkauf. | Teilweise: alle drei Bereiche in erster Ausbaustufe vorhanden; Nanny noch ohne Google-Kalender. |
 | Z-07 | Auf der vom Nutzer positiv bewerteten Demo aufbauen. | Vorhanden: bestehende Gestaltung und Bedienstruktur werden fortgeführt. |
 | Z-08 | Brittas eigene Rückmeldung zunächst zurückstellen, technische Machbarkeit zuerst prüfen. | Rahmen: zurückgestellt bedeutet nicht abgenommen oder dauerhaft ausgeschlossen. |
 
@@ -70,7 +70,7 @@ aktivem gemeinsamem Planungsmodus und monatlicher Ansicht „Gemeinsam getragen�
 | B-13 | Nach einer bestätigten Änderung eine explizite Aufgabe „Arbeitskalender aktualisieren“ erzeugen. | Vorhanden: betroffene Person pflegt den eigenen Kalender; Aufgabe hält ausstehende manuelle Übernahme sichtbar. |
 | B-14 | Historischer Ablauf: direkte Absprache, unterwegs meist iMessage; verbindlich wurde die Änderung durch geänderte Kalendereinträge. | Kontext: keine daraus abgeleitete Pflicht, iMessage zu integrieren. Im Produkt Freigabe und externe Übertragung getrennt kenntlich machen. |
 | B-15 | Explizit aktivierbarer gemeinsamer Planungsmodus für die Couch: ohne zusätzliche Einzelbestätigung Termine gemeinsam zuordnen. | Vorhanden: bewusst gestartete Ausnahme zu B-11; kein Abschaffen der normalen Freigaben. |
-| B-16 | Nanny-Wünsche bereits bei der monatlichen Betreuungsplanung mitdenken. Eltern holen Lina immer selbst ab und treffen die Nanny zuhause. | Ausstehend für Nanny; keine Abholzuständigkeit automatisch der Nanny zuweisen. |
+| B-16 | Nanny-Wünsche bereits bei der monatlichen Betreuungsplanung mitdenken. Eltern holen Lina immer selbst ab und treffen die Nanny zuhause. | Teilweise: Nanny-Tage mit Hinweis „früher abholen“ im Monatskalender; Wünsche werden in der Nanny-Ansicht angelegt. Keine Abholzuständigkeit an die Nanny. |
 
 Die konkrete Monatsformel im aktuellen Produkt zählt bestätigte Wege an Werktagen,
 zeigt Abholungen getrennt und setzt als Ziel die Hälfte aller vorgesehenen Wege.
@@ -84,18 +84,23 @@ Quelle: zweiter geschilderter Alltagsprozess und spätere Antworten zur Zuständ
 
 | ID | Anforderung oder Kontext | Stand / überprüfbares Ergebnis |
 | --- | --- | --- |
-| N-01 | Flexible Betreuung nach der Krippe planen: gewöhnlich einmal pro Woche 16:00–18:00 Uhr, gelegentlich zweimal. Keine festen Tage. | Ausstehend: Wünsche mit Familienplanung zusammen anzeigen. |
-| N-02 | Einzelne gewünschte Termine per WhatsApp anfragen und von der Nanny bestätigen lassen. | Ausstehend: angefragt und bestätigt unterscheidbar; automatische WhatsApp-Anbindung nur, falls realisierbar. |
+| N-01 | Flexible Betreuung nach der Krippe planen: gewöhnlich einmal pro Woche 16:00–18:00 Uhr, gelegentlich zweimal. Keine festen Tage. | Vorhanden: freie Tage, Vorgabe 16:00–18:00, Überschneidungsschutz. |
+| N-02 | Einzelne gewünschte Termine per WhatsApp anfragen und von der Nanny bestätigen lassen. | Vorhanden: Status Wunsch/angefragt/bestätigt/Nanny kann nicht/abgesagt; vorbereiteter WhatsApp-Text (einzeln oder gesammelt), Bestätigung manuell. Siehe N-08. |
 | N-03 | WhatsApp ist der bevorzugte Kontaktkanal; die Nanny soll die Familienanwendung zunächst nicht selbst nutzen müssen. | Rahmen: kein Nanny-Login als zwingender Teil des Ablaufs. Automatisches Versenden ist nicht im Detail festgelegt. |
-| N-04 | Stundenübersicht als Grundlage der monatlichen Abrechnung führen. Bisher werden Kalendertermine herangezogen, die gewöhnlich wie geplant stattfinden. | Ausstehend: geplante Termine sind Ausgangspunkt, kein zwingender Beleg unveränderter tatsächlicher Arbeitszeit. |
-| N-05 | Tobi pflegt die Stunden und macht die Abrechnung. | Ausstehend: entsprechende Verantwortung im Ablauf sichtbar. |
-| N-06 | Nanny ist auf Minijob-Basis beschäftigt; vereinbarter Lohn 20 EUR pro Stunde. | Rahmen: aktueller Interviewwert für Berechnung, keine Aussage über gesetzliche Abgaben oder Grenzen. |
-| N-07 | Monatlich Stunden und daraus folgenden Lohnbetrag nachvollziehbar zusammenstellen. Tobi überweist den Betrag. | Ausstehend: z. B. zwei bestätigte Stunden ergeben 40 EUR Lohn, ohne unvereinbarte Zusatzberechnung. Automatische Banküberweisung wurde nicht festgelegt. |
+| N-04 | Stundenübersicht als Grundlage der monatlichen Abrechnung führen. Bisher werden Kalendertermine herangezogen, die gewöhnlich wie geplant stattfinden. | Vorhanden: geplante Zeit zählt, Abweichungen minutengenau mit Grund (N-09). |
+| N-05 | Tobi pflegt die Stunden und macht die Abrechnung. | Vorhanden: Aufgaben „Nanny anfragen“, „Nanny-Abrechnung“, „Nanny-Lohn überweisen“ gehen an Tobi; beide Eltern können Einträge pflegen, alles im Verlauf. |
+| N-06 | Nanny ist auf Minijob-Basis beschäftigt; vereinbarter Lohn 20 EUR pro Stunde. | Rahmen / vorhanden: Stundenlohn einstellbar (Vorgabe 20 EUR), wird beim Monatsabschluss eingefroren. Keine Abgabenberechnung. |
+| N-07 | Monatlich Stunden und daraus folgenden Lohnbetrag nachvollziehbar zusammenstellen. Tobi überweist den Betrag. | Vorhanden: Monatsübersicht je Termin, Summe auf volle Cent, Abschluss nach Monatsende, Markierung „überwiesen“. Keine automatische Überweisung. |
+| N-08 | Entscheidung 26.09.2026 (O-03): WhatsApp als vorbereiteter Text; Tobi/Britta senden selbst und tragen die Zusage manuell ein. Kein automatischer Versand. | Vorhanden: Öffnen des Links ändert keinen Status; optionale Nummer der Nanny. |
+| N-09 | Entscheidung 26.09.2026 (O-04): Abgerechnet wird die geplante Zeit; Abweichungen minutengenau korrigierbar. Kurzfristige Absagen bestätigter Termine: im Einzelfall „bezahlt“ oder „nicht bezahlt“. | Vorhanden: Korrektur nur mit Grund; Absage bestätigter Termine verlangt die Entscheidung. |
+| N-10 | Entscheidung 26.09.2026 (O-04): An Nanny-Tagen holen die Eltern Lina früher ab, damit die Übergabe zuhause zum Nanny-Beginn (gewöhnlich 16:00) klappt. | Teilweise: Hinweis an der Abholung und in der Tagesübersicht; Abholzeit wird nicht automatisch geändert. |
 
-Offen sind unter anderem Abweichungen, Ausfälle, Rundung, Auszahlungskorrekturen und
-welche zusätzlichen Unterlagen der Minijob-Abrechnung benötigt werden. Keine dieser
-Regeln darf stillschweigend erfunden werden. Ebenso ist zu klären, wie ein Nanny-Start
-um 16:00 Uhr mit der sonst üblichen Abholung um 16:15 Uhr zusammenpasst.
+Geklärt am 26.09.2026: WhatsApp-Umfang, Stundenbasis, Ausfälle und Nanny-Start (N-08 bis N-10).
+Offen bleiben Auszahlungskorrekturen nach der Überweisung, zusätzliche Unterlagen der
+Minijob-Abrechnung und die Übertragung der Nanny-Termine in den Google-Kalender.
+Implementierungsentscheidungen: Wünsche benötigen keine gegenseitige Freigabe (die andere
+Person erhält eine Mitteilung); nur noch nicht angefragte Wünsche sind änderbar; ein
+abgeschlossener Monat kann bis zur Markierung „überwiesen“ wieder geöffnet werden.
 
 ## 4. Essensplanung und Einkauf mit Cookidoo
 
@@ -214,8 +219,8 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | --- | --- | --- |
 | O-01 | Brittas Rückmeldung nachholen, ohne den bisherigen Aufschub als Zustimmung zu allen Details zu behandeln. | Z-08, K-01–K-07 |
 | O-02 | Brittas Zeitblöcke, Urlaub, Feiertage, Krankheit und Krippenschließtage; Bewertung ungleicher Abhol-/Nachmittagslast und Nanny-Ausnahmen. | B-04–B-09 |
-| O-03 | Nanny-Terminstatus und WhatsApp-Umfang: vorbereiteter Text oder technische Anbindung, manuelle bzw. automatische Bestätigungserkennung. | N-01–N-03 |
-| O-04 | Nanny-Start/Abholung abstimmen; tatsächliche Stunden, Abweichungen, Rundungen und gewünschte Monatsunterlagen definieren. Überweisungsautomatik nicht vereinbart. | N-04–N-07 |
+| O-03 | Geklärt 26.09.2026 → N-08. | N-01–N-03 |
+| O-04 | Weitgehend geklärt 26.09.2026 → N-09, N-10. Offen: Monatsunterlagen für den Minijob, Korrektur nach Überweisung, Nanny im Google-Kalender. | N-04–N-07 |
 | O-05 | Automatische vegetarische Rezeptauswahl zuverlässig prüfen; Proteinpräferenz, Wiederholungen, weitere Familienpräferenzen und Umgang mit nicht verfügbaren Rezepten konkretisieren. | E-04–E-08 |
 | O-06 | Geführter Wochenwechsel der Einkaufsliste und Umgang mit mehrdeutigen Kennungen ohne Verlust bestehender Positionen. | E-09–E-12 |
 | O-07 | Quellen und Kriterien für PAYBACK-Aktionen, Erinnerungszeitpunkt, Gutscheinrestbeträge, PDF-/E-Mail-/iCloud-Zugriff und Automatisierungsgrenzen. | G-01–G-07 |

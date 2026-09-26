@@ -21,6 +21,7 @@ import pyotp
 from integrations import Integrations, notify
 from meals import Meals
 from migrations import migrate
+from nanny import Nanny
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -198,6 +199,10 @@ def create_app(db_path=None, demo=None, origin=None):
     app.state.meals = meals
     integrations.meals = meals
     meals.routes(app, identity)
+    nanny = Nanny(db, demo)
+    app.state.nanny = nanny
+    integrations.periodic.append(nanny.periodic)
+    nanny.routes(app, identity)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):
@@ -283,7 +288,8 @@ def create_app(db_path=None, demo=None, origin=None):
             tasks = [dict(r) for r in conn.execute("SELECT * FROM tasks WHERE state IN ('open','done') ORDER BY state DESC,due,id DESC LIMIT 200")]
             planning = planning_mode(conn, request)
             history = [dict(r) for r in conn.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 30')]
-        return {'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
+            nanny_shifts = [dict(r) for r in conn.execute("SELECT id,day,start,end,state FROM nanny_shifts WHERE day BETWEEN ? AND ? AND state IN ('wish','requested','confirmed') ORDER BY day,start", (str(first), str(last)))]
+        return {'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
 
     @app.post('/api/proposals')
     def propose(data: ProposalInput, request: Request):

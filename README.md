@@ -43,7 +43,7 @@ Ein neuer Monat lässt sich in der Monatsplanung vorbereiten. Standard ist eine
 gleichmäßige Verteilung von fünf Wegen pro Person in einer vollständigen Woche.
 Alle Zuordnungen bleiben vorläufig, bis die andere Person die konkrete Fassung
 bestätigt. Die vorgegebenen Zeitblöcke entsprechen Tobis Angaben; Brittas Zeiten
-sind noch gemeinsam zu prüfen. Feiertage, Krippenschließtage und Nanny-Ausnahmen
+sind noch gemeinsam zu prüfen. Feiertage und Krippenschließtage
 sind in diesem ersten Monatsentwurf noch nicht berücksichtigt.
 
 Vorschläge lassen sich ablehnen oder durch ihren Ersteller zurückziehen und neu
@@ -74,6 +74,24 @@ bleiben aktiv. Die Historie nennt die bedienende Person und kennzeichnet direkte
 Zuordnungen als gemeinsame Planung. Die andere Person erhält beim Start eine
 Mitteilung über den eingeschalteten Modus.
 
+## Nanny-Planung
+
+Unter **Nanny** legen beide Eltern Wünsche an (Standard 16:00–18:00 Uhr). Tobi erhält
+die Aufgabe „Nanny anfragen“. Die Anfrage öffnet WhatsApp mit einem fertigen Text,
+optional direkt im Chat der hinterlegten Nummer. Das Öffnen ändert nichts; erst
+„als angefragt markieren“ und später „Zusage eintragen“ ändern den Stand.
+
+An bestätigten oder angefragten Nanny-Tagen zeigt die Abholung den Hinweis
+„früher abholen“: Die Übergabe erfolgt zuhause zum Nanny-Beginn.
+
+Abgerechnet werden die geplanten Zeiten. Abweichungen lassen sich ab dem Termin
+minutengenau mit Grund eintragen. Bei der Absage eines bestätigten Termins wird
+im Einzelfall festgelegt, ob er bezahlt wird. Ab dem Monatsersten erhält Tobi die
+Aufgabe „Nanny-Abrechnung“. Ein abgeschlossener Monat ist mit seinem Stundenlohn
+eingefroren und lässt sich bis zur Markierung „überwiesen“ wieder öffnen.
+Die Abrechnung enthält nur den Lohn, keine Minijob-Abgaben oder Meldungen.
+Nanny-Termine werden noch nicht in den Google-Kalender übertragen.
+
 ## Was implementiert ist
 
 - Übersicht der nächsten Betreuungstage und Monatsplanung.
@@ -101,7 +119,7 @@ Mitteilung über den eingeschalteten Modus.
 
 ## Noch nicht implementiert
 
-Nanny-Verwaltung, automatische Menüvorschläge, automatisch verfügbare
+Automatische Menüvorschläge, automatisch verfügbare
 Offline-Einkaufslisten mit späterem Abgleich sowie Spracherkennung folgen später.
 Die erste Cookidoo-Anbindung ist integriert; siehe [COOKIDOO.md](COOKIDOO.md).
 Es gibt keinen Zugriff auf Arbeitskalender. Google und Push benötigen die Einrichtung
