@@ -58,6 +58,13 @@ def amount_cents(total_minutes, rate_cents):
     return (total_minutes * rate_cents * 2 + 60) // 120
 
 
+MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+
+
+def month_label(month):
+    return f'{MONTHS[int(month[5:7]) - 1]} {month[:4]}'
+
+
 def label(row):
     day = date.fromisoformat(row['day'])
     weekdays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
@@ -69,6 +76,23 @@ class ShiftInput(BaseModel):
     start: str = Field(default='16:00', pattern=TIME)
     end: str = Field(default='18:00', pattern=TIME)
     note: str = Field(default='', max_length=300)
+
+
+class BatchInput(BaseModel):
+    days: list[date] = Field(min_length=1, max_length=23)
+    start: str = Field(default='16:00', pattern=TIME)
+    end: str = Field(default='18:00', pattern=TIME)
+    note: str = Field(default='', max_length=300)
+
+
+class Answer(BaseModel):
+    id: int
+    version: int = Field(ge=1)
+    answer: Literal['confirm', 'decline']
+
+
+class AnswerInput(BaseModel):
+    items: list[Answer] = Field(min_length=1, max_length=31)
 
 
 class ShiftEdit(ShiftInput):
@@ -127,6 +151,56 @@ class Nanny:
                              (str(data.day), own_id, data.end, data.start)).fetchone()
         if clash:
             raise HTTPException(409, 'An diesem Tag gibt es bereits einen überschneidenden Nanny-Termin.')
+
+    def insert_wish(self, conn, actor, day, start, end, note):
+        if minutes(start, end) <= 0:
+            raise HTTPException(422, 'Das Ende muss nach dem Beginn liegen.')
+        self.require_open_month(conn, day)
+        if day < datetime.now(TZ).date():
+            raise HTTPException(422, 'Neue Nanny-Wünsche bitte für heute oder später anlegen.')
+        self.require_no_clash(conn, ShiftInput(day=day, start=start, end=end))
+        cursor = conn.execute('INSERT INTO nanny_shifts(day,start,end,note,creator,created,updated) VALUES(?,?,?,?,?,?,?)',
+                              (str(day), start, end, note.strip(), actor, now(), now()))
+        row = self.shift(conn, cursor.lastrowid)
+        self.audit(conn, actor, 'Nanny-Wunsch angelegt', label(row))
+        return row
+
+    def sync_request_task(self, conn, month):
+        """Keep exactly one open 'Nanny anfragen' task per month while wishes exist."""
+        first, last = month_range(month)
+        wishes = conn.execute("SELECT COUNT(*) FROM nanny_shifts WHERE day BETWEEN ? AND ? AND state='wish'", (str(first), str(last))).fetchone()[0]
+        task = conn.execute("SELECT id FROM tasks WHERE title='Nanny anfragen' AND nanny_shift_id IS NULL AND state='open' AND details LIKE ?",
+                            (month + ':%',)).fetchone()
+        details = (f'{month}: {wishes} ' + ('Wunsch' if wishes == 1 else 'Wünsche')
+                   + f' für {month_label(month)} in einer WhatsApp-Nachricht anfragen und danach als angefragt markieren.')
+        if wishes and task:
+            conn.execute('UPDATE tasks SET details=? WHERE id=?', (details, task['id']))
+        elif wishes:
+            conn.execute('INSERT INTO tasks(owner,title,details,due,created) VALUES(?,?,?,?,?)',
+                         (BILLING_OWNER, 'Nanny anfragen', details, now(), now()))
+        elif task:
+            conn.execute("UPDATE tasks SET state='superseded' WHERE id=?", (task['id'],))
+
+    def apply(self, conn, actor, row, action, paid=None):
+        allowed = {'request': {'wish'}, 'confirm': {'wish', 'requested'}, 'decline': {'requested'},
+                   'cancel': {'wish', 'requested', 'confirmed'}}[action]
+        target = {'request': 'requested', 'confirm': 'confirmed', 'decline': 'declined', 'cancel': 'cancelled'}[action]
+        if row['state'] not in allowed:
+            raise HTTPException(409, f'{label(row)}: Dieser Schritt passt nicht zum aktuellen Stand. Bitte neu laden.')
+        self.require_open_month(conn, row['day'])
+        if action == 'cancel' and row['state'] == 'confirmed':
+            if paid is None:
+                raise HTTPException(422, 'Bitte festlegen, ob der abgesagte Termin bezahlt wird.')
+            paid = int(paid)
+        else:
+            paid = None
+        conn.execute('UPDATE nanny_shifts SET state=?,paid_cancel=?,version=version+1,updated=? WHERE id=?',
+                     (target, paid, now(), row['id']))
+        self.close_tasks(conn, row['id'])
+        text = {'request': 'Nanny angefragt', 'confirm': 'Nanny-Termin bestätigt', 'decline': 'Nanny kann nicht',
+                'cancel': 'Nanny-Termin abgesagt'}[action]
+        suffix = '' if paid is None else (' · wird bezahlt' if paid else ' · wird nicht bezahlt')
+        self.audit(conn, actor, text, label(row) + suffix)
 
     def shift(self, conn, shift_id, version=None):
         row = conn.execute('SELECT * FROM nanny_shifts WHERE id=?', (shift_id,)).fetchone()
@@ -229,22 +303,29 @@ class Nanny:
 
         @app.post('/api/nanny/shifts')
         def create(data: ShiftInput, request: Request):
-            if minutes(data.start, data.end) <= 0:
-                raise HTTPException(422, 'Das Ende muss nach dem Beginn liegen.')
             with db() as conn:
                 actor = identity(request, conn)
-                self.require_open_month(conn, data.day)
-                if data.day < datetime.now(TZ).date():
-                    raise HTTPException(422, 'Neue Nanny-Wünsche bitte für heute oder später anlegen.')
-                self.require_no_clash(conn, data)
-                cursor = conn.execute('INSERT INTO nanny_shifts(day,start,end,note,creator,created,updated) VALUES(?,?,?,?,?,?,?)',
-                                      (str(data.day), data.start, data.end, data.note.strip(), actor, now(), now()))
-                row = self.shift(conn, cursor.lastrowid)
-                conn.execute('INSERT INTO tasks(owner,title,details,due,created,nanny_shift_id) VALUES(?,?,?,?,?,?)',
-                             (BILLING_OWNER, 'Nanny anfragen', f'{label(row)}: Wunsch per WhatsApp anfragen und danach als angefragt markieren.', now(), now(), row['id']))
+                row = self.insert_wish(conn, actor, data.day, data.start, data.end, data.note)
+                self.sync_request_task(conn, month_of(row['day']))
                 notify(conn, self.other(actor), f'nanny-wish:{row["id"]}', 'Neuer Nanny-Wunsch', f'{PEOPLE[actor]} wünscht sich Nanny-Betreuung: {label(row)}.', False)
-                self.audit(conn, actor, 'Nanny-Wunsch angelegt', label(row))
                 return {'id': row['id']}
+
+        @app.post('/api/nanny/shifts/batch')
+        def create_month(data: BatchInput, request: Request):
+            if len(set(data.days)) != len(data.days):
+                raise HTTPException(422, 'Jeder Tag darf nur einmal ausgewählt werden.')
+            months = {month_of(day) for day in data.days}
+            if len(months) != 1:
+                raise HTTPException(422, 'Bitte nur Tage aus einem Monat auswählen.')
+            month = months.pop()
+            with db() as conn:
+                actor = identity(request, conn)
+                rows = [self.insert_wish(conn, actor, day, data.start, data.end, data.note) for day in sorted(data.days)]
+                self.sync_request_task(conn, month)
+                notify(conn, self.other(actor), 'nanny-wishes:' + ','.join(str(r['id']) for r in rows),
+                       'Nanny-Wünsche für ' + month_label(month),
+                       f'{PEOPLE[actor]} hat {len(rows)} Nanny-Termine geplant: ' + '; '.join(label(r) for r in rows) + '.', False)
+                return {'ids': [r['id'] for r in rows]}
 
         @app.post('/api/nanny/shifts/{shift_id}')
         def edit(shift_id: int, data: ShiftEdit, request: Request):
@@ -261,8 +342,8 @@ class Nanny:
                 conn.execute('UPDATE nanny_shifts SET day=?,start=?,end=?,note=?,version=version+1,updated=? WHERE id=?',
                              (str(data.day), data.start, data.end, data.note.strip(), now(), shift_id))
                 updated = self.shift(conn, shift_id)
-                conn.execute("UPDATE tasks SET details=? WHERE nanny_shift_id=? AND state='open'",
-                             (f'{label(updated)}: Wunsch per WhatsApp anfragen und danach als angefragt markieren.', shift_id))
+                for month in {month_of(row['day']), month_of(updated['day'])}:
+                    self.sync_request_task(conn, month)
                 self.audit(conn, actor, 'Nanny-Wunsch geändert', f'{label(row)} → {label(updated)}')
             return {'ok': True}
 
@@ -270,34 +351,42 @@ class Nanny:
         def transition(data: Transition, request: Request):
             if len(data.ids) != len(data.versions) or len(set(data.ids)) != len(data.ids):
                 raise HTTPException(422, 'Ungültige Auswahl.')
-            allowed = {'request': {'wish'}, 'confirm': {'wish', 'requested'}, 'decline': {'requested'},
-                       'cancel': {'wish', 'requested', 'confirmed'}}[data.action]
-            target = {'request': 'requested', 'confirm': 'confirmed', 'decline': 'declined', 'cancel': 'cancelled'}[data.action]
             with db() as conn:
                 actor = identity(request, conn)
                 rows = [self.shift(conn, shift_id, version) for shift_id, version in zip(data.ids, data.versions)]
                 for row in rows:
-                    if row['state'] not in allowed:
-                        raise HTTPException(409, f'{label(row)}: Dieser Schritt passt nicht zum aktuellen Stand. Bitte neu laden.')
-                    self.require_open_month(conn, row['day'])
-                    paid = None
-                    if data.action == 'cancel' and row['state'] == 'confirmed':
-                        if data.paid is None:
-                            raise HTTPException(422, 'Bitte festlegen, ob der abgesagte Termin bezahlt wird.')
-                        paid = int(data.paid)
-                    conn.execute('UPDATE nanny_shifts SET state=?,paid_cancel=?,version=version+1,updated=? WHERE id=?',
-                                 (target, paid, now(), row['id']))
-                    self.close_tasks(conn, row['id'])
-                    text = {'request': 'Nanny angefragt', 'confirm': 'Nanny-Termin bestätigt', 'decline': 'Nanny hat abgesagt',
-                            'cancel': 'Nanny-Termin abgesagt'}[data.action]
-                    suffix = '' if paid is None else (' · wird bezahlt' if paid else ' · wird nicht bezahlt')
-                    self.audit(conn, actor, text, label(row) + suffix)
+                    self.apply(conn, actor, row, data.action, data.paid)
+                for month in {month_of(r['day']) for r in rows}:
+                    self.sync_request_task(conn, month)
                 if data.action in ('confirm', 'decline', 'cancel'):
                     summary = ', '.join(label(r) for r in rows)
                     title = {'confirm': 'Nanny kommt', 'decline': 'Nanny kann nicht', 'cancel': 'Nanny-Termin abgesagt'}[data.action]
                     key = f'nanny-{data.action}:' + ','.join(f'{r["id"]}.{r["version"]}' for r in rows)
                     notify(conn, self.other(actor), key, title, summary, data.action != 'confirm')
             return {'ok': True}
+
+        @app.post('/api/nanny/answer')
+        def answer(data: AnswerInput, request: Request):
+            """Record the nanny's reply to a monthly request in one atomic step."""
+            if len({item.id for item in data.items}) != len(data.items):
+                raise HTTPException(422, 'Jeder Termin darf nur einmal beantwortet werden.')
+            with db() as conn:
+                actor = identity(request, conn)
+                rows = [(self.shift(conn, item.id, item.version), item.answer) for item in data.items]
+                for row, reply in rows:
+                    if row['state'] != 'requested':
+                        raise HTTPException(409, f'{label(row)}: Dieser Termin ist nicht mehr angefragt. Bitte neu laden.')
+                    self.apply(conn, actor, row, reply)
+                confirmed = [label(r) for r, reply in rows if reply == 'confirm']
+                declined = [label(r) for r, reply in rows if reply == 'decline']
+                parts = []
+                if confirmed:
+                    parts.append('Zusage: ' + '; '.join(confirmed))
+                if declined:
+                    parts.append('Kann nicht: ' + '; '.join(declined))
+                key = 'nanny-answer:' + ','.join(f'{r["id"]}.{r["version"]}' for r, _ in rows)
+                notify(conn, self.other(actor), key, 'Antwort der Nanny', '. '.join(parts) + '.', bool(declined))
+            return {'confirmed': len(confirmed), 'declined': len(declined)}
 
         @app.post('/api/nanny/shifts/{shift_id}/correct')
         def correct(shift_id: int, data: Correction, request: Request):

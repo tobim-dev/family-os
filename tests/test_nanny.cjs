@@ -20,6 +20,8 @@ test('WhatsApp link uses digits only and encodes the full request text', () => {
   const shifts = [{day: '2026-10-06', start: '16:00', end: '18:00'}, {day: '2026-10-08', start: '16:00', end: '17:30'}];
   const text = ctx.requestText(shifts);
   assert.match(text, /^Hallo Mia,/);
+  assert.match(text, /für Oktober hätten wir gern diese Termine für Lina:/);
+  assert.match(text, /falls einzelne Tage nicht gehen/);
   assert.match(text, /– Dienstag, 6\. Oktober, 16:00–18:00 Uhr/);
   assert.match(text, /– Donnerstag, 8\. Oktober, 16:00–17:30 Uhr/);
   assert.match(text, /Britta$/);

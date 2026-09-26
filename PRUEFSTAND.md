@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-92 Tests bestanden (`python -m unittest discover -s tests -v`):
+95 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -53,6 +53,9 @@ Nanny-Planung (Migration 2):
 - Abschluss erst nach Monatsende und ohne ungeklärte Termine; danach eingefroren
   (Stundenlohnänderung wirkt nicht), Termine gesperrt, Wiederöffnen bis zur Überweisung.
 - Abrechnungsaufgabe ab dem Monatsersten 9 Uhr genau einmal.
+- Monatsplanung: mehrere Tage atomar (Überschneidung → nichts gespeichert), nur ein Monat,
+  eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
+- Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
 
 Zusätzliche Integrationstests mit simulierten Google-/Push-Antworten:
 
@@ -120,6 +123,9 @@ Nanny-Oberfläche (Playwright, Demo, 1440 px und 390 px):
 - Aufgabe „Nanny anfragen“ verschwindet nach der Anfrage.
 - Abholhinweis erscheint im Monatskalender; keine horizontale Überbreite, acht
   Navigationspunkte auf 390 px Breite. Keine JavaScript-Fehler.
+- Monatsablauf: Oktober mit vier Tagen geplant, Monatsnachricht mit allen fünf Wünschen,
+  als angefragt markiert, Antwort „alle zugesagt“ außer einem Tag gespeichert.
+  Monatsplaner auf 390 px ohne Überbreite.
 - Echte WhatsApp-Übergabe auf dem iPhone noch nicht geprüft.
 
 Cookidoo-Oberfläche dieser Etappe:

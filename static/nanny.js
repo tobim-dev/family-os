@@ -50,12 +50,21 @@ function shiftLine(shift) {
   return `${fmt(shift.day, {weekday: 'long', day: 'numeric', month: 'long'})}, ${shift.start}–${shift.end} Uhr`;
 }
 
+function nannyMonthName(value) {
+  return new Date(value.slice(0, 7) + '-01T12:00:00').toLocaleDateString('de-DE', {month: 'long'});
+}
+
 function requestText(shifts) {
   const greeting = `Hallo ${nannyState.settings.name},`;
+  const signature = `Viele Grüße\n${names[state.user]}`;
   if (shifts.length === 1) {
-    return `${greeting}\nhättest du am ${shiftLine(shifts[0])} Zeit für Lina?\nViele Grüße\n${names[state.user]}`;
+    return `${greeting}\nhättest du am ${shiftLine(shifts[0])} Zeit für Lina?\n${signature}`;
   }
-  return `${greeting}\nhättest du an diesen Terminen Zeit für Lina?\n${shifts.map(s => '– ' + shiftLine(s)).join('\n')}\nViele Grüße\n${names[state.user]}`;
+  const sorted = [...shifts].sort((a, b) => (a.day + a.start).localeCompare(b.day + b.start));
+  const months = [...new Set(sorted.map(s => nannyMonthName(s.day)))];
+  return `${greeting}\nfür ${months.join(' und ')} hätten wir gern diese Termine für Lina:\n`
+    + sorted.map(s => '– ' + shiftLine(s)).join('\n')
+    + `\nPasst dir das? Sag gern Bescheid, falls einzelne Tage nicht gehen.\n${signature}`;
 }
 
 function cancelText(shift) {
@@ -73,7 +82,7 @@ function shiftActions(shift, locked) {
   const past = shift.day <= nannyState.today;
   const buttons = {
     wish: [
-      `<button class="btn primary" data-nanny-request="${id}">WhatsApp-Anfrage</button>`,
+      `<button class="btn" data-nanny-request="${id}">Einzeln anfragen</button>`,
       `<button class="btn" data-nanny-confirm="${id}">Schon zugesagt</button>`,
       `<button class="btn ghost" data-nanny-edit="${id}">Ändern</button>`,
       `<button class="btn ghost danger" data-nanny-cancel="${id}">Streichen</button>`,
@@ -149,6 +158,22 @@ function statementHTML(statement) {
   </section>`;
 }
 
+function monthBanners(wishes, requested, locked, phoneNote) {
+  if (locked) return '';
+  let html = '';
+  if (wishes.length) {
+    html += `<div class="planning-banner"><div><b>${wishes.length === 1 ? 'Ein Wunsch' : wishes.length + ' Wünsche'} für ${monthName(month)} noch nicht angefragt</b>
+      <p>Alle Termine des Monats in einer WhatsApp-Nachricht an die Nanny.${phoneNote}</p></div>
+      <button class="btn primary" data-nanny-request="${wishes.map(s => s.id).join(',')}">Monatsnachricht senden</button></div>`;
+  }
+  if (requested.length) {
+    html += `<div class="planning-banner nanny-answer-banner"><div><b>${requested.length === 1 ? 'Ein Termin wartet' : requested.length + ' Termine warten'} auf Antwort</b>
+      <p>Hat die Nanny geantwortet? Zusagen und Absagen gesammelt eintragen.</p></div>
+      <button class="btn green" data-nanny-answer>Antwort eintragen</button></div>`;
+  }
+  return html;
+}
+
 function nannyHTML() {
   if (!nannyState || nannyState.month !== month) {
     return '<section class="panel"><div class="empty-state">Nanny-Planung wird geladen …</div></section>';
@@ -156,6 +181,7 @@ function nannyHTML() {
   const {shifts, statement, settings} = nannyState;
   const locked = statement.state !== 'open';
   const wishes = shifts.filter(s => s.state === 'wish');
+  const requested = shifts.filter(s => s.state === 'requested');
   const active = shifts.filter(s => ['wish', 'requested', 'confirmed'].includes(s.state));
   const closedShifts = shifts.filter(s => !['wish', 'requested', 'confirmed'].includes(s.state));
   const phoneNote = settings.phone ? '' : ' Ohne hinterlegte Nummer wählst du den Chat in WhatsApp selbst.';
@@ -166,18 +192,98 @@ function nannyHTML() {
         <span class="month-title">${monthName(month)}</span>
         <button class="btn" data-month="1" aria-label="Nächster Monat">${icon('arrow')}</button>
         <button class="btn" data-nanny-settings>Einstellungen</button>
-        ${locked ? '' : `<button class="btn primary" data-nanny-new>${icon('plus')}Nanny-Wunsch</button>`}
+        ${locked ? '' : `<button class="btn" data-nanny-new>${icon('plus')}Einzeltermin</button>
+        <button class="btn primary" data-nanny-plan>${icon('calendar')}Monat planen</button>`}
       </div>
     </div>
     ${locked ? '<div class="note nanny-locked">Dieser Monat ist abgerechnet. Zum Ändern die Abrechnung wieder öffnen.</div>' : ''}
     <div class="content-grid"><div class="stack">
-      ${wishes.length > 1 && !locked ? `<div class="planning-banner"><div><b>${wishes.length} Wünsche offen</b><p>Gemeinsam in einer WhatsApp-Nachricht anfragen.${phoneNote}</p></div><button class="btn" data-nanny-request="${wishes.map(s => s.id).join(',')}">Alle anfragen</button></div>` : ''}
+      ${monthBanners(wishes, requested, locked, phoneNote)}
       <section class="panel"><div class="panel-head"><div><h2>Nanny-Termine</h2><p>An Nanny-Tagen holt ihr Lina früher ab und übergebt zuhause.</p></div><span class="status gray">${active.length}</span></div>
         ${active.length ? active.map(s => shiftRow(s, locked)).join('') : `<div class="empty-state">${icon('users')}<b>Keine Nanny-Termine geplant.</b><p>Wünsche könnt ihr bei der Monatsplanung gleich mit anlegen.</p></div>`}
       </section>
       ${closedShifts.length ? `<details class="panel meal-done"><summary>Abgesagt (${closedShifts.length})</summary>${closedShifts.map(s => shiftRow(s, true)).join('')}</details>` : ''}
     </div>
     <aside class="rail">${statementHTML(statement)}</aside></div>`;
+}
+
+function nannyPlanDialog() {
+  const first = dateObj(month + '-01');
+  const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
+  const taken = new Set(nannyState.shifts.filter(s => ['wish', 'requested', 'confirmed'].includes(s.state)).map(s => s.day));
+  const weeks = [];
+  for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    const day = iso(d);
+    if (!weeks.length || d.getDay() === 1) weeks.push([]);
+    weeks[weeks.length - 1].push(day);
+  }
+  const dayBox = day => {
+    const past = day < nannyState.today;
+    const planned = taken.has(day);
+    const pickup = pickupOwner(day);
+    return `<label class="nanny-pick ${planned ? 'planned' : ''} ${past ? 'past' : ''}">
+      <input type="checkbox" name="day" value="${day}" ${planned ? 'checked disabled' : past ? 'disabled' : ''}>
+      <span><b>${fmt(day, {weekday: 'short'})} ${fmt(day, {day: 'numeric'})}.</b>
+      <small>${planned ? 'geplant' : pickup ? 'Abholung ' + esc(pickup) : '&nbsp;'}</small></span>
+    </label>`;
+  };
+  const free = weeks.flat().filter(day => day >= nannyState.today && !taken.has(day));
+  dialog('Nanny-Monat planen', monthName(month), free.length ? `<form>
+    <p>Tage auswählen, an denen ihr die Nanny braucht. Danach geht alles in einer WhatsApp-Nachricht raus.</p>
+    <div class="nanny-weeks">${weeks.map((week, index) => `<div class="nanny-week">${index === 0 ? '<span aria-hidden="true"></span>'.repeat((dateObj(week[0]).getDay() + 6) % 7) : ''}${week.map(dayBox).join('')}</div>`).join('')}</div>
+    <div class="field-pair">
+      <div class="field"><label for="plan-start">Von</label><input id="plan-start" name="start" type="time" required value="16:00"></div>
+      <div class="field"><label for="plan-end">Bis</label><input id="plan-end" name="end" type="time" required value="18:00"></div>
+    </div>
+    <p class="note">Gilt für alle ausgewählten Tage; einzelne Zeiten lassen sich danach ändern. An diesen Tagen holt ihr Lina früher ab.</p>
+    <div class="dialog-footer"><button class="btn primary" type="submit">Wünsche speichern und Nachricht vorbereiten</button></div>
+  </form>` : '<p class="note">In diesem Monat sind keine freien Werktage mehr übrig.</p>');
+  const form = modal.querySelector('form');
+  if (!form) return;
+  form.onsubmit = async event => {
+    event.preventDefault();
+    const days = [...form.querySelectorAll('input[name=day]:checked:not(:disabled)')].map(input => input.value);
+    if (!days.length) return formError(form, 'Bitte mindestens einen Tag auswählen.');
+    const button = form.querySelector('[type=submit]');
+    button.disabled = true;
+    try {
+      await api('/nanny/shifts/batch', {days, start: form.start.value, end: form.end.value});
+      modal.close();
+      await load();
+      const wishes = nannyState.shifts.filter(s => s.state === 'wish');
+      if (wishes.length) nannyRequestDialog(wishes.map(s => s.id).join(','));
+    } catch (error) {
+      formError(form, error.message);
+      button.disabled = false;
+    }
+  };
+}
+
+function nannyAnswerDialog() {
+  const requested = nannyState.shifts.filter(s => s.state === 'requested');
+  dialog('Antwort der Nanny eintragen', monthName(month), `<form>
+    <div class="actions nanny-answer-all"><button type="button" class="btn" data-answer-all="confirm">Alle zugesagt</button></div>
+    ${requested.map(s => `<fieldset class="nanny-answer" data-id="${s.id}" data-version="${s.version}">
+      <legend>${esc(shiftLine(s))}</legend>
+      <label class="choice"><input type="radio" name="a${s.id}" value="confirm"> Kommt</label>
+      <label class="choice"><input type="radio" name="a${s.id}" value="decline"> Kann nicht</label>
+      <label class="choice"><input type="radio" name="a${s.id}" value="" checked> Noch offen</label>
+    </fieldset>`).join('')}
+    <div class="dialog-footer"><button type="submit" class="btn green">Antwort speichern</button></div>
+  </form>`);
+  const form = modal.querySelector('form');
+  form.querySelector('[data-answer-all]').onclick = () => {
+    form.querySelectorAll('input[value=confirm]').forEach(input => { input.checked = true; });
+  };
+  submitForm(form, () => {
+    const items = [...form.querySelectorAll('.nanny-answer')].map(set => ({
+      id: Number(set.dataset.id), version: Number(set.dataset.version),
+      answer: set.querySelector('input:checked')?.value || '',
+    })).filter(item => item.answer);
+    if (!items.length) throw new Error('Bitte mindestens eine Antwort auswählen.');
+    return api('/nanny/answer', {items});
+  });
 }
 
 function nannyShift(id) {
@@ -215,8 +321,8 @@ function nannyRequestDialog(ids) {
   const shifts = ids.split(',').map(nannyShift).filter(Boolean);
   const text = requestText(shifts);
   const pending = shifts.filter(s => s.state === 'wish');
-  dialog('Nanny per WhatsApp anfragen', `${shifts.length === 1 ? nannyDay(shifts[0].day) : shifts.length + ' Termine'}`, `
-    <div class="field"><label for="nanny-text">Nachricht</label><textarea id="nanny-text" readonly rows="6">${esc(text)}</textarea></div>
+  dialog(shifts.length > 1 ? 'Monatsnachricht an die Nanny' : 'Nanny per WhatsApp anfragen', `${shifts.length === 1 ? nannyDay(shifts[0].day) : shifts.length + ' Termine · ' + monthName(month)}`, `
+    <div class="field"><label for="nanny-text">Nachricht</label><textarea id="nanny-text" readonly rows="${Math.min(14, shifts.length + 5)}">${esc(text)}</textarea></div>
     <div class="actions"><a class="btn primary" href="${esc(whatsappLink(text))}" target="_blank" rel="noopener noreferrer">In WhatsApp öffnen</a></div>
     <p class="note">Das Öffnen ändert nichts. Nach dem Senden hier als angefragt markieren. Die Zusage trägst du ein, sobald sie antwortet.</p>
     ${pending.length ? '<div class="dialog-footer"><button class="btn green" data-nanny-mark-requested>Nachricht gesendet · als angefragt markieren</button></div>' : ''}
@@ -314,6 +420,8 @@ function bindNanny() {
   });
   app.querySelector('[data-nanny-new]')?.addEventListener('click', () => nannyShiftForm(null));
   app.querySelector('[data-nanny-settings]')?.addEventListener('click', nannySettingsDialog);
+  app.querySelector('[data-nanny-plan]')?.addEventListener('click', nannyPlanDialog);
+  app.querySelector('[data-nanny-answer]')?.addEventListener('click', nannyAnswerDialog);
   on('[data-nanny-edit]', b => nannyShiftForm(nannyShift(b.dataset.nannyEdit)));
   on('[data-nanny-request]', b => nannyRequestDialog(b.dataset.nannyRequest));
   on('[data-nanny-confirm]', b => nannySimpleDialog(nannyShift(b.dataset.nannyConfirm), 'confirm'));

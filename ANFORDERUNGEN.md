@@ -93,6 +93,7 @@ Quelle: zweiter geschilderter Alltagsprozess und spätere Antworten zur Zuständ
 | N-07 | Monatlich Stunden und daraus folgenden Lohnbetrag nachvollziehbar zusammenstellen. Tobi überweist den Betrag. | Vorhanden: Monatsübersicht je Termin, Summe auf volle Cent, Abschluss nach Monatsende, Markierung „überwiesen“. Keine automatische Überweisung. |
 | N-08 | Entscheidung 26.09.2026 (O-03): WhatsApp als vorbereiteter Text; Tobi/Britta senden selbst und tragen die Zusage manuell ein. Kein automatischer Versand. | Vorhanden: Öffnen des Links ändert keinen Status; optionale Nummer der Nanny. |
 | N-09 | Entscheidung 26.09.2026 (O-04): Abgerechnet wird die geplante Zeit; Abweichungen minutengenau korrigierbar. Kurzfristige Absagen bestätigter Termine: im Einzelfall „bezahlt“ oder „nicht bezahlt“. | Vorhanden: Korrektur nur mit Grund; Absage bestätigter Termine verlangt die Entscheidung. |
+| N-11 | Wunsch 26.09.2026: Nanny-Termine für einen Monat gemeinsam planen und der Nanny alle Termine eines Monats in einer WhatsApp-Nachricht schicken. | Vorhanden: Monatsplaner (mehrere Werktage, gemeinsame Zeit), Monatsnachricht, gesammelte Antwort mit Zusage/Absage je Termin, eine Anfrage-Aufgabe pro Monat. |
 | N-10 | Entscheidung 26.09.2026 (O-04): An Nanny-Tagen holen die Eltern Lina früher ab, damit die Übergabe zuhause zum Nanny-Beginn (gewöhnlich 16:00) klappt. | Teilweise: Hinweis an der Abholung und in der Tagesübersicht; Abholzeit wird nicht automatisch geändert. |
 
 Geklärt am 26.09.2026: WhatsApp-Umfang, Stundenbasis, Ausfälle und Nanny-Start (N-08 bis N-10).

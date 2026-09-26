@@ -76,10 +76,14 @@ Mitteilung über den eingeschalteten Modus.
 
 ## Nanny-Planung
 
-Unter **Nanny** legen beide Eltern Wünsche an (Standard 16:00–18:00 Uhr). Tobi erhält
-die Aufgabe „Nanny anfragen“. Die Anfrage öffnet WhatsApp mit einem fertigen Text,
-optional direkt im Chat der hinterlegten Nummer. Das Öffnen ändert nichts; erst
-„als angefragt markieren“ und später „Zusage eintragen“ ändern den Stand.
+Unter **Nanny → Monat planen** wählt ihr alle Tage eines Monats auf einmal aus
+(Standard 16:00–18:00 Uhr). Danach erscheint direkt die **Monatsnachricht**: eine
+WhatsApp-Nachricht mit allen noch nicht angefragten Terminen des Monats, optional
+direkt im Chat der hinterlegten Nummer. Das Öffnen ändert nichts; erst „als angefragt
+markieren“ ändert den Stand. Die Antwort der Nanny tragt ihr unter **Antwort eintragen**
+gesammelt ein („Alle zugesagt“, einzelne Tage auf „Kann nicht“ setzen). Einzeltermine
+bleiben möglich. Tobi erhält pro Monat eine Aufgabe „Nanny anfragen“, solange dort
+noch Wünsche offen sind.
 
 An bestätigten oder angefragten Nanny-Tagen zeigt die Abholung den Hinweis
 „früher abholen“: Die Übergabe erfolgt zuhause zum Nanny-Beginn.

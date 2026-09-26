@@ -70,9 +70,72 @@ class NannyTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         [task] = self.tasks()
         self.assertEqual(task['title'], 'Nanny anfragen')
-        self.assertEqual(task['nanny_shift_id'], response.json()['id'])
+        self.assertTrue(task['details'].startswith(str(self.day)[:7] + ': 1 Wunsch'))
         with self.app.state.db() as conn:
             self.assertTrue(conn.execute("SELECT 1 FROM notifications WHERE owner='tobi' AND dedupe LIKE 'nanny-wish:%'").fetchone())
+
+    def month_days(self, count):
+        # Weekdays from tomorrow on within one month; move to next month if needed.
+        day = self.today + timedelta(days=1)
+        if (day + timedelta(days=count * 2)).month != day.month:
+            day = (day.replace(day=1) + timedelta(days=32)).replace(day=1)
+        days = []
+        while len(days) < count:
+            if day.weekday() < 5:
+                days.append(str(day))
+            day += timedelta(days=1)
+        return days
+
+    def test_month_is_planned_in_one_step_with_one_task_and_notice(self):
+        days = self.month_days(4)
+        response = self.britta.post('/api/nanny/shifts/batch', json={'days': days})
+        self.assertEqual(response.status_code, 200)
+        ids = response.json()['ids']
+        self.assertEqual(len(ids), 4)
+        [task] = self.tasks()
+        self.assertIn('4 Wünsche', task['details'])
+        with self.app.state.db() as conn:
+            notices = conn.execute("SELECT body FROM notifications WHERE owner='tobi' AND dedupe LIKE 'nanny-wishes:%'").fetchall()
+        self.assertEqual(len(notices), 1)
+        # Requesting part of the month keeps the task with the remaining count.
+        month = days[0][:7]
+        shifts = self.overview(month)['shifts']
+        first = shifts[0]
+        self.tobi.post('/api/nanny/transition', json={'ids': [first['id']], 'versions': [first['version']], 'action': 'request'})
+        [task] = self.tasks()
+        self.assertIn('3 Wünsche', task['details'])
+        rest = [s for s in self.overview(month)['shifts'] if s['state'] == 'wish']
+        self.tobi.post('/api/nanny/transition', json={'ids': [s['id'] for s in rest], 'versions': [s['version'] for s in rest], 'action': 'request'})
+        self.assertEqual(self.tasks(), [])
+
+    def test_month_batch_is_atomic_and_single_month(self):
+        days = self.month_days(3)
+        self.create(day=days[1])
+        response = self.britta.post('/api/nanny/shifts/batch', json={'days': days})
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(len(self.overview(days[0][:7])['shifts']), 1)
+        self.assertEqual(self.britta.post('/api/nanny/shifts/batch', json={'days': [days[0], days[0]]}).status_code, 422)
+        other_month = str((date.fromisoformat(days[0]).replace(day=1) + timedelta(days=40)))
+        self.assertEqual(self.britta.post('/api/nanny/shifts/batch', json={'days': [days[0], other_month]}).status_code, 422)
+
+    def test_mixed_answer_is_recorded_atomically(self):
+        days = self.month_days(3)
+        self.britta.post('/api/nanny/shifts/batch', json={'days': days})
+        month = days[0][:7]
+        shifts = self.overview(month)['shifts']
+        self.tobi.post('/api/nanny/transition', json={'ids': [s['id'] for s in shifts], 'versions': [s['version'] for s in shifts], 'action': 'request'})
+        shifts = self.overview(month)['shifts']
+        items = [{'id': shifts[0]['id'], 'version': shifts[0]['version'], 'answer': 'confirm'},
+                 {'id': shifts[1]['id'], 'version': shifts[1]['version'] - 1, 'answer': 'decline'}]
+        self.assertEqual(self.tobi.post('/api/nanny/answer', json={'items': items}).status_code, 409)
+        self.assertEqual({s['state'] for s in self.overview(month)['shifts']}, {'requested'})
+        items[1]['version'] += 1
+        response = self.tobi.post('/api/nanny/answer', json={'items': items})
+        self.assertEqual(response.json(), {'confirmed': 1, 'declined': 1})
+        self.assertEqual([s['state'] for s in self.overview(month)['shifts']], ['confirmed', 'declined', 'requested'])
+        with self.app.state.db() as conn:
+            body = conn.execute("SELECT body FROM notifications WHERE owner='britta' AND dedupe LIKE 'nanny-answer:%'").fetchone()[0]
+        self.assertIn('Kann nicht', body)
 
     def test_invalid_and_overlapping_wishes_are_rejected(self):
         self.assertEqual(self.create(end='15:00').status_code, 422)
