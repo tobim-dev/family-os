@@ -78,8 +78,8 @@ Spracheingabe (A-01, A-02, A-10) mit simuliertem Modell, echte Audio-Dekodierung
 - Container-Prüfung in CI: Bibliotheken und Stille-Erkennung laufen im schreibgeschützten Image.
 - Browser (Chromium, simuliertes Mikrofon, 390 px): Aufnahme mit Zeitanzeige, WebM/Opus wird
   auf dem Server dekodiert, Text erscheint im Feld, erst „Notieren“ speichert.
-- Nicht geprüft: das echte Whisper-Modell (Download aus dieser Entwicklungsumgebung gesperrt),
-  Erkennungsqualität und Geschwindigkeit auf dem NAS, Aufnahme auf echten iPhones.
+- Auf dem NAS von Tobi bestätigt (26.09.2026): Modell geladen, „Sprechen“ erscheint, 7,7 s Sprache
+  in 4,1 s umgewandelt. Noch offen: Erkennungsqualität über mehrere Wochen, Aufnahme auf Brittas iPhone.
 
 Gutscheine (Migration 5):
 
