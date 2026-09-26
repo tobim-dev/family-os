@@ -22,6 +22,7 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
   Vorschläge/Freigaben, Klärungspunkte, Aufgaben, gemeinsamer Planungsmodus.
 - `integrations.py`: Google-Kalender, Mitteilungen, Web-Push, Hintergrund-Threads.
 - `meals.py`: Cookidoo (inoffizielle `cookidoo-api`), Einkaufsliste.
+- `recipe_images.py`: Rezeptbilder über den NAS (Host-Allowlist, Cache); Browser lädt nie extern.
 - `nanny.py`: Nanny-Termine, WhatsApp-Anfragen (nur vorbereiteter Text), Stunden, Monatsabrechnung.
 - `migrations.py`: versioniertes SQLite-Schema (`PRAGMA user_version`).
 - `manage.py`: Konten einrichten, Backups. `docker-entrypoint.py`: Unraid-Rechte.
