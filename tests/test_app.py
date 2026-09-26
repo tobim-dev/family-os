@@ -20,7 +20,7 @@ class PlanningTests(unittest.TestCase):
         self.path = Path(self.tmp.name) / 'family.sqlite'
         self.app = create_app(self.path, demo=True)
         with self.app.state.db() as conn:
-            for table in ('tasks','proposals','issues','appointments','audit'):
+            for table in ('work_calendar_items','tasks','proposals','issues','appointments','audit'):
                 conn.execute('DELETE FROM ' + table)
         self.tobi = self.client('tobi')
         self.britta = self.client('britta')
@@ -65,6 +65,8 @@ class PlanningTests(unittest.TestCase):
 
     def test_change_preserves_current_owner_until_accepted(self):
         self.approve(self.proposal().json()['id'])
+        [task]=self.state()['tasks']
+        self.assertEqual(self.tobi.post(f"/api/tasks/{task['id']}/complete",json={}).status_code,200)  # block entered
         p=self.proposal(owner='britta',expected_version=1).json()['id']
         self.assertEqual(self.state()['appointments'][0]['owner'],'tobi')
         self.approve(p)
@@ -167,7 +169,8 @@ class PlanningTests(unittest.TestCase):
             self.assertEqual([r[0] for r in targets], ['slot-' + str(s['appointments'][0]['id'])])
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM notifications WHERE dedupe LIKE 'proposal:%'").fetchone()[0], 0)
         self.assertEqual(self.proposal(planning_session=mode,owner='britta',expected_version=1).status_code,200)
-        self.assertEqual({t['owner'] for t in self.state()['tasks'] if t['state']=='open'}, {'tobi','britta'})
+        # Tobi never entered the block: his add and remove cancel out (B-18).
+        self.assertEqual({t['owner'] for t in self.state()['tasks'] if t['state']=='open'}, {'britta'})
         self.assertEqual(self.proposal(planning_session=mode,expected_version=1).status_code,409)
 
     def test_joint_mode_does_not_apply_to_other_login_or_unmarked_request(self):
@@ -263,7 +266,7 @@ class AuthenticationTests(unittest.TestCase):
         month = self.client.post('/api/month-draft', json={'month':'2027-02','bring_start':'07:45','bring_end':'08:45','pickup_start':'15:30','pickup_end':'17:30'})
         self.assertEqual(month.status_code, 409)
         with self.app.state.db() as conn:
-            for table in ('appointments','proposals','issues','notifications'):
+            for table in ('work_calendar_items','appointments','proposals','issues','notifications'):
                 self.assertEqual(conn.execute('SELECT COUNT(*) FROM ' + table).fetchone()[0], 0)
             conn.execute('INSERT INTO users(id,password,totp) VALUES(?,?,?)', ('britta', password_hash('test-password-123'), pyotp.random_base32()))
         self.assertEqual(self.client.post('/api/proposals', json=data).status_code, 200)

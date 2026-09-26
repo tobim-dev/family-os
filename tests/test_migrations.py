@@ -185,7 +185,7 @@ class MigrationTests(unittest.TestCase):
             conn.execute("INSERT INTO lina_diapers(kind,packs,actor,created) VALUES('set',3,'tobi','x')")
             conn.execute("INSERT INTO lina_items(list,text,owner,creator,created,updated) VALUES('need','Jacke','tobi','tobi','x','x')")
         conn.close()
-        self.assertEqual(migrate(self.path), [5])
+        self.assertEqual(migrate(self.path, migrations.MIGRATIONS[:4]), [5])
         with sqlite3.connect(self.path) as conn:
             self.assertEqual(conn.execute('SELECT kind,packs FROM lina_diapers').fetchall(), [('set', 3)])
             self.assertEqual(conn.execute('SELECT text FROM lina_items').fetchall(), [('Jacke',)])
@@ -193,6 +193,41 @@ class MigrationTests(unittest.TestCase):
                 conn.execute("INSERT INTO vouchers(value_cents,remaining_cents,file,filename,size,uploaded_by,created,updated) VALUES(100,200,'f','f',1,'tobi','x','x')")
         conn.close()
         self.assertTrue(any(b.name.startswith('pre-migration-v4-v5-') for b in self.backups()))
+
+    def test_work_calendar_tasks_are_bundled_without_loss(self):
+        legacy_database(self.path)
+        migrate(self.path, migrations.MIGRATIONS[:4])  # production state before version 6
+        with sqlite3.connect(self.path) as conn:
+            conn.execute("INSERT INTO users(id,password,totp) VALUES('britta','x','y')")
+            conn.execute("INSERT INTO appointments(day,kind,owner,start,end,version) VALUES('2026-10-06','pickup','britta','15:30','17:30',2)")
+            rows = [(1, 'tobi', '2026-10-05 · Lina bringen: 07:45–08:45 als abwesend eintragen.', 'open'),
+                    (2, 'tobi', '2026-10-06 · Lina abholen: bisherigen Block entfernen; Britta übernimmt.', 'open'),
+                    (2, 'britta', '2026-10-06 · Lina abholen: 15:30–17:30 als abwesend eintragen.', 'open'),
+                    (None, 'britta', 'Blöcke entfernen, sie entfallen: 07.10. Bringen 07:45–08:45.', 'open'),
+                    (1, 'tobi', 'Schon erledigt', 'done')]
+            for appointment, owner, details, state in rows:
+                conn.execute("INSERT INTO tasks(appointment_id,owner,title,details,due,created,state) "
+                             "VALUES(?,?,'Arbeitskalender aktualisieren',?,'2026-10-01','2026-10-01T10:00:00+02:00',?)",
+                             (appointment, owner, details, state))
+        conn.close()
+        self.assertEqual(migrate(self.path), [6])
+        with sqlite3.connect(self.path) as conn:
+            items = conn.execute('SELECT owner,appointment_id,action,day,start,end,text FROM work_calendar_items ORDER BY id').fetchall()
+            states = conn.execute('SELECT state FROM tasks ORDER BY id').fetchall()
+        conn.close()
+        self.assertEqual([i[:6] for i in items], [
+            ('tobi', 1, 'add', '2026-10-05', '07:45', '08:45'),
+            ('tobi', 2, 'remove', '2026-10-06', None, None),
+            ('britta', 2, 'add', '2026-10-06', '15:30', '17:30'),
+            ('britta', None, 'remove', None, None, None)])
+        self.assertEqual(items[3][6], 'Blöcke entfernen, sie entfallen: 07.10. Bringen 07:45–08:45.')
+        self.assertEqual([s[0] for s in states], ['superseded'] * 4 + ['done'])
+        # On start the app shows one task per person with all entries.
+        app = create_app(self.path, demo=True)
+        with app.state.db() as conn:
+            open_tasks = conn.execute("SELECT owner,details FROM tasks WHERE state='open' ORDER BY owner").fetchall()
+        self.assertEqual([t[0] for t in open_tasks], ['britta', 'tobi'])
+        self.assertIn('Entfernen: Di 06.10. Lina abholen', open_tasks[1][1])
 
     def test_statement_splitting_handles_triggers(self):
         script = "CREATE TABLE a(x); CREATE TRIGGER t AFTER INSERT ON a BEGIN UPDATE a SET x=1; END; SELECT 1;"

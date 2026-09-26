@@ -22,11 +22,23 @@ function outlookLinks(block) {
   return {app, web};
 }
 
+// The bundled work-calendar task (B-18): every entry with "eintragen" or
+// "entfernen"; entries to add get the Outlook buttons for their owner.
 function outlookActions(task) {
-  if (!task.calendar_block || task.owner !== state.user) return '';
-  const links = outlookLinks(task.calendar_block);
-  return `<div class="actions outlook-actions">
-      <a class="btn primary" href="${esc(links.app)}">In Outlook eintragen</a>
-      <a class="btn ghost" href="${esc(links.web)}" target="_blank" rel="noopener noreferrer">In Outlook im Web</a></div>
-    <small>Vor dem Speichern „Anzeigen als: Abwesend“ wählen. Danach diese Aufgabe abhaken.</small>`;
+  if (!task.calendar_items) return '';
+  const own = task.owner === state.user;
+  const rows = task.calendar_items.map(item => {
+    const links = own && item.calendar_block ? outlookLinks(item.calendar_block) : null;
+    return `<li class="work-entry ${item.action}"><span class="status ${item.action === 'add' ? 'green' : 'amber'}">${item.action === 'add' ? 'Eintragen' : 'Entfernen'}</span>
+      <span>${esc(item.label)}</span>
+      ${links ? `<span class="work-links"><a class="btn primary" href="${esc(links.app)}">In Outlook eintragen</a>
+        <a class="btn ghost" href="${esc(links.web)}" target="_blank" rel="noopener noreferrer">Im Web</a></span>` : ''}</li>`;
+  }).join('');
+  const hint = own && task.calendar_items.some(i => i.calendar_block)
+    ? '<small>Vor dem Speichern „Anzeigen als: Abwesend“ wählen. Wenn alles angepasst ist, die Aufgabe einmal abhaken.</small>' : '';
+  return `<ul class="work-entries">${rows}</ul>${hint}`;
+}
+
+function workCalendarUpto(task) {
+  return task.calendar_items ? {upto: Math.max(0, ...task.calendar_items.map(i => i.id))} : {};
 }

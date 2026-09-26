@@ -21,6 +21,7 @@ from fastapi import HTTPException, Request
 from pydantic import BaseModel, Field
 
 from integrations import TZ, PEOPLE, notify
+import work_calendar
 
 KINDS = {'closed': 'Krippe geschlossen', 'holiday': 'Feiertag', 'vacation': 'Urlaub', 'sick': 'Lina krank'}
 MAX_DAYS = 31
@@ -74,13 +75,8 @@ class Closures:
         marks = ','.join('?' * len(days))
         rows = conn.execute(f'SELECT * FROM appointments WHERE owner IS NOT NULL AND day IN ({marks}) ORDER BY day,kind',
                             days).fetchall()
-        for owner in sorted({r['owner'] for r in rows}):
-            own = [r for r in rows if r['owner'] == owner]
-            listing = '; '.join(f"{date.fromisoformat(r['day']).strftime('%d.%m.')} "
-                                f"{'Bringen' if r['kind'] == 'bring' else 'Abholen'} {r['start']}–{r['end']}" for r in own)
-            action = 'Blöcke entfernen, sie entfallen' if suspended else 'Blöcke wieder eintragen, sie gelten wieder'
-            conn.execute('INSERT INTO tasks(owner,title,details,due,created) VALUES(?,?,?,?,?)',
-                         (owner, 'Arbeitskalender aktualisieren', f'{action}: {listing}.', now(), now()))
+        for row in rows:
+            work_calendar.record(conn, row['owner'], 'remove' if suspended else 'add', row)
 
     def confirm(self, conn, actor, rows):
         days = [r['day'] for r in rows]

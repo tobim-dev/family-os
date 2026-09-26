@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-178 Tests bestanden (`python -m unittest discover -s tests -v`):
+183 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -57,10 +57,22 @@ Nanny-Planung (Migration 2):
   eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
 - Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
 
+Gebündelte Arbeitskalender-Aufgabe (B-18, Migration 6):
+
+- Mehrere Bestätigungen → genau eine offene Aufgabe je Person mit allen Einträgen, sortiert nach Tag.
+- Weitergabe vor dem Eintragen hebt sich auf; nach dem Eintragen entstehen „Entfernen“ (alte Person)
+  und „Eintragen“ (neue Person); geänderte Zeit ersetzt den offenen Eintrag.
+- Abhaken erledigt nur die angezeigten Einträge, später hinzugekommene halten die Aufgabe offen;
+  nur die eigene Aufgabe lässt sich abhaken.
+- Tage ohne Krippe: Aufheben vor dem Entfernen lässt nichts übrig, nach dem Entfernen „Eintragen“.
+- Migration: offene Einzelaufgaben (auch Freitext aus Schließtagen) werden verlustfrei übernommen,
+  erledigte bleiben unberührt; beim Start entsteht je Person eine gebündelte Aufgabe.
+- Browser (390 px): Monatsentwurf, Britta bestätigt sechs Wege gesammelt → Tobi hat eine Aufgabe;
+  einmal abhaken → erledigt.
+
 Outlook-Übergabe (B-17):
 
-- Nur die Aufgabe der Person, die einen Block neu eintragen muss, erhält Outlook-Daten; nicht das
-  Entfernen, nicht an bestätigten Tagen ohne Krippe, nicht für die andere Person.
+- Outlook-Knöpfe nur an Einträgen zum Eintragen in der eigenen Aufgabe, nicht beim Entfernen.
 - Zeiten: App-Link in Ortszeit, Web-Link in UTC, korrekt über Sommer-/Winterzeit.
 - Links enthalten nur Titel und Zeit, Leerzeichen als %20 (kein „+“ im Betreff).
 - Browser (390 px): Vorschlag bestätigt → Aufgabe mit „In Outlook eintragen“.

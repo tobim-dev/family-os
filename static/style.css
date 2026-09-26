@@ -40,3 +40,4 @@ dialog{border:0;padding:0;border-radius:15px;box-shadow:0 24px 100px #102a4050;w
 .vinted-text{width:100%;border:1px solid #bccbd5;border-radius:7px;padding:10px;font:inherit}
 .btn.mic{align-self:flex-start;margin-top:6px;min-height:36px;padding:6px 10px}.btn.mic.recording{color:var(--danger);border-color:#df9aa4;background:#fff0f3}
 .offline-page{max-width:640px;display:grid;gap:16px;padding:32px 16px}
+.work-entries{list-style:none;margin:10px 0 8px;padding:0;display:grid;gap:8px}.work-entry{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.9rem}.work-links{display:flex;gap:6px;flex-wrap:wrap;width:100%}.work-links .btn{min-height:36px;padding:6px 10px}

@@ -31,9 +31,16 @@ test('app link uses local time, web link uses UTC, text is encoded', () => {
   assert.equal([...web.searchParams.keys()].sort().join(','), 'enddt,path,rru,startdt,subject');  // nothing else leaves
 });
 
-test('buttons only for your own add-task', () => {
-  const task = {owner: 'britta', calendar_block: block};
-  assert.match(context('britta').outlookActions(task), /In Outlook eintragen/);
-  assert.equal(context('tobi').outlookActions(task), '');
+test('bundled task lists every entry; buttons only for own entries to add', () => {
+  const task = {owner: 'britta', calendar_items: [
+    {id: 4, action: 'add', label: 'Mo 29.03. Lina abholen 15:30–17:30', calendar_block: block},
+    {id: 7, action: 'remove', label: 'Di 30.03. Lina bringen 07:45–08:45'}]};
+  const mine = context('britta').outlookActions(task);
+  assert.equal((mine.match(/In Outlook eintragen/g) || []).length, 1);
+  assert.match(mine, /Entfernen<\/span>\s*<span>Di 30\.03\./);
+  const other = context('tobi').outlookActions(task);
+  assert.match(other, /Mo 29\.03\./);
+  assert.doesNotMatch(other, /In Outlook eintragen/);
   assert.equal(context('britta').outlookActions({owner: 'britta'}), '');
+  assert.deepEqual(JSON.parse(JSON.stringify(context('britta').workCalendarUpto(task))), {upto: 7});
 });

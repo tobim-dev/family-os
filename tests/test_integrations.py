@@ -23,7 +23,7 @@ class IntegrationTests(unittest.TestCase):
         self.client=TestClient(self.app,base_url='http://127.0.0.1:8765',headers={'Origin':'http://127.0.0.1:8765','X-Family-Request':'1'})
         self.client.post('/api/login',json={'user':'tobi'})
         with self.app.state.db() as c:
-            for table in ('tasks','proposals','issues','appointments','audit'):
+            for table in ('work_calendar_items','tasks','proposals','issues','appointments','audit'):
                 c.execute('DELETE FROM '+table)
             c.execute("INSERT INTO appointments VALUES(1,'2027-03-29','bring','tobi','07:45','08:45',1)")
         self.remote={};self.calls=[];self.etag=0

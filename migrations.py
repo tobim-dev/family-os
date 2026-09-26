@@ -53,6 +53,45 @@ CREATE TABLE IF NOT EXISTS meal_cache(key TEXT PRIMARY KEY, value TEXT NOT NULL,
 CREATE TABLE IF NOT EXISTS meal_operations(id TEXT PRIMARY KEY, actor TEXT NOT NULL REFERENCES users(id), payload TEXT NOT NULL, state TEXT NOT NULL, message TEXT NOT NULL DEFAULT '', created REAL NOT NULL);
 '''
 
+def work_calendar_items(conn):
+    """Version 6: one bundled work-calendar task per person.
+
+    Open per-appointment tasks "Arbeitskalender aktualisieren" become entries of
+    the new table; the tasks themselves are closed. The application recreates
+    one open task per person with all entries on start (work_calendar.py).
+    """
+    conn.execute('''CREATE TABLE work_calendar_items(
+ id INTEGER PRIMARY KEY,
+ owner TEXT NOT NULL REFERENCES users(id),
+ appointment_id INTEGER REFERENCES appointments(id),
+ action TEXT NOT NULL CHECK(action IN ('add','remove')),
+ day TEXT,
+ kind TEXT CHECK(kind IN ('bring','pickup')),
+ start TEXT,
+ end TEXT,
+ text TEXT NOT NULL DEFAULT '',
+ state TEXT NOT NULL DEFAULT 'open' CHECK(state IN ('open','done','cancelled')),
+ created TEXT NOT NULL,
+ done TEXT)''')
+    conn.execute('CREATE INDEX work_calendar_items_owner ON work_calendar_items(owner,state)')
+    tasks = conn.execute("SELECT id,appointment_id,owner,details,created FROM tasks "
+                         "WHERE title='Arbeitskalender aktualisieren' AND state='open' ORDER BY id").fetchall()
+    for task_id, appointment_id, owner, details, created in tasks:
+        slot = None
+        if appointment_id:
+            slot = conn.execute('SELECT day,kind,owner,start,end FROM appointments WHERE id=?', (appointment_id,)).fetchone()
+        if slot and slot[2] == owner and slot[3] and slot[4]:
+            values = (owner, appointment_id, 'add', slot[0], slot[1], slot[3], slot[4], details)
+        elif slot:
+            values = (owner, appointment_id, 'remove', slot[0], slot[1], None, None, details)
+        else:
+            action = 'remove' if 'entfernen' in details else 'add'
+            values = (owner, None, action, None, None, None, None, details)
+        conn.execute('INSERT INTO work_calendar_items(owner,appointment_id,action,day,kind,start,end,text,created) '
+                     'VALUES(?,?,?,?,?,?,?,?,?)', (*values, created))
+        conn.execute("UPDATE tasks SET state='superseded' WHERE id=?", (task_id,))
+
+
 # Append new schema changes here as (version, description, migration).
 # ``migration`` is either an SQL script (str) or a callable taking the
 # connection. Versions must be consecutive, starting at 2.
@@ -147,6 +186,7 @@ CREATE TABLE voucher_uses(
  actor TEXT NOT NULL REFERENCES users(id),
  created TEXT NOT NULL);
 '''),
+    (6, 'Arbeitskalender: Einträge je Person in einer Aufgabe bündeln', work_calendar_items),
 ]
 
 LATEST = 1 + len(MIGRATIONS)

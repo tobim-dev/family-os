@@ -14,7 +14,7 @@ class ClosureTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.app = create_app(Path(self.tmp.name) / 'family.sqlite', demo=True)
         with self.app.state.db() as conn:
-            for table in ('tasks', 'proposals', 'issues', 'appointments', 'audit', 'nanny_shifts', 'calendar_targets'):
+            for table in ('work_calendar_items', 'tasks', 'proposals', 'issues', 'appointments', 'audit', 'nanny_shifts', 'calendar_targets'):
                 conn.execute('DELETE FROM ' + table)
         self.tobi = self.client('tobi')
         self.britta = self.client('britta')
@@ -66,7 +66,7 @@ class ClosureTests(unittest.TestCase):
         # Both parents with assignments that day get a work-calendar task.
         tasks = self.rows("SELECT owner,details FROM tasks WHERE title='Arbeitskalender aktualisieren' ORDER BY owner")
         self.assertEqual([t[0] for t in tasks], ['britta'])
-        self.assertIn('entfallen', tasks[0][1])
+        self.assertIn('Entfernen:', tasks[0][1])
         self.assertEqual(len(self.calendar_keys()), len(before) - 2)
 
     def test_lifting_restores_the_confirmed_plan(self):
@@ -76,8 +76,21 @@ class ClosureTests(unittest.TestCase):
         self.assertEqual(self.decide(batch, 'lift', self.tobi).status_code, 200)
         self.assertEqual(len(self.calendar_keys()), 6)
         self.assertEqual(self.rows('SELECT owner FROM appointments WHERE day=? AND kind=?', self.days[0], 'bring'), [('tobi',)])
-        restored = self.rows("SELECT owner FROM tasks WHERE details LIKE 'Blöcke wieder eintragen%' ORDER BY owner")
-        self.assertEqual(restored, [('britta',), ('tobi',)])
+        # Nobody had removed the blocks yet: removal and re-entry cancel out (B-18).
+        self.assertEqual(self.rows("SELECT owner FROM tasks WHERE state='open' AND title='Arbeitskalender aktualisieren'"), [])
+
+    def test_lifting_after_removal_asks_to_enter_again(self):
+        batch = self.enter(start=self.days[0], end=self.days[0]).json()['batch']
+        self.decide(batch, 'confirm')
+        for client in (self.tobi, self.britta):
+            [task] = [t for t in client.get('/api/state', params={'month': self.days[0][:7]}).json()['tasks']
+                      if t['state'] == 'open' and t['title'] == 'Arbeitskalender aktualisieren' and t['owner'] in ('tobi', 'britta')
+                      and t['owner'] == ('tobi' if client is self.tobi else 'britta')]
+            self.assertEqual(client.post(f"/api/tasks/{task['id']}/complete", json={}).status_code, 200)
+        self.decide(batch, 'lift', self.tobi)
+        restored = self.rows("SELECT owner,details FROM tasks WHERE state='open' AND title='Arbeitskalender aktualisieren' ORDER BY owner")
+        self.assertEqual([r[0] for r in restored], ['britta', 'tobi'])
+        self.assertTrue(all(r[1].startswith('Eintragen:') for r in restored))
 
     def test_reject_and_withdraw_leave_the_plan(self):
         batch = self.enter().json()['batch']

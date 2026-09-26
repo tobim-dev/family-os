@@ -15,7 +15,7 @@ class LinaTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.app = create_app(Path(self.tmp.name) / 'family.sqlite', demo=True)
         with self.app.state.db() as conn:
-            for table in ('lina_items', 'lina_diapers', 'tasks', 'proposals', 'issues', 'appointments', 'day_closures'):
+            for table in ('lina_items', 'lina_diapers', 'work_calendar_items', 'tasks', 'proposals', 'issues', 'appointments', 'day_closures'):
                 conn.execute('DELETE FROM ' + table)
             conn.execute("DELETE FROM metadata WHERE key LIKE 'lina_%' AND key!='lina_seeded'")
         self.tobi = self.client('tobi')

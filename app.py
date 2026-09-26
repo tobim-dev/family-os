@@ -29,7 +29,7 @@ from lina import Lina
 from vouchers import Vouchers
 from speech import Speech
 from offline import Offline
-from work_calendar import add_blocks
+import work_calendar
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -89,6 +89,10 @@ class IssueInput(BaseModel):
 class ResolveInput(BaseModel):
     version: int
     resolution: str = Field(min_length=1, max_length=500)
+
+
+class CompleteInput(BaseModel):
+    upto: int | None = Field(default=None, ge=0)
 
 
 class MonthInput(BaseModel):
@@ -152,6 +156,8 @@ def create_app(db_path=None, demo=None, origin=None):
                 conn.execute('INSERT OR IGNORE INTO users(id,password,totp) VALUES(?,?,?)', (user, password_hash(secrets.token_hex(24)), pyotp.random_base32()))
     os.chmod(path, 0o600)
 
+    with db() as conn:
+        work_calendar.sync_all(conn)  # one bundled work-calendar task per person (also after migration 6)
     integrations = Integrations(db, path.parent, demo, origin)
     app = FastAPI(title='Family OS', docs_url=None, redoc_url=None, openapi_url=None, lifespan=integrations.lifespan)
     app.state.integrations = integrations
@@ -315,7 +321,7 @@ def create_app(db_path=None, demo=None, origin=None):
             appointments = [dict(r) for r in conn.execute('SELECT * FROM appointments WHERE day BETWEEN ? AND ? ORDER BY day,kind', (str(first), str(last)))]
             proposals = [dict(r) for r in conn.execute("SELECT p.*,a.day,a.kind,a.owner AS current_owner FROM proposals p JOIN appointments a ON a.id=p.appointment_id WHERE p.state='pending' ORDER BY p.deadline")]
             issues = [dict(r) for r in conn.execute("SELECT i.*,a.day,a.kind FROM issues i LEFT JOIN appointments a ON a.id=i.appointment_id WHERE i.state='open' ORDER BY i.deadline")]
-            tasks = add_blocks(conn, [dict(r) for r in conn.execute("SELECT * FROM tasks WHERE state IN ('open','done') ORDER BY state DESC,due,id DESC LIMIT 200")])
+            tasks = work_calendar.attach(conn, [dict(r) for r in conn.execute("SELECT * FROM tasks WHERE state IN ('open','done') ORDER BY state DESC,due,id DESC LIMIT 200")])
             planning = planning_mode(conn, request)
             history = [dict(r) for r in conn.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 30')]
             nanny_shifts = [dict(r) for r in conn.execute("SELECT id,day,start,end,state FROM nanny_shifts WHERE day BETWEEN ? AND ? AND state IN ('wish','requested','confirmed') ORDER BY day,start", (str(first), str(last)))]
@@ -367,10 +373,10 @@ def create_app(db_path=None, demo=None, origin=None):
         # Replace obsolete pending reminders with the latest required action.
         conn.execute("UPDATE tasks SET state='superseded' WHERE appointment_id=? AND state='open'", (slot['id'],))
         kind = 'Lina bringen' if slot['kind'] == 'bring' else 'Lina abholen'
-        for owner in {slot['owner'], proposal['owner']} - {None}:
-            details = (f"{slot['day']} · {kind}: {proposal['start']}–{proposal['end']} als abwesend eintragen."
-                       if owner == proposal['owner'] else f"{slot['day']} · {kind}: bisherigen Block entfernen; {PEOPLE[proposal['owner']]} übernimmt.")
-            conn.execute('INSERT INTO tasks(appointment_id,owner,title,details,due,created) VALUES(?,?,?,?,?,?)', (slot['id'],owner,'Arbeitskalender aktualisieren',details,now(),now()))
+        # Work calendars (B-13), bundled per person (B-18): old block out, new block in.
+        if slot['owner']:
+            work_calendar.record(conn, slot['owner'], 'remove', slot)
+        work_calendar.record(conn, proposal['owner'], 'add', slot, proposal['start'], proposal['end'])
         if proposal['issue_id']:
             conn.execute("UPDATE issues SET state='resolved',version=version+1,resolution=? WHERE id=? AND state='open'", ('Gemeinsam bestätigte Neuplanung', proposal['issue_id']))
         if send_notice:
@@ -468,7 +474,7 @@ def create_app(db_path=None, demo=None, origin=None):
         return {'ok': True}
 
     @app.post('/api/tasks/{task_id}/complete')
-    def complete(task_id: int, request: Request):
+    def complete(task_id: int, request: Request, data: CompleteInput | None = None):
         with db() as conn:
             actor = identity(request, conn)
             task = conn.execute('SELECT * FROM tasks WHERE id=?', (task_id,)).fetchone()
@@ -476,7 +482,11 @@ def create_app(db_path=None, demo=None, origin=None):
                 raise HTTPException(403, 'Nur eigene Aufgaben können bestätigt werden.')
             if task['state'] != 'open':
                 raise HTTPException(409, 'Diese Aufgabe ist nicht mehr offen.')
-            conn.execute("UPDATE tasks SET state='done' WHERE id=?", (task_id,))
+            if work_calendar.is_work_task(conn, task):
+                # Only the entries shown to the person are done; newer ones keep the task open.
+                work_calendar.complete(conn, actor, data.upto if data else None)
+            else:
+                conn.execute("UPDATE tasks SET state='done' WHERE id=?", (task_id,))
             audit(conn, actor, 'Aufgabe erledigt', task['title'])
         return {'ok': True}
 
@@ -510,7 +520,10 @@ def create_app(db_path=None, demo=None, origin=None):
                     slot = next((s for s in slots if s[2]=='pickup'), slots[0])
                     issue = conn.execute('INSERT INTO issues(appointment_id,text,owner,deadline,created) VALUES(?,?,?,?,?)', (slot[0],'Mein Termin dauert länger. Können wir das Abholen tauschen?','tobi',(datetime.now(TZ)+timedelta(hours=24)).isoformat(),now()))
                     conn.execute('INSERT INTO proposals(appointment_id,owner,start,end,creator,reason,deadline,base_version,created,issue_id) VALUES(?,?,?,?,?,?,?,?,?,?)', (slot[0], 'britta' if slot[3]=='tobi' else 'tobi',slot[4],slot[5],'britta','Können wir diesen Termin tauschen?',(datetime.now(TZ)+timedelta(hours=24)).isoformat(),1,now(),issue.lastrowid))
-                conn.execute('INSERT INTO tasks(owner,title,details,due,created) VALUES(?,?,?,?,?)', ('tobi','Arbeitskalender aktualisieren','Beispielaufgabe: bestätigte Bring- und Abholzeiten als abwesend eintragen.',now(),now()))
+                example = next((s for s in slots if s[3] == 'tobi'), None)
+                if example:
+                    row = conn.execute('SELECT * FROM appointments WHERE id=?', (example[0],)).fetchone()
+                    work_calendar.record(conn, 'tobi', 'add', row)
                 audit(conn,'tobi','Beispielplanung angelegt','Demodaten · Zeitfenster sind Beispiele, keine echte Familienplanung.')
                 conn.execute("INSERT INTO metadata VALUES('seeded','1')")
     return app

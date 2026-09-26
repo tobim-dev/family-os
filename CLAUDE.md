@@ -32,7 +32,7 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
 - `nanny.py`: Nanny-Termine, WhatsApp-Anfragen (nur vorbereiteter Text), Stunden, Monatsabrechnung.
 - `speech.py`: lokale Spracherkennung (faster-whisper, Deutsch), Aufnahme nur im Arbeitsspeicher, Text nur zur Kontrolle ins Feld.
 - `offline.py` + `static/sw.js`, `offline-sync.js`, `offline.html/.js`: Lesekopie von Einkaufsliste und Gutscheinen auf dem Gerät (nur diese Daten werden im Browser gespeichert).
-- `work_calendar.py` + `static/outlook.js`: Links „In Outlook eintragen“ an Arbeitskalender-Aufgaben (nur Titel und Zeit, kein Zugriff auf Arbeitskalender).
+- `work_calendar.py` + `static/outlook.js`: Arbeitskalender-Einträge je Person gebündelt in einer Aufgabe (gegenseitiges Aufheben, Abhaken nur des Gesehenen) mit Links „In Outlook eintragen“ (nur Titel und Zeit, kein Zugriff auf Arbeitskalender).
 - `backups.py`: tägliche automatische Sicherung (DB + Schlüssel, Integritätsprüfung, Aufbewahrung).
 - `migrations.py`: versioniertes SQLite-Schema (`PRAGMA user_version`).
 - `manage.py`: Konten einrichten, Backups. `docker-entrypoint.py`: Unraid-Rechte.
