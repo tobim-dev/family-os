@@ -194,6 +194,37 @@ class NannyTests(unittest.TestCase):
         self.assertEqual(len(statement['lines']), 3)
         self.assertTrue(statement['month_over'])
 
+    def test_past_shifts_are_backfilled_confirmed_and_billed(self):
+        month = self.last_month
+        days = [f'{month}-02', f'{month}-06']  # weekends allowed
+        response = self.tobi.post('/api/nanny/shifts/past', json={'days': days, 'start': '15:00', 'end': '18:30', 'note': 'nachgetragen'})
+        self.assertEqual(response.status_code, 200)
+        shifts = self.overview(month)['shifts']
+        self.assertEqual([s['state'] for s in shifts], ['confirmed', 'confirmed'])
+        self.assertEqual(self.overview(month)['statement']['minutes'], 420)
+        self.assertFalse([t for t in self.tasks() if t['title'] == 'Nanny anfragen'])  # no request needed
+        with self.app.state.db() as conn:
+            notice = conn.execute("SELECT body FROM notifications WHERE owner='britta' AND dedupe LIKE 'nanny-past:%'").fetchone()
+        self.assertIn('2 Nanny-Termine nachgetragen', notice[0])
+
+    def test_past_shift_rules(self):
+        month = self.last_month
+        url = '/api/nanny/shifts/past'
+        tomorrow = str(self.today + timedelta(days=1))
+        self.assertEqual(self.tobi.post(url, json={'days': [tomorrow]}).status_code, 422)
+        self.assertEqual(self.tobi.post(url, json={'days': [str(self.today)]}).status_code, 200)
+        self.assertEqual(self.tobi.post(url, json={'days': [f'{month}-03'], 'start': '18:00', 'end': '16:00'}).status_code, 422)
+        self.assertEqual(self.tobi.post(url, json={'days': [f'{month}-03', f'{month}-03']}).status_code, 422)
+        other = str(date.fromisoformat(f'{month}-01') - timedelta(days=1))
+        self.assertEqual(self.tobi.post(url, json={'days': [f'{month}-03', other]}).status_code, 422)
+        # Clash with an existing shift: nothing is stored.
+        self.past_shift(month, 4)
+        self.assertEqual(self.tobi.post(url, json={'days': [f'{month}-03', f'{month}-04']}).status_code, 409)
+        self.assertEqual(len(self.overview(month)['shifts']), 1)
+        # Closed month stays untouched.
+        self.assertEqual(self.tobi.post(f'/api/nanny/statement/{month}', json={'action': 'close'}).status_code, 200)
+        self.assertEqual(self.tobi.post(url, json={'days': [f'{month}-05']}).status_code, 409)
+
     def test_correction_rules(self):
         shift_id = self.create().json()['id']
         self.move(shift_id, 'confirm')

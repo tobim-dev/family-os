@@ -86,6 +86,10 @@ class BatchInput(BaseModel):
     note: str = Field(default='', max_length=300)
 
 
+class PastInput(BatchInput):
+    days: list[date] = Field(min_length=1, max_length=31)  # weekends included
+
+
 class Answer(BaseModel):
     id: int
     version: int = Field(ge=1)
@@ -171,6 +175,20 @@ class Nanny:
                               (str(day), start, end, note.strip(), actor, now(), now()))
         row = self.shift(conn, cursor.lastrowid)
         self.audit(conn, actor, 'Nanny-Wunsch angelegt', label(row))
+        return row
+
+    def insert_past(self, conn, actor, day, start, end, note):
+        """A shift that already took place (N-13): stored as confirmed, no request."""
+        if minutes(start, end) <= 0:
+            raise HTTPException(422, 'Das Ende muss nach dem Beginn liegen.')
+        if day > datetime.now(TZ).date():
+            raise HTTPException(422, 'Nachtragen geht nur für heute oder frühere Tage. Künftige Termine bitte als Wunsch anlegen.')
+        self.require_open_month(conn, day)
+        self.require_no_clash(conn, ShiftInput(day=day, start=start, end=end))
+        cursor = conn.execute("INSERT INTO nanny_shifts(day,start,end,state,note,creator,created,updated) VALUES(?,?,?,'confirmed',?,?,?,?)",
+                              (str(day), start, end, note.strip(), actor, now(), now()))
+        row = self.shift(conn, cursor.lastrowid)
+        self.audit(conn, actor, 'Nanny-Termin nachgetragen', label(row))
         return row
 
     def sync_request_task(self, conn, month):
@@ -358,6 +376,20 @@ class Nanny:
                 notify(conn, self.other(actor), 'nanny-wishes:' + ','.join(str(r['id']) for r in rows),
                        'Nanny-Wünsche für ' + month_label(month),
                        f'{PEOPLE[actor]} hat {len(rows)} Nanny-Termine geplant: ' + '; '.join(label(r) for r in rows) + '.', False)
+                return {'ids': [r['id'] for r in rows]}
+
+        @app.post('/api/nanny/shifts/past')
+        def create_past(data: PastInput, request: Request):
+            if len(set(data.days)) != len(data.days):
+                raise HTTPException(422, 'Jeder Tag darf nur einmal ausgewählt werden.')
+            if len({month_of(day) for day in data.days}) != 1:
+                raise HTTPException(422, 'Bitte nur Tage aus einem Monat auswählen.')
+            with db() as conn:
+                actor = identity(request, conn)
+                rows = [self.insert_past(conn, actor, day, data.start, data.end, data.note) for day in sorted(data.days)]
+                notify(conn, self.other(actor), 'nanny-past:' + ','.join(str(r['id']) for r in rows),
+                       'Nanny-Termine nachgetragen',
+                       f'{PEOPLE[actor]} hat {len(rows)} Nanny-Termine nachgetragen: ' + '; '.join(label(r) for r in rows) + '.', False)
                 return {'ids': [r['id'] for r in rows]}
 
         @app.post('/api/nanny/shifts/{shift_id}')

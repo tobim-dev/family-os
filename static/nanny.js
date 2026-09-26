@@ -243,7 +243,8 @@ function nannyHTML() {
         <button class="btn" data-month="1" aria-label="Nächster Monat">${icon('arrow')}</button>
         <button class="btn" data-nanny-settings>Einstellungen</button>
         ${locked ? '' : `<button class="btn" data-nanny-new>${icon('plus')}Einzeltermin</button>
-        <button class="btn primary" data-nanny-plan>${icon('calendar')}Monat planen</button>`}
+        <button class="btn primary" data-nanny-plan>${icon('calendar')}Monat planen</button>
+        ${month + '-01' <= nannyState.today ? `<button class="btn" data-nanny-past>${icon('check')}Nachtragen</button>` : ''}`}
       </div>
     </div>
     ${locked ? '<div class="note nanny-locked">Dieser Monat ist abgerechnet. Zum Ändern die Abrechnung wieder öffnen.</div>' : ''}
@@ -303,6 +304,56 @@ function nannyPlanDialog() {
       await load();
       const wishes = nannyState.shifts.filter(s => s.state === 'wish');
       if (wishes.length) nannyRequestDialog(wishes.map(s => s.id).join(','));
+    } catch (error) {
+      formError(form, error.message);
+      button.disabled = false;
+    }
+  };
+}
+
+// Shifts that already took place (N-13): stored as confirmed right away,
+// without a WhatsApp request, so they count for the statement.
+function nannyPastDialog() {
+  const first = dateObj(month + '-01');
+  const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
+  const taken = new Set(nannyState.shifts.filter(s => ['wish', 'requested', 'confirmed'].includes(s.state)).map(s => s.day));
+  const weeks = [];
+  for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
+    if (!weeks.length || d.getDay() === 1) weeks.push([]);
+    weeks[weeks.length - 1].push(iso(d));
+  }
+  const dayBox = day => {
+    const future = day > nannyState.today;
+    const planned = taken.has(day);
+    return `<label class="nanny-pick ${planned ? 'planned' : ''} ${future ? 'past' : ''}">
+      <input type="checkbox" name="day" value="${day}" ${planned ? 'checked disabled' : future ? 'disabled' : ''}>
+      <span><b>${fmt(day, {weekday: 'short'})} ${fmt(day, {day: 'numeric'})}.</b><small>${planned ? 'vorhanden' : '&nbsp;'}</small></span>
+    </label>`;
+  };
+  const lead = (dateObj(weeks[0][0]).getDay() + 6) % 7;
+  dialog('Nanny-Termine nachtragen', monthName(month), `<form>
+    <p>Tage auswählen, an denen die Nanny schon da war. Sie werden direkt als bestätigt gespeichert und zählen für die Abrechnung.</p>
+    <div class="nanny-weeks nanny-weeks-full">${weeks.map((week, index) => `<div class="nanny-week">${index === 0 ? '<span aria-hidden="true"></span>'.repeat(lead) : ''}${week.map(dayBox).join('')}</div>`).join('')}</div>
+    <div class="field-pair">
+      <div class="field"><label for="past-start">Von</label><input id="past-start" name="start" type="time" required value="16:00"></div>
+      <div class="field"><label for="past-end">Bis</label><input id="past-end" name="end" type="time" required value="18:00"></div>
+    </div>
+    <div class="field"><label for="past-note">Notiz (optional)</label><input id="past-note" name="note" maxlength="300" data-speech placeholder="z. B. aus dem Kalender nachgetragen"></div>
+    <p class="note">Gilt für alle ausgewählten Tage; abweichende Zeiten danach einzeln korrigieren. Die andere Person wird informiert.</p>
+    <div class="dialog-footer"><button class="btn primary" type="submit">Nachtragen</button></div>
+  </form>`);
+  const form = modal.querySelector('form');
+  form.onsubmit = async event => {
+    event.preventDefault();
+    const days = [...form.querySelectorAll('input[name=day]:checked:not(:disabled)')].map(input => input.value);
+    if (!days.length) return formError(form, 'Bitte mindestens einen Tag auswählen.');
+    const button = form.querySelector('[type=submit]');
+    button.disabled = true;
+    try {
+      await api('/nanny/shifts/past', {days, start: form.start.value, end: form.end.value, note: form.note.value});
+      modal.close();
+      await load();
+      toast(days.length === 1 ? 'Termin nachgetragen.' : `${days.length} Termine nachgetragen.`);
     } catch (error) {
       formError(form, error.message);
       button.disabled = false;
@@ -471,6 +522,7 @@ function bindNanny() {
   app.querySelector('[data-nanny-new]')?.addEventListener('click', () => nannyShiftForm(null));
   app.querySelector('[data-nanny-settings]')?.addEventListener('click', nannySettingsDialog);
   app.querySelector('[data-nanny-plan]')?.addEventListener('click', nannyPlanDialog);
+  app.querySelector('[data-nanny-past]')?.addEventListener('click', nannyPastDialog);
   app.querySelector('[data-nanny-answer]')?.addEventListener('click', nannyAnswerDialog);
   on('[data-nanny-edit]', b => nannyShiftForm(nannyShift(b.dataset.nannyEdit)));
   on('[data-nanny-request]', b => nannyRequestDialog(b.dataset.nannyRequest));

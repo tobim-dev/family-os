@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-199 Tests bestanden (`python -m unittest discover -s tests -v`):
+201 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -38,6 +38,13 @@ Schema-Migrationen:
 - Vor einer Migration mit Daten entsteht eine geschützte Kopie mit altem Stand.
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
+
+Nanny-Termine nachtragen (N-13):
+
+- Vergangene Tage (auch Wochenende) werden bestätigt gespeichert und abgerechnet; die andere
+  Person bekommt eine Mitteilung, es entsteht keine Anfrage-Aufgabe.
+- Abgelehnt: künftige Tage, Ende vor Beginn, doppelte Tage, mehrere Monate, Überschneidung
+  (nichts gespeichert), abgeschlossener Monat.
 
 Minijob-Abgaben (N-12, Migration 7):
 
@@ -296,6 +303,9 @@ Nanny-Oberfläche (Playwright, Demo, 1440 px und 390 px):
 - Monatsablauf: Oktober mit vier Tagen geplant, Monatsnachricht mit allen fünf Wünschen,
   als angefragt markiert, Antwort „alle zugesagt“ außer einem Tag gespeichert.
   Monatsplaner auf 390 px ohne Überbreite.
+- Nachtragen (N-13): Dialog für September mit sieben Spalten (inkl. Wochenende), künftige
+  und vorhandene Tage gesperrt; zwei Tage nachgetragen, als bestätigt in der Abrechnung.
+  390 px ohne Überbreite, keine JavaScript-Fehler.
 - Echte WhatsApp-Übergabe auf dem iPhone noch nicht geprüft.
 
 Cookidoo-Oberfläche dieser Etappe:
