@@ -326,7 +326,8 @@ def create_app(db_path=None, demo=None, origin=None):
             history = [dict(r) for r in conn.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 30')]
             nanny_shifts = [dict(r) for r in conn.execute("SELECT id,day,start,end,state FROM nanny_shifts WHERE day BETWEEN ? AND ? AND state IN ('wish','requested','confirmed') ORDER BY day,start", (str(first), str(last)))]
             closed_days = closures.listing(conn, first, last)
-        return {'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
+            tour_seen = bool(conn.execute('SELECT 1 FROM metadata WHERE key=?', ('tour_seen:' + user,)).fetchone())
+        return {'tour_seen': tour_seen, 'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
 
     @app.post('/api/proposals')
     def propose(data: ProposalInput, request: Request):
@@ -488,6 +489,14 @@ def create_app(db_path=None, demo=None, origin=None):
             else:
                 conn.execute("UPDATE tasks SET state='done' WHERE id=?", (task_id,))
             audit(conn, actor, 'Aufgabe erledigt', task['title'])
+        return {'ok': True}
+
+    @app.post('/api/tour/seen')
+    def tour_seen(request: Request):
+        """The guided tour (A-11) was shown or declined; offer it only once per person."""
+        with db() as conn:
+            user = identity(request, conn)
+            conn.execute('INSERT OR REPLACE INTO metadata VALUES(?,?)', ('tour_seen:' + user, now()))
         return {'ok': True}
 
     @app.get('/health')

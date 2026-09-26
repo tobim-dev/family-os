@@ -33,10 +33,11 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
 - `speech.py`: lokale Spracherkennung (faster-whisper, Deutsch), Aufnahme nur im Arbeitsspeicher, Text nur zur Kontrolle ins Feld.
 - `offline.py` + `static/sw.js`, `offline-sync.js`, `offline.html/.js`: Lesekopie von Einkaufsliste und Gutscheinen auf dem Gerät (nur diese Daten werden im Browser gespeichert).
 - `work_calendar.py` + `static/outlook.js`: Arbeitskalender-Einträge je Person gebündelt in einer Aufgabe (gegenseitiges Aufheben, Abhaken nur des Gesehenen) mit Links „In Outlook eintragen“ (nur Titel und Zeit, kein Zugriff auf Arbeitskalender).
+- `static/tour.js`: geführter Rundgang (A-11); bei neuen Bereichen/Knöpfen die Schritte `TOUR_STEPS` nachziehen (`tests/test_tour.cjs` prüft Ansichten und Selektoren).
 - `backups.py`: tägliche automatische Sicherung (DB + Schlüssel, Integritätsprüfung, Aufbewahrung).
 - `migrations.py`: versioniertes SQLite-Schema (`PRAGMA user_version`).
 - `manage.py`: Konten einrichten, Backups. `docker-entrypoint.py`: Unraid-Rechte.
-- `static/`: Vanilla-JS-PWA ohne Build-Schritt (`app.js` Kern, `meals.js`, `nanny.js`, `closures.js`, `lina.js`, `vouchers.js`, `speech.js` je Bereich; globale Namen müssen dateiübergreifend eindeutig sein, geprüft in `tests/test_scripts.cjs`), strikte CSP (keine Inline-Skripte/-Styles,
+- `static/`: Vanilla-JS-PWA ohne Build-Schritt (`app.js` Kern, `meals.js`, `nanny.js`, `closures.js`, `lina.js`, `vouchers.js`, `speech.js`, `outlook.js`, `tour.js` je Bereich; globale Namen müssen dateiübergreifend eindeutig sein, geprüft in `tests/test_scripts.cjs`), strikte CSP (keine Inline-Skripte/-Styles,
   keine externen Ressourcen).
 
 ## Datenbank-Regeln

@@ -154,6 +154,15 @@ class PlanningTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         return response.json()['id']
 
+    def test_tour_is_offered_once_per_person(self):
+        self.assertFalse(self.state()['tour_seen'])
+        self.assertEqual(self.tobi.post('/api/tour/seen', json={}).status_code, 200)
+        self.assertTrue(self.state()['tour_seen'])
+        self.assertFalse(self.state(self.britta)['tour_seen'])
+        anonymous = TestClient(self.app, base_url='http://127.0.0.1:8765', headers={'Origin':'http://127.0.0.1:8765','X-Family-Request':'1'})
+        self.assertEqual(anonymous.post('/api/tour/seen', json={}).status_code, 401)
+        anonymous.close()
+
     def test_joint_direct_assignment_and_followup_tasks(self):
         mode = self.start_joint()
         response = self.proposal(planning_session=mode)
