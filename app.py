@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 import pyotp
 from integrations import Integrations, notify
 from meals import Meals
+from migrations import migrate
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -38,24 +39,6 @@ def password_hash(password, salt=None):
 
 def password_ok(password, stored):
     return hmac.compare_digest(password_hash(password, stored.split(':')[0]), stored)
-
-
-SCHEMA = '''
-PRAGMA foreign_keys=ON;
-CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, password TEXT NOT NULL, totp TEXT NOT NULL, last_step INTEGER NOT NULL DEFAULT -1);
-CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), expires REAL NOT NULL);
-CREATE TABLE IF NOT EXISTS attempts(key TEXT PRIMARY KEY, count INTEGER NOT NULL, until REAL NOT NULL);
-CREATE TABLE IF NOT EXISTS appointments(id INTEGER PRIMARY KEY, day TEXT NOT NULL, kind TEXT NOT NULL CHECK(kind IN ('bring','pickup')), owner TEXT REFERENCES users(id), start TEXT, end TEXT, version INTEGER NOT NULL DEFAULT 0, UNIQUE(day,kind));
-CREATE TABLE IF NOT EXISTS issues(id INTEGER PRIMARY KEY, appointment_id INTEGER REFERENCES appointments(id), text TEXT NOT NULL, owner TEXT NOT NULL REFERENCES users(id), state TEXT NOT NULL DEFAULT 'open', deadline TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 1, created TEXT NOT NULL, resolution TEXT);
-CREATE TABLE IF NOT EXISTS proposals(id INTEGER PRIMARY KEY, appointment_id INTEGER NOT NULL REFERENCES appointments(id), owner TEXT NOT NULL REFERENCES users(id), start TEXT NOT NULL, end TEXT NOT NULL, creator TEXT NOT NULL REFERENCES users(id), reason TEXT NOT NULL, deadline TEXT NOT NULL, base_version INTEGER NOT NULL, state TEXT NOT NULL DEFAULT 'pending', created TEXT NOT NULL, issue_id INTEGER REFERENCES issues(id));
-CREATE UNIQUE INDEX IF NOT EXISTS one_pending_proposal ON proposals(appointment_id) WHERE state='pending';
-CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY, appointment_id INTEGER REFERENCES appointments(id), owner TEXT NOT NULL REFERENCES users(id), title TEXT NOT NULL, details TEXT NOT NULL, due TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'open', created TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, actor TEXT NOT NULL, action TEXT NOT NULL, details TEXT NOT NULL, created TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS appointments_day ON appointments(day);
-CREATE INDEX IF NOT EXISTS tasks_owner_state ON tasks(owner,state);
-CREATE TABLE IF NOT EXISTS planning_sessions(id TEXT PRIMARY KEY, session_token TEXT NOT NULL REFERENCES sessions(token) ON DELETE CASCADE, actor TEXT NOT NULL REFERENCES users(id), expires REAL NOT NULL, ended INTEGER NOT NULL DEFAULT 0);
-CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL);
-'''
 
 
 class Login(BaseModel):
@@ -148,8 +131,8 @@ def create_app(db_path=None, demo=None, origin=None):
         finally:
             conn.close()
 
+    migrate(path)
     with sqlite3.connect(path) as conn:
-        conn.executescript(SCHEMA)
         stored = conn.execute("SELECT value FROM metadata WHERE key='mode'").fetchone()
         mode = 'demo' if demo else 'production'
         if stored and stored[0] != mode:

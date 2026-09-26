@@ -35,11 +35,6 @@ for name in ('cookidoo_api.cookidoo', 'cookidoo_api.well_known', 'cookidoo_api.h
 LOG = logging.getLogger('uvicorn.error.family_os.cookidoo')
 REQUEST_TIMEOUT = 45
 
-SCHEMA = '''
-CREATE TABLE IF NOT EXISTS meal_cache(key TEXT PRIMARY KEY, value TEXT NOT NULL, updated REAL NOT NULL);
-CREATE TABLE IF NOT EXISTS meal_operations(id TEXT PRIMARY KEY, actor TEXT NOT NULL REFERENCES users(id), payload TEXT NOT NULL, state TEXT NOT NULL, message TEXT NOT NULL DEFAULT '', created REAL NOT NULL);
-'''
-
 
 def saturday(value):
     return value - timedelta(days=(value.weekday() - 5) % 7)
@@ -127,7 +122,6 @@ class Meals:
         self.diagnostic_id = None
         self.started = 0
         with self.db() as conn:
-            conn.executescript(SCHEMA)
             conn.execute("UPDATE meal_operations SET state='review',message='Der Server wurde während der Übertragung neu gestartet. Bitte in Cookidoo prüfen.' WHERE state='sending'")
         self.adapter = self.client
 

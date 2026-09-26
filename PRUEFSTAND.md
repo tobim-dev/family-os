@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-67 Tests bestanden (`python -m unittest discover -s tests -v`):
+78 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -26,6 +26,18 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 - Daten bleiben nach erneutem Start erhalten.
 - SQLite-Sicherung enthält konsistenten Plan und Folgeaufgabe; Integritätsprüfung erfolgreich.
 - Monatsentwurf verteilt Wege gleichmäßig und überschreibt keinen bestehenden Monat.
+
+Schema-Migrationen:
+
+- Neue Datenbank erhält die aktuelle Schema-Version; wiederholter Start ändert nichts.
+- Bestehende, unversionierte Datenbanken (auch der erste veröffentlichte Stand ohne
+  gemeinsamen Planungsmodus und Cookidoo-Tabellen) werden ohne Datenverlust übernommen.
+  Zusätzlich manuell mit Datenbanken geprüft, die der Code von `f7cd278` und `e66e48a` erzeugt hat.
+- Fremder Tabellenaufbau wird abgewiesen und bleibt unverändert.
+- Neuere Datenbank wird von älterem Code abgewiesen.
+- Vor einer Migration mit Daten entsteht eine geschützte Kopie mit altem Stand.
+- Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
+- Tabellenumbau mit Fremdschlüsseln funktioniert.
 
 Zusätzliche Integrationstests mit simulierten Google-/Push-Antworten:
 

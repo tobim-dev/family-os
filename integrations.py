@@ -28,18 +28,6 @@ from pywebpush import webpush, WebPushException
 
 TZ = ZoneInfo('Europe/Berlin')
 PEOPLE = {'tobi': 'Tobi', 'britta': 'Britta'}
-SCHEMA = '''
-CREATE TABLE IF NOT EXISTS calendar_targets(
- key TEXT PRIMARY KEY, event_id TEXT NOT NULL, desired TEXT, applied TEXT,
- etag TEXT, inflight TEXT, state TEXT NOT NULL DEFAULT 'queued',
- attempts INTEGER NOT NULL DEFAULT 0, next_try REAL NOT NULL DEFAULT 0,
- checked REAL NOT NULL DEFAULT 0, message TEXT NOT NULL DEFAULT '');
-CREATE TABLE IF NOT EXISTS integration_secrets(key TEXT PRIMARY KEY, value TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS oauth_states(state TEXT PRIMARY KEY, verifier TEXT NOT NULL, cookie_hash TEXT NOT NULL, session TEXT NOT NULL, expires REAL NOT NULL);
-CREATE TABLE IF NOT EXISTS notifications(id INTEGER PRIMARY KEY, owner TEXT NOT NULL REFERENCES users(id), dedupe TEXT NOT NULL UNIQUE, title TEXT NOT NULL, body TEXT NOT NULL, urgent INTEGER NOT NULL, created TEXT NOT NULL, read_at TEXT, not_before REAL NOT NULL);
-CREATE TABLE IF NOT EXISTS push_subscriptions(id INTEGER PRIMARY KEY, owner TEXT NOT NULL REFERENCES users(id), endpoint TEXT NOT NULL UNIQUE, subscription TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1);
-CREATE TABLE IF NOT EXISTS push_deliveries(notification_id INTEGER NOT NULL REFERENCES notifications(id), subscription_id INTEGER NOT NULL REFERENCES push_subscriptions(id), state TEXT NOT NULL DEFAULT 'queued', attempts INTEGER NOT NULL DEFAULT 0, next_try REAL NOT NULL DEFAULT 0, PRIMARY KEY(notification_id,subscription_id));
-'''
 
 
 def dump(value):
@@ -122,7 +110,6 @@ class Integrations:
         self.stop = threading.Event()
         self.lock = threading.Lock()
         with db() as conn:
-            conn.executescript(SCHEMA)
             conn.execute("INSERT OR IGNORE INTO metadata VALUES('installation',?)", (secrets.token_hex(16),))
             self.installation = conn.execute("SELECT value FROM metadata WHERE key='installation'").fetchone()[0]
             old = conn.execute("SELECT value FROM metadata WHERE key='calendar_id'").fetchone()

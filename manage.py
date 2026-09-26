@@ -6,7 +6,8 @@ from pathlib import Path
 import sqlite3
 import shutil
 import pyotp
-from app import SCHEMA, PEOPLE, password_hash, now
+from app import PEOPLE, password_hash, now
+from migrations import migrate
 
 
 def main():
@@ -47,8 +48,8 @@ def main():
         return
     if not args.user:
         parser.error('--user required.')
+    migrate(path)
     with sqlite3.connect(path) as conn:
-        conn.executescript(SCHEMA)
         row = conn.execute("SELECT value FROM metadata WHERE key='mode'").fetchone()
         if row and row[0] != 'production':
             raise SystemExit('Keine echten Konten in der Demo-Datenbank anlegen.')

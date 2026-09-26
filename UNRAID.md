@@ -82,8 +82,15 @@ Für jede Sicherung einen neuen Namen verwenden. Datenbank und zugehörigen
 `.keys`-Ordner auf ein separates geschütztes Ziel kopieren.
 
 Ein älterer Image-Tag lässt sich im Repository-Feld der Vorlage fest einstellen.
-Bei zukünftigen Datenbankschemaänderungen kann zusätzlich eine passende
-Datenbanksicherung nötig sein; ein älteres Image allein ist kein garantierter Rollback.
+
+**Datenbankschema:** Die Datenbank trägt eine Schema-Version. Ein neues Image passt
+sie beim Start automatisch an. Vorher legt es unter `/data/backups/` eine Kopie mit dem
+Namen `pre-migration-v<alt>-v<neu>-<Zeitpunkt>.sqlite` an. Schlägt eine Anpassung fehl,
+wird sie vollständig zurückgenommen und der Container startet nicht. Ein älteres Image
+verweigert den Start mit einer neueren Datenbank, statt sie falsch zu verwenden.
+Für einen Rollback deshalb das ältere Image **und** die passende `pre-migration`-Kopie
+als `/data/family.sqlite` einsetzen. Danach vorgenommene Änderungen fehlen dann.
+Automatische `pre-migration`-Kopien ersetzen nicht die Sicherung auf ein separates Ziel.
 
 ## Was die Pipeline prüft
 

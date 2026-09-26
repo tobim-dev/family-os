@@ -192,6 +192,10 @@ Wiederherstellung alle Sitzungen aus der Tabelle `sessions` löschen oder beide
 Konten über `setup-user` neu einrichten, bevor der öffentliche Zugriff wieder
 aktiviert wird. Den Ablauf zuerst in einer getrennten Testinstallation prüfen.
 
+Die Datenbank hat eine Schema-Version (`PRAGMA user_version`). Neue Versionen passen sie
+beim Start an und legen vorher eine Kopie unter `backups/` im Datenverzeichnis ab.
+Details zu Rollback und Grenzen stehen in [UNRAID.md](UNRAID.md).
+
 ## Lokale Entwicklung und Prüfungen
 
 Python 3.12 verwenden. Abhängigkeiten sind auf konkrete Versionen festgelegt.
