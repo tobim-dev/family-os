@@ -27,6 +27,7 @@ from meal_reminders import MealReminders
 from closures import Closures, CONFIRMED_DAYS_SQL
 from lina import Lina
 from vouchers import Vouchers
+from speech import Speech
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -225,6 +226,10 @@ def create_app(db_path=None, demo=None, origin=None):
     app.state.vouchers = vouchers
     integrations.periodic.append(vouchers.periodic)
     vouchers.routes(app, identity)
+    speech = Speech(db, path.parent, demo)
+    app.state.speech = speech
+    integrations.speech = speech
+    speech.routes(app, identity)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):

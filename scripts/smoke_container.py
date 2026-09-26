@@ -23,7 +23,9 @@ def check_image(image, unraid):
         args = ['run', '--detach', '--name', name, '--read-only', '--tmpfs', '/tmp:rw,noexec,nosuid,size=64m',
                 '--cap-drop=ALL', '--security-opt=no-new-privileges:true',
                 '--mount', f'type=volume,source={volume},target=/data',
-                '--env', 'FOS_ORIGIN=https://family.test', '--env', 'FOS_DEMO=0']
+                '--env', 'FOS_ORIGIN=https://family.test', '--env', 'FOS_DEMO=0',
+                # No 1.6 GB model download in CI; the libraries are checked below.
+                '--env', 'FOS_SPEECH_MODEL=off']
         if unraid:
             args += ['--user', '0:0', '--env', 'FOS_UID=99', '--env', 'FOS_GID=100']
             for cap in ('CHOWN', 'FOWNER', 'SETUID', 'SETGID'):
@@ -54,6 +56,9 @@ except urllib.error.HTTPError as e:
 print(json.dumps({'uid':os.getuid(),'mfa_required':True,'data_writable':True}))
 '''
         print(docker('exec', '--user', uid, name, 'python', '-c', code).stdout.strip())
+        # Speech libraries import and the bundled VAD model runs on the read-only image.
+        docker('exec', '--user', uid, name, 'python', '-c',
+               'import ctranslate2, av; from faster_whisper.vad import get_vad_model; get_vad_model()')
         docker('restart', name)
         docker('exec', '--user', uid, name, 'python', '-c', "from pathlib import Path; assert Path('/data/persistence-check').read_text() == 'preserved'")
         print('Container smoke test passed:', 'Unraid initialization' if unraid else 'unprivileged default')

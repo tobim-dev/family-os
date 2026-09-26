@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-162 Tests bestanden (`python -m unittest discover -s tests -v`):
+172 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -56,6 +56,21 @@ Nanny-Planung (Migration 2):
 - Monatsplanung: mehrere Tage atomar (Überschneidung → nichts gespeichert), nur ein Monat,
   eine Mitteilung, eine Anfrage-Aufgabe pro Monat mit aktueller Anzahl, erledigt nach Anfrage.
 - Gesammelte Antwort (Zusage/Absage gemischt) atomar; veraltete Version → nichts geändert.
+
+Spracheingabe (A-01, A-02, A-10) mit simuliertem Modell, echte Audio-Dekodierung:
+
+- iPhone-Format (AAC in MP4) wird aus dem Arbeitsspeicher dekodiert; Sprache Deutsch, Stille-Filter aktiv.
+- Keine Datei entsteht, der Text steht nicht in der Datenbank; gespeichert werden nur Dauer-Messwerte.
+- Anmeldung wird vor dem Lesen der Aufnahme geprüft; falsches Format und über 10 MB abgewiesen.
+- Phantomsätze („Untertitel im Auftrag des ZDF“ u. Ä.) und unsichere Stille-Segmente werden verworfen;
+  bleibt nichts übrig, kommt „keine Sprache erkannt“ statt eines Texts.
+- Defekte Aufnahme: klare Meldung, Sperre wieder frei, nächste Umwandlung klappt.
+- Modell lädt nicht: verständliche Meldung; „off“ lädt nichts. Demo ohne Spracherkennung.
+- Container-Prüfung in CI: Bibliotheken und Stille-Erkennung laufen im schreibgeschützten Image.
+- Browser (Chromium, simuliertes Mikrofon, 390 px): Aufnahme mit Zeitanzeige, WebM/Opus wird
+  auf dem Server dekodiert, Text erscheint im Feld, erst „Notieren“ speichert.
+- Nicht geprüft: das echte Whisper-Modell (Download aus dieser Entwicklungsumgebung gesperrt),
+  Erkennungsqualität und Geschwindigkeit auf dem NAS, Aufnahme auf echten iPhones.
 
 Gutscheine (Migration 5):
 

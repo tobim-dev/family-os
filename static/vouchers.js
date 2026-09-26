@@ -57,7 +57,7 @@ function voucherUploadDialog() {
       <div class="field"><label for="vv">Wert</label><input id="vv" name="value" inputmode="decimal" required placeholder="z. B. 25,00"></div>
       <div class="field"><label for="vs">Geschäft</label><input id="vs" name="store" maxlength="60" value="Kaufland"></div>
     </div>
-    <div class="field"><label for="vn">Notiz (optional)</label><input id="vn" name="note" maxlength="200"></div>
+    <div class="field"><label for="vn">Notiz (optional)</label><input id="vn" data-speech name="note" maxlength="200"></div>
     <div class="dialog-footer"><button class="btn primary" type="submit">Ablegen</button></div></form>`);
   const form = modal.querySelector('form');
   form.onsubmit = async event => {

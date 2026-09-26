@@ -35,7 +35,7 @@ gewählte erste Funktionsbereiche.
 
 | ID | Anforderung oder Kontext | Stand / überprüfbares Ergebnis |
 | --- | --- | --- |
-| Z-01 | Eine zentrale Anlaufstelle für die Familienplanung schaffen, damit weniger vergessen wird und Informationen ohne Suchen in Nachrichten auffindbar sind. | Teilweise: Betreuung, Aufgaben, Essen, Nanny, Lina (Kleidung/Windeln) und Gutscheine vorhanden; Sprache und Offline fehlen. |
+| Z-01 | Eine zentrale Anlaufstelle für die Familienplanung schaffen, damit weniger vergessen wird und Informationen ohne Suchen in Nachrichten auffindbar sind. | Teilweise: Betreuung, Aufgaben, Essen, Nanny, Lina (Kleidung/Windeln), Gutscheine und Spracheingabe vorhanden; Offline fehlt. |
 | Z-02 | Hoher Grad an Automation und Proaktivität soll den Alltag entlasten. Zuverlässigkeit und Ergebnisqualität haben Vorrang; Fehler dürfen keine zusätzliche Alltagsarbeit verursachen. | Teilweise: Kalenderabgleich, Aufgaben und Mitteilungen; weitere Routinen ausstehend. Keine Behauptung absoluter Fehlerfreiheit. |
 | Z-03 | Tobi und Britta sind die Nutzer. Lina wird mitgeplant. Die Anwendung soll zunächst innerhalb der Familie bleiben. | Rahmen / vorhanden: zwei persönliche Konten; kein Nanny-Konto als Voraussetzung. |
 | Z-04 | Bedienung so einfach wie möglich, mit erkennbarem Nutzen und möglichst wenig laufender Datenpflege. | Rahmen: insbesondere bei Vorräten keine Einzelverbrauchserfassung verlangen. |
@@ -166,8 +166,9 @@ Quelle: Antworten zu Alltagsbedienung, Zuständigkeiten und Übersichten.
 
 | ID | Anforderung oder Kontext | Stand / überprüfbares Ergebnis |
 | --- | --- | --- |
-| A-01 | Informationen per Texteingabe oder Sprachnachricht erfassen können. | Teilweise: Texteingaben vorhanden, Sprache ausstehend. |
-| A-02 | Sprachaufnahmen nach Umwandlung in Text löschen. | Ausstehend: Sprachverarbeitung muss Löschung als Bestandteil des Ablaufs enthalten. Verhalten bei fehlgeschlagener Transkription noch offen. |
+| A-01 | Informationen per Texteingabe oder Sprachnachricht erfassen können. | Vorhanden: Texteingabe sowie „Sprechen“ an den Eingabefeldern von Dialogen (A-10). Praktische Abnahme auf den iPhones offen. |
+| A-02 | Sprachaufnahmen nach Umwandlung in Text löschen. | Vorhanden: Aufnahme existiert nur im Arbeitsspeicher einer Anfrage und wird danach verworfen, auch bei Fehlern; nie auf Platte, im Log oder in der Sicherung. Fehlgeschlagene Umwandlung wird klar gemeldet, es wird nichts gespeichert. |
+| A-10 | Entscheidung 26.09.2026 (O-09): Spracherkennung lokal auf dem NAS, zuverlässig auf Deutsch; nur falls lokal nicht tragfähig ein sehr datenarmer Dienst. | Vorhanden: Whisper „large-v3-turbo“ über faster-whisper auf der CPU, Sprache fest Deutsch, Stille-Filter und Verwerfen typischer Phantomsätze; Text erscheint immer zuerst zur Kontrolle im Feld. Einmaliger Modell-Download (~1,6 GB). Geschwindigkeit auf dem NAS unter „Verbindungen“ sichtbar, reale Abnahme offen. |
 | A-03 | Jede Aufgabe hat eine verantwortliche Person; keine Aufgaben ohne Zuständigkeit. Erinnerungen sind notwendig. | Vorhanden für bestehende Aufgaben; auf neue Bereiche übertragen. |
 | A-04 | Benachrichtigungen auf beiden iPhones ermöglichen. | Teilweise: Web Push implementiert, reale Zustellung und Geräteeinstellungen noch abzunehmen. |
 | A-05 | Neue Terminabstimmungen sofort per Push melden, unabhängig von der Uhrzeit. | Teilweise: in der Anwendung ohne Nachtruhe; keine zugesagte Umgehung des iPhone-Fokusmodus. |
@@ -233,7 +234,7 @@ verbindliche Interviewanforderungen, weil sie bereits implementiert wurden.
 | O-06 | Geklärt 26.09.2026 → E-16. Offen bleibt nur das Abhaken mehrdeutiger Einzelartikel (weiter direkt in Cookidoo). | E-09–E-12 |
 | O-07 | Teilweise umgesetzt mit vorläufigen Regeln (Abschnitt 9). Offen: Quelle und Kriterien für Aktionsmeldungen, E-Mail-/iCloud-Zugriff, gewünschter Erinnerungszeitpunkt. | G-01–G-07 |
 | O-08 | Teilweise umgesetzt mit vorläufigen Regeln (Bereich „Lina“, Abschnitt 9). Mit Britta bestätigen: Schwellen, Zuständigkeiten, Saisonbedarf, Vinted-Bilder/Ablauf. | K-01–K-07 |
-| O-09 | Spracherkennung lokal oder extern, erlaubte Inhalte, Kontrolle des Texts und Löschung bei Fehlern. | A-01–A-02, D-02 |
+| O-09 | Geklärt 26.09.2026 → A-10 (lokal). Offen: Messung der Geschwindigkeit auf dem NAS; Wechsel zu einem datenarmen Dienst nur, falls lokal nicht zuverlässig. | A-01–A-02, D-02 |
 | O-10 | Kalender/Einkauf bei NAS- oder Netzausfall: lesend/schreibend, Dauer, iPhone-Verhalten, Wiederabgleich und Konflikte. | V-01, E-13 |
 | O-11 | Teilweise: Claude API für Essensvorschläge freigegeben (26.09.2026), Modell Claude Haiku 4.5, Monatslimit 40 Anfragen, Token-Verbrauch in der App sichtbar. Offen: tatsächliche Kosten nach einigen Wochen gegen T-07 prüfen; API-Konto/Schlüssel richtet Tobi ein. | Z-05, D-02, T-07 |
 | O-12 | Reale Push-Zustellung auf beiden iPhones, Wiederherstellung aus Backup und Cookidoo-Gesamtablauf nach den jüngsten Fehlerkorrekturen prüfen. | A-04–A-07, Q-01 |

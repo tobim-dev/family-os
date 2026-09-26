@@ -227,6 +227,22 @@ Die Datenbank hat eine Schema-Version (`PRAGMA user_version`). Neue Versionen pa
 beim Start an und legen vorher eine Kopie unter `backups/` im Datenverzeichnis ab.
 Details zu Rollback und Grenzen stehen in [UNRAID.md](UNRAID.md).
 
+## Spracheingabe
+
+„Sprechen“ erscheint an den Eingabefeldern, sobald die lokale Spracherkennung bereit ist.
+Sie läuft vollständig auf dem NAS (Whisper `large-v3-turbo` über `faster-whisper`, nur CPU).
+Beim **ersten Start** lädt der Container das Modell einmalig (etwa 1,6 GB) von
+`huggingface.co` nach `/data/models`; dafür muss der Container ins Internet dürfen. Danach
+werden keine Aufnahmen und keine Texte übertragen. Das geladene Modell belegt dauerhaft
+etwa 1–2 GB Arbeitsspeicher. Den Stand und die zuletzt gemessene Dauer zeigt
+**Verbindungen → Spracheingabe**.
+
+Aufnahmen existieren nur im Arbeitsspeicher einer Anfrage und werden danach verworfen, auch
+bei Fehlern. Der erkannte Text landet zur Kontrolle im Feld; gespeichert wird erst mit dem
+normalen Speichern-Knopf. `/data/models` muss nicht gesichert werden (wird bei Bedarf neu
+geladen). Ausschalten mit `FOS_SPEECH_MODEL=off`; `FOS_SPEECH_THREADS` begrenzt die CPU-Threads.
+Das Mikrofon funktioniert nur über HTTPS (wie über `fos.lausbuben.cloud`).
+
 ## Lokale Entwicklung und Prüfungen
 
 Python 3.12 verwenden. Abhängigkeiten sind auf konkrete Versionen festgelegt.

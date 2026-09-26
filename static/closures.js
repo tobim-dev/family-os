@@ -67,7 +67,7 @@ function closureDialog() {
       <div class="field"><label for="cl-start">Von</label><input id="cl-start" name="start" type="date" required value="${today}"></div>
       <div class="field"><label for="cl-end">Bis</label><input id="cl-end" name="end" type="date" required value="${today}"></div>
     </div>
-    <div class="field"><label for="cl-note">Notiz (optional)</label><input id="cl-note" name="note" maxlength="200" placeholder="z. B. Teamtag der Krippe"></div>
+    <div class="field"><label for="cl-note">Notiz (optional)</label><input id="cl-note" data-speech name="note" maxlength="200" placeholder="z. B. Teamtag der Krippe"></div>
     <p class="note">Nur Montag bis Freitag. ${jointMode() ? 'Gemeinsame Planung: gilt sofort.' : 'Bis zur Bestätigung gilt die bisherige Planung.'}
       Danach entfallen Bringen und Abholen dieser Tage; ihr erhaltet Aufgaben zum Arbeitskalender.</p>
     <div class="dialog-footer"><button class="btn primary" type="submit">Eintragen</button></div></form>`);

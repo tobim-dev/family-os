@@ -43,6 +43,7 @@ jobs:
           node --check static/closures.js
           node --check static/lina.js
           node --check static/vouchers.js
+          node --check static/speech.js
           node --test tests/*.cjs
           python scripts/check_unraid.py
       - name: Build production image

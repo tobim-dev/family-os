@@ -122,7 +122,7 @@ function itemDialog(list) {
   const hint = list === 'nursery' ? '<p class="note">Die Aufgabe geht an die Person, die Lina als Nächstes bringt.</p>'
     : list === 'need' ? '<p class="note">Britta ist verantwortlich. Dringendes wird zur Aufgabe.</p>' : '';
   dialog(titles[list], 'Lina', `<form>
-    <div class="field"><label for="it">Was?</label><input id="it" name="text" required maxlength="200" placeholder="${list === 'nursery' ? 'z. B. Body und Strumpfhose' : 'z. B. Winterjacke'}"></div>
+    <div class="field"><label for="it">Was?</label><input id="it" data-speech name="text" required maxlength="200" placeholder="${list === 'nursery' ? 'z. B. Body und Strumpfhose' : 'z. B. Winterjacke'}"></div>
     <div class="field"><label for="is">Größe (optional)</label><input id="is" name="size" maxlength="40"></div>
     ${extra}${hint}
     <div class="dialog-footer"><button class="btn primary" type="submit">Notieren</button></div></form>`);

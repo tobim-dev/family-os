@@ -128,6 +128,7 @@ class Integrations:
         self.stop = threading.Event()
         self.periodic = []  # callables run on every background tick
         self.backups = None  # AutoBackup, set by create_app
+        self.speech = None  # Speech, set by create_app
         self.lock = threading.Lock()
         with db() as conn:
             conn.execute("INSERT OR IGNORE INTO metadata VALUES('installation',?)", (secrets.token_hex(16),))
@@ -397,6 +398,8 @@ class Integrations:
         push_worker.start()
         meal_worker = threading.Thread(target=self.meals.background, name='family-meals', daemon=True)
         meal_worker.start()
+        if self.speech:
+            self.speech.start()  # loads (and first time downloads) the model in its own thread
         yield
         self.stop.set()
         import asyncio
@@ -412,7 +415,8 @@ class Integrations:
         return {'google_connected': connected, 'google_configured': bool(self.calendar and self.client_file), 'calendar_targets': targets,
                 'notifications': notices, 'push_devices': devices, 'push_accepted': accepted, 'push_waiting': waiting, 'push_public_key': self.push_public,
                 'origin': self.origin, 'calendar_kind': 'Bestehender Gemeinschaftskalender',
-                'backup': self.backups.status(conn) if self.backups else None}
+                'backup': self.backups.status(conn) if self.backups else None,
+                'speech': self.speech.status(conn) if self.speech else None}
 
     def routes(self, app, identity, static):
         @app.get('/api/connections')
