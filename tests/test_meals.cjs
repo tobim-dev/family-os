@@ -39,3 +39,47 @@ test('failed login does not request calendar or discard credential inputs', asyn
   await assert.rejects(operation({email:'example@example.org',password:'example'}), /Login failed/);
   assert.deepEqual(calls,['/meals/connect']);
 });
+
+function weekSwitchContext(api) {
+  let counter = 0;
+  const context = vm.createContext({api, crypto: {randomUUID: () => 'id-' + (++counter)}});
+  vm.runInContext(fs.readFileSync('static/meals.js', 'utf8'), context);
+  vm.runInContext("mealStart = '2026-10-31'; mealState = {revision: 'rev-0'};", context);
+  return context;
+}
+
+test('week switch removes before adding and follows only selected recipes', () => {
+  const context = weekSwitchContext(async () => ({}));
+  const form = new Map([['remove', ['r1']], ['add', ['r3', 'r2']]]);
+  const data = {getAll: key => form.get(key) || []};
+  const plan = {remove: [{id: 'r1', name: 'Alt'}, {id: 'r4', name: 'Behalten'}], add: [{id: 'r2', name: 'B'}, {id: 'r3', name: 'C'}]};
+  const steps = context.weekSwitchSteps(data, plan);
+  assert.deepEqual(JSON.parse(JSON.stringify(steps)), [
+    {action: 'ingredients_remove', id: 'r1', name: 'Alt'},
+    {action: 'ingredients_add', id: 'r3', name: 'C'},
+    {action: 'ingredients_add', id: 'r2', name: 'B'},
+  ]);
+});
+
+test('week switch uses the latest revision per step and stops at the first failure', async () => {
+  const calls = [];
+  const context = weekSwitchContext(async (path, body) => {
+    calls.push(body);
+    if (calls.length === 2) throw new Error('Cookidoo-Ergebnis muss geprüft werden.');
+    return {revision: 'rev-' + calls.length};
+  });
+  const steps = [
+    {action: 'ingredients_remove', id: 'r1', name: 'Alt'},
+    {action: 'ingredients_add', id: 'r2', name: 'Neu'},
+    {action: 'ingredients_add', id: 'r3', name: 'Nie'},
+  ];
+  const result = await context.runWeekSwitch(steps);
+  assert.equal(result.done, 1);
+  assert.equal(result.failed.id, 'r2');
+  assert.match(result.error.message, /geprüft/);
+  assert.deepEqual(calls.map(c => [c.action, c.recipe_id, c.revision]), [
+    ['ingredients_remove', 'r1', 'rev-0'],
+    ['ingredients_add', 'r2', 'rev-1'],
+  ]);
+  assert.notEqual(calls[0].id, calls[1].id);
+});

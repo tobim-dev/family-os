@@ -141,18 +141,19 @@ class MealTests(unittest.TestCase):
         self.assertEqual(exported.count('200 g'), 2)
         self.assertIn('300 g', exported)
 
-    def test_ambiguous_items_cannot_be_written_but_other_operations_work(self):
+    def test_ambiguous_checkmark_is_blocked_but_recipe_ingredients_use_count_check(self):
         self.remote.ingredients.append(Item('old', 'Weiterer Vorrat', False, '300 g'))
         self.sync()
-        for action, fields in [('check_ingredient', {'item_id':'old','owned':False}), ('ingredients_remove', {'recipe_id':'r1'})]:
-            response = self.client.post('/api/meals/change', json=self.payload(action, **fields))
-            self.assertEqual(response.status_code, 409)
+        response = self.client.post('/api/meals/change', json=self.payload('check_ingredient', item_id='old', owned=False))
+        self.assertEqual(response.status_code, 409)
         self.assertEqual(self.remote.calls, [])
         self.change()  # Calendar planning does not depend on ingredient ID uniqueness.
-        self.assertEqual(self.client.post('/api/meals/change', json=self.payload('ingredients_add',recipe_id='r2')).status_code, 409)
+        self.change('ingredients_add', recipe_id='r2')  # O-06: allowed, verified by counting.
         self.change('check_additional', item_id='own', owned=True)
         self.change('additional_add', name='Brot')
-        self.assertEqual(len(self.remote.ingredients), 2)
+        self.assertEqual(len(self.remote.ingredients), 3)
+        self.change('ingredients_remove', recipe_id='r1')
+        self.assertEqual([i.id for i in self.remote.ingredients], ['r2-ingredient'])
 
     def test_ambiguous_custom_item_cannot_be_checked(self):
         self.remote.additional.append(deepcopy(self.remote.additional[0]))

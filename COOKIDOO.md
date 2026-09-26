@@ -33,10 +33,30 @@ und lässt keine echten Cookidoo-Schreibvorgänge zu.
   Rezepte werden nicht erneut hinzugefügt. Mengen bleiben bei den Cookidoo-Standardportionen.
 - Vorhandene Zutaten oder gekaufte Artikel lassen sich abhaken; eigene Artikel ergänzen.
 - Einzelne Rezeptzutaten lassen sich aus der Liste entfernen. Es gibt keine Funktion,
-  die die gesamte bestehende Einkaufsliste leert. Das Entfernen eines Rezepts aus
+  die die gesamte bestehende Einkaufsliste leert (siehe aber den geführten Wochenwechsel unten). Das Entfernen eines Rezepts aus
   einem Tag entfernt dessen Zutaten nicht automatisch aus der Einkaufsliste.
 - Eigene Cookidoo-Rezepte werden im Kalender angezeigt, aber in dieser Etappe direkt
   in Cookidoo bearbeitet. Das Gerät erhält seine Daten weiterhin über Cookidoo.
+
+## Wochenwechsel der Einkaufsliste
+
+**Einkaufsliste für diese Woche vorbereiten** (unter „Rezepte für den Einkauf“) zeigt zuerst
+eine Vorschau für die angezeigte Woche (Samstag bis Freitag):
+
+- **Alte Rezepte entfernen:** alle Rezepte auf der Liste, die in dieser Woche nicht geplant sind.
+  Abgehakte Zutaten werden genannt und mit entfernt. Häkchen weg = Rezept bleibt auf der Liste.
+- **Neu hinzufügen:** geplante Rezepte, deren Zutaten noch fehlen (Standardportionen).
+- **Bleibt:** Rezepte, die schon auf der Liste stehen und in dieser Woche geplant sind.
+- **Nicht automatisch:** eigene Cookidoo-Rezepte; bitte direkt in Cookidoo bearbeiten.
+- Eigene Artikel werden nie angefasst.
+
+Erst **Wochenwechsel starten** ändert Cookidoo: zuerst entfernen, dann hinzufügen, jedes Rezept
+als eigener, geprüfter Schritt mit aktueller Revision. Beim ersten Fehler hält der Wechsel an und
+nennt die bereits erledigten Schritte; nach der Prüfung zeigt dieselbe Schaltfläche den Rest.
+Danach folgt der Hinweis, die Vorräte durchzugehen und Vorhandenes abzuhaken.
+
+Cookidoo entfernt Zutaten nur pro Rezept, nicht einzeln. Zutaten, die ein verbleibendes Rezept
+ebenfalls braucht, bleiben erhalten; ihre Mengenangabe darf Cookidoo dabei neu berechnen.
 
 ## Wochenvorschläge
 
@@ -143,9 +163,14 @@ Ladevorgang deshalb nicht mehr ab. Die Reihenfolge gleichnamiger Kennungen wird
 stabil sortiert, damit eine andere Lieferreihenfolge keinen falschen Konflikt erzeugt.
 
 Ein Hinweis kennzeichnet diesen Fall. Häkchen mit mehrfacher Kennung werden in
-Family OS gesperrt und müssen direkt in Cookidoo geändert werden. Bei mehrfachen
-Rezept- oder Zutatenkennungen werden auch das Hinzufügen und Entfernen von
-Rezeptzutaten angehalten, da deren vollständiger Erhalt über die Kennung allein
-nicht eindeutig überprüfbar ist. Wochenplanung, eindeutig zugeordnete Artikel
-und das Ergänzen eigener Artikel bleiben verfügbar. Der Schutz gilt auch auf
-dem Server, nicht nur für die Schaltflächen.
+Family OS gesperrt und müssen direkt in Cookidoo geändert werden; der Schutz gilt
+auch auf dem Server, nicht nur für die Schaltflächen.
+
+Rezeptzutaten lassen sich trotz mehrfacher Kennungen hinzufügen und entfernen
+(Entscheidung E-16). Statt einzelne Positionen zuzuordnen, zählt Family OS nach dem
+Schreiben nach: Wochenplan, eigene Artikel und die übrigen Rezepte müssen exakt gleich
+sein; Kennungen, die das Rezept nicht verwendet, müssen unverändert sein. Bei Kennungen
+des Rezepts darf beim Hinzufügen keine bisherige Position und kein Häkchen fehlen; beim
+Entfernen darf nichts Neues entstehen und jede Zutat, die ein anderes Rezept braucht,
+muss vorhanden bleiben. Weicht etwas ab, bleibt ein Prüfhinweis und weitere
+Schreibvorgänge sind angehalten.

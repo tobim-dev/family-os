@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-110 Tests bestanden (`python -m unittest discover -s tests -v`):
+122 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -111,12 +111,26 @@ Zusätzliche Cookidoo-Tests mit simulierten Antworten:
 - Unerwarteter Verlust anderer Artikel wird erkannt und als Prüfhinweis gespeichert.
 - Einzeln abhaken, eigene Artikel ergänzen, Zugriffsschutz und HTML-Escaping im Export.
 - Mehrfache Kennungen werden samt allen Mengen/Häkchen geladen und exportiert; wechselnde Reihenfolge verändert die Revision nicht.
-- Mehrdeutige Artikel und Rezeptzutaten werden vor dem Schreiben gesperrt; unabhängige Änderungen bleiben möglich.
+- Mehrdeutige Einzelartikel werden vor dem Abhaken gesperrt; unabhängige Änderungen bleiben möglich.
+
+Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen je Rezept):
+
+- Vorschau nennt alte, neue und bleibende Rezepte, abgehakte Zutaten, eigene Artikel und
+  eigene Cookidoo-Rezepte als „nicht automatisch“; die Vorschau schreibt nichts.
+- Vollständiger Wechsel: alte Rezepte entfernt, neue ergänzt, eigene Artikel unverändert,
+  gemeinsam genutzte Zutaten der verbleibenden Rezepte erhalten.
+- Mehrfache Kennungen: Entfernen lässt die Einträge anderer Rezepte stehen, Hinzufügen
+  erhält bestehende Häkchen.
+- Prüfhinweis (und Stopp weiterer Schreibvorgänge), wenn Cookidoo gemeinsame Zutaten
+  mit entfernt, Häkchen verliert, unbeteiligte Zutaten ändert oder eigene Artikel verliert.
+- Kein Fehlalarm, wenn Cookidoo einzelne Rezeptzutaten (z. B. Wasser) gar nicht auf die Liste setzt.
+- Browser: Entfernen vor Hinzufügen, nur ausgewählte Rezepte, aktuelle Revision je Schritt,
+  Stopp beim ersten Fehler. Dialog bei 1300 px und 390 px mit simuliertem Cookidoo durchgespielt.
 - Neustart während einer Übertragung erfordert eine Prüfung; parallele Anfragen werden abgewiesen.
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-Neun JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung und Nanny-WhatsApp-Texte bestehen. Oberfläche, neuer
+Elf JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel und Nanny-WhatsApp-Texte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft
@@ -167,7 +181,9 @@ Cookidoo-Oberfläche dieser Etappe:
   eine Browseransicht in iPhone-Breite, kein physisches iPhone.
 - Google-Verbindung und Terminzuordnung wurden vom Nutzer als funktionierend bestätigt.
 - Push-Zustellung, Berechtigungen und Fokusverhalten auf beiden echten iPhones: offen.
-- Cookidoo-End-to-End-Test dieser neuen Oberfläche am echten Konto steht aus.
+- Cookidoo-End-to-End-Test dieser neuen Oberfläche am echten Konto steht aus, einschließlich
+  Wochenwechsel: Verhalten der echten Schnittstelle bei gemeinsam genutzten Zutaten (getrennte
+  Einträge oder zusammengeführte Menge) ist nicht belegt.
 - Nanny-Termine im Google-Kalender, echter Claude-Aufruf mit eurem Schlüssel, automatischer Offline-Abgleich und Sprache folgen später.
 
 Die Entwickler-Testbibliothek meldet eine Abkündigung ihres bisherigen HTTP-Test-

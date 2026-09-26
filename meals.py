@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field, SecretStr
 from integrations import dump, TZ
 from recipe_images import RecipeImages
 from meal_suggestions import MealSuggestions
+import shopping_week
 
 for name in ('cookidoo_api.cookidoo', 'cookidoo_api.well_known', 'cookidoo_api.helpers'):
     logging.getLogger(name).disabled = True
@@ -264,6 +265,7 @@ class Meals:
         return {'diagnostic': diagnostic, 'error': diagnostic['detail'] if diagnostic else error[0] if error else None, 'connected': connected and not self.demo, 'demo': self.demo, 'snapshot': data, 'revision': revision(data) if data else None,
                 'updated': row['updated'] if row else None, 'reviews': reviews, 'images': self.images.available(recipe_ids),
                 'suggestion': self.suggestions.stored(start), 'ai': self.suggestions.info(),
+                'week_switch': shopping_week.plan(data) if data else None,
                 'shopping_updated': latest['updated'] if latest else None}
 
     async def sync(self, start):
@@ -307,9 +309,8 @@ class Meals:
             if data.action == 'plan_remove' and data.recipe_id not in ids:
                 raise HTTPException(409, 'Diese Zuordnung besteht nicht mehr.')
         elif data.action.startswith('ingredients_'):
-            duplicates = before.get('duplicate_ids', {})
-            if duplicates.get('ingredients') or duplicates.get('shopping_recipes'):
-                raise HTTPException(409, 'Cookidoo liefert mehrdeutige Einkaufskennungen. Bitte Rezeptzutaten vorerst direkt in Cookidoo bearbeiten; die vollständige Liste bleibt hier sichtbar.')
+            # Duplicate ingredient IDs are allowed here (O-06): the readback
+            # check counts entries per ID instead of matching single items.
             if not data.recipe_id:
                 raise HTTPException(422, 'Rezept fehlt.')
             exists = any(r['id'] == data.recipe_id for r in before['shopping_recipes'])
@@ -372,17 +373,8 @@ class Meals:
         if before['days'] != after['days']:
             return False
         if data.action.startswith('ingredients_'):
-            # Existing custom items and checked flags on surviving ingredient IDs must remain intact.
-            remaining = {i['id']: i for i in after['ingredients']}
-            preserved = all(remaining[i['id']] == i for i in before['ingredients'] if i['id'] in remaining)
-            if data.action == 'ingredients_add':
-                preserved = preserved and all(i['id'] in remaining for i in before['ingredients'])
-            if data.action == 'ingredients_remove':
-                removed = next(r for r in before['shopping_recipes'] if r['id'] == data.recipe_id)
-                others = {iid for r in before['shopping_recipes'] if r['id'] != data.recipe_id for iid in r['ingredient_ids']}
-                allowed = set(removed['ingredient_ids']) - others
-                preserved = preserved and all(i['id'] in remaining for i in before['ingredients'] if i['id'] not in allowed)
-            return preserved and before['additional'] == after['additional'] and all(r in after['shopping_recipes'] for r in before['shopping_recipes'] if r['id'] != data.recipe_id)
+            # Own items, checkmarks and other recipes' positions must remain intact.
+            return shopping_week.preserved(data.action, data.recipe_id, before, after)
         group = 'ingredients' if data.action == 'check_ingredient' else 'additional'
         return before['shopping_recipes'] == after['shopping_recipes'] and before['additional' if group == 'ingredients' else 'ingredients'] == after['additional' if group == 'ingredients' else 'ingredients'] and all(
             i in after[group] for i in before[group] if i['id'] != data.item_id)
