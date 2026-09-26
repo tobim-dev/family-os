@@ -158,7 +158,9 @@ def create_app(db_path=None, demo=None, origin=None):
             if request.headers.get('origin') != origin or request.headers.get('x-family-request') != '1':
                 return JSONResponse({'detail': 'Ungültiger Anfrageursprung.'}, status_code=403)
         response = await call_next(request)
-        response.headers['Cache-Control'] = 'no-store'
+        # Private data is never cached, except responses that explicitly opt in (recipe images).
+        if 'cache-control' not in response.headers:
+            response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'no-referrer'
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"

@@ -25,9 +25,10 @@ from cookidoo_api import Cookidoo
 from cookidoo_api.exceptions import CookidooAuthException, CookidooParseException, CookidooRequestException
 from cookidoo_api.types import CookidooAuthData, CookidooConfig, CookidooLocalizationConfig
 from fastapi import HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, Field, SecretStr
 from integrations import dump, TZ
+from recipe_images import RecipeImages
 
 for name in ('cookidoo_api.cookidoo', 'cookidoo_api.well_known', 'cookidoo_api.helpers'):
     logging.getLogger(name).disabled = True
@@ -58,19 +59,26 @@ def recipe(row):
     return {'id': row.id, 'name': row.name, 'total_time': getattr(row, 'total_time', None)}
 
 
-async def snapshot(client, start, progress=lambda stage: None):
+async def snapshot(client, start, progress=lambda stage: None, images=None):
+    # Preview image URLs are collected separately so they never change the
+    # revision that protects writes against parallel changes.
+    def keep(row):
+        if images is not None and getattr(row, 'thumbnail', None):
+            images[row.id] = row.thumbnail
+        return recipe(row)
+
     days = {}
     progress('calendar')
     for anchor in (start, start + timedelta(days=6)):
         for day in await client.get_recipes_in_calendar_week(anchor):
             parsed = date.fromisoformat(day.id)
             if start <= parsed <= start + timedelta(days=6):
-                days[day.id] = {'day': day.id, 'recipes': [recipe(r) for r in day.recipes], 'custom_ids': day.customer_recipe_ids}
+                days[day.id] = {'day': day.id, 'recipes': [keep(r) for r in day.recipes], 'custom_ids': day.customer_recipe_ids}
     for offset in range(7):
         day = str(start + timedelta(days=offset))
         days.setdefault(day, {'day': day, 'recipes': [], 'custom_ids': []})
     progress('shopping_recipes')
-    shopping_recipes = [{**recipe(r), 'ingredient_ids': sorted(i.id for i in r.ingredients)} for r in await client.get_shopping_list_recipes()]
+    shopping_recipes = [{**keep(r), 'ingredient_ids': sorted(i.id for i in r.ingredients)} for r in await client.get_shopping_list_recipes()]
     progress('ingredients')
     ingredients = [asdict(i) for i in await client.get_ingredient_items()]
     progress('additional_items')
@@ -124,6 +132,7 @@ class Meals:
         with self.db() as conn:
             conn.execute("UPDATE meal_operations SET state='review',message='Der Server wurde während der Übertragung neu gestartet. Bitte in Cookidoo prüfen.' WHERE state='sending'")
         self.adapter = self.client
+        self.images = RecipeImages(self.db, integrations.directory, self.demo)
 
     @asynccontextmanager
     async def client(self, credentials=None):
@@ -223,7 +232,9 @@ class Meals:
         finally:
             self.lock.release()
 
-    def store(self, value):
+    def store(self, value, images=None):
+        if images:
+            self.images.remember(images)
         with self.db() as conn:
             conn.execute('INSERT OR REPLACE INTO meal_cache VALUES(?,?,?)', ('week:' + value['start'], dump(value), time.time()))
             conn.execute('INSERT OR REPLACE INTO meal_cache VALUES(?,?,?)', ('shopping', dump(value), time.time()))
@@ -238,15 +249,17 @@ class Meals:
             reviews = [dict(r) for r in conn.execute("SELECT id,state,message,created FROM meal_operations WHERE state IN ('sending','review') ORDER BY created")]
         data = json.loads(row['value']) if row else None
         diagnostic = json.loads(diagnostic[0]) if diagnostic else None
+        recipe_ids = [r['id'] for d in data['days'] for r in d['recipes']] + [r['id'] for r in data['shopping_recipes']] if data else []
         # A snapshot has one coherent revision; don't splice a newer shopping list into it.
         return {'diagnostic': diagnostic, 'error': diagnostic['detail'] if diagnostic else error[0] if error else None, 'connected': connected and not self.demo, 'demo': self.demo, 'snapshot': data, 'revision': revision(data) if data else None,
-                'updated': row['updated'] if row else None, 'reviews': reviews,
+                'updated': row['updated'] if row else None, 'reviews': reviews, 'images': self.images.available(recipe_ids),
                 'shopping_updated': latest['updated'] if latest else None}
 
     async def sync(self, start):
         async with self.adapter() as api:
-            value = await snapshot(api, start, self.progress)
-            self.store(value)
+            images = {}
+            value = await snapshot(api, start, self.progress, images)
+            self.store(value, images)
             return self.status(start)
 
     async def connect(self, credentials, start):
@@ -260,13 +273,16 @@ class Meals:
         async with self.adapter() as api:
             self.progress('search')
             found = await api.search_recipes(query=data.query.strip(), languages='de', total_time=data.max_minutes * 60, page_size=12)
-            return {'recipes': [recipe(r) for r in found.recipes], 'total': found.total}
+            self.images.remember({r.id: getattr(r, 'thumbnail', None) for r in found.recipes})
+            images = self.images.available([r.id for r in found.recipes])
+            return {'recipes': [{**recipe(r), 'image': images.get(r.id)} for r in found.recipes], 'total': found.total}
 
     async def details(self, rid):
         async with self.adapter() as api:
             self.progress('details')
             r = await api.get_recipe_details(rid)
-            return {**recipe(r), 'serving_size': r.serving_size, 'ingredients': [asdict(i) for i in r.ingredients],
+            self.images.remember({r.id: getattr(r, 'thumbnail', None)})
+            return {**recipe(r), 'image': self.images.available([r.id]).get(r.id), 'serving_size': r.serving_size, 'ingredients': [asdict(i) for i in r.ingredients],
                     'categories': [c.name for c in r.categories], 'nutrition': [asdict(g) for g in r.nutrition_groups]}
 
     def validate_change(self, data, before):
@@ -374,8 +390,9 @@ class Meals:
         if old:
             return self.status(start)
         async with self.adapter() as api:
-            before = await snapshot(api, start, self.progress)
-            self.store(before)
+            images = {}
+            before = await snapshot(api, start, self.progress, images)
+            self.store(before, images)
             if revision(before) != data.revision:
                 raise HTTPException(409, 'Cookidoo wurde zwischenzeitlich geändert. Bitte den aktualisierten Stand laden und erneut auswählen.')
             self.validate_change(data, before)
@@ -384,8 +401,8 @@ class Meals:
             try:
                 self.progress('write')
                 await self.apply(api, data)
-                after = await snapshot(api, start, self.progress)
-                self.store(after)
+                after = await snapshot(api, start, self.progress, images)
+                self.store(after, images)
                 if not self.effect(data, after, before) or not self.unaffected(data, before, after):
                     raise ValueError('Readback did not match')
             except Exception as error:
@@ -474,6 +491,15 @@ class Meals:
             if not re.fullmatch(r'r[0-9]+', rid):
                 raise HTTPException(422, 'Ungültige Cookidoo-Rezept-ID.')
             return self.run(self.details(rid))
+
+        @app.get('/api/meals/image/{rid}')
+        def image(rid: str, request: Request):
+            actor(request)
+            found = self.images.get(rid)
+            if not found:
+                raise HTTPException(404, 'Kein Rezeptbild verfügbar.')
+            kind, path = found
+            return FileResponse(path, media_type=kind, headers={'Cache-Control': 'private, max-age=604800'})
 
         @app.post('/api/meals/change')
         def change(data: Change, request: Request):

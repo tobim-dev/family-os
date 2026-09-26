@@ -38,6 +38,18 @@ und lässt keine echten Cookidoo-Schreibvorgänge zu.
 - Eigene Cookidoo-Rezepte werden im Kalender angezeigt, aber in dieser Etappe direkt
   in Cookidoo bearbeitet. Das Gerät erhält seine Daten weiterhin über Cookidoo.
 
+## Rezeptbilder
+
+Wochenplan, Suchtreffer und Rezeptdetails zeigen die Vorschaubilder aus Cookidoo.
+Der Browser lädt sie ausschließlich vom NAS (`/api/meals/image/<Rezept-ID>`), nie direkt
+von Cookidoo; die strikte Inhaltsrichtlinie der Seite bleibt unverändert. Der NAS holt
+jedes Bild einmal vom Cookidoo-Bildserver (`assets.tmecosys.com`, nur HTTPS), prüft
+Bildtyp und Größe (höchstens 2 MB) und speichert es unter `/data/recipe-images/`
+(höchstens 400 Dateien, älteste werden entfernt). Der Ordner muss nicht gesichert werden.
+Fehlt ein Bild oder schlägt der Abruf fehl, erscheint eine neutrale Kachel; ein neuer
+Versuch folgt frühestens nach einer Stunde. Bild-Adressen beeinflussen nicht die Revision,
+mit der Schreibvorgänge gegen parallele Änderungen geschützt werden. Die Demo lädt keine Bilder.
+
 ## Abgleich und Fehlerfälle
 
 Der Server liest die zuletzt abgeglichene Essenswoche und die Einkaufsliste etwa

@@ -122,6 +122,7 @@ Cookidoo-Erprobung. Die aktuellen technischen Einschränkungen stehen in COOKIDO
 | E-10 | Danach Vorräte zuhause durchgehen und bereits vorhandene Zutaten abhaken. Nur den Rest einkaufen. | Teilweise: gezielte Häkchen vorhanden; mehrdeutige Cookidoo-Kennungen aktuell nur direkt dort bearbeitbar. |
 | E-11 | Liste auch unter der Woche für akuten Bedarf, Frühstück und andere Artikel ergänzen. | Vorhanden als eigene Einkaufsartikel; reale Gesamtintegration noch nicht vollständig abgenommen. |
 | E-12 | Vorhandene eigene Artikel und bereits gesetzte Häkchen bei Übertragungen berücksichtigen; keine unbeabsichtigte Listenlöschung oder Doppeländerung. | Teilweise: gezielte, geprüfte Operationen und Konfliktbehandlung; keine absolute Verlustfreiheitsgarantie der inoffiziellen Schnittstelle. |
+| E-14 | Wunsch 26.09.2026: Bei der Cookidoo-Planung Bilder der Rezepte anzeigen. | Vorhanden: Vorschaubilder in Wochenplan, Suche und Rezeptdetails, über den NAS geladen und zwischengespeichert (D-01, keine externen Ressourcen im Browser). Reale Anzeige mit dem echten Cookidoo-Konto noch zu bestätigen. |
 | E-13 | Einkaufsinformationen sollen unterwegs schnell zugänglich sein. | Teilweise: mobile Ansicht und manuell gespeicherte Offline-Kopie; vollständiger Offline-Abgleich ausstehend. Siehe V-01 für die noch offene genaue Ausfallanforderung. |
 
 Die beim Debugging eingeführte Sperre für mehrdeutige Einkaufskennungen ist eine

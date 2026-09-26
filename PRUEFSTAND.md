@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-95 Tests bestanden (`python -m unittest discover -s tests -v`):
+102 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -75,6 +75,16 @@ Zusätzliche Integrationstests mit simulierten Google-/Push-Antworten:
 - Push-Fehler bleiben ausstehend; abgelaufene Abonnements werden deaktiviert.
 - Push-Annahme erzeugt keine falsche Lesebestätigung.
 - Kalenderabweichung lässt sich nur nach Prüfung des aktuellen Stands erneut übertragen.
+
+Rezeptbilder:
+
+- Nur HTTPS vom Cookidoo-Bildserver (keine fremden Hosts, Ports, Zugangsdaten im Link).
+- Unbekannte oder ungültige Rezept-IDs werden ignoriert; der Browser übergibt nur die ID.
+- Bild wird einmal geladen und danach vom NAS-Cache ausgeliefert; Fehlschlag pausiert erneute Versuche.
+- Demo lädt nie externe Bilder. Bild-Adressen verändern die Schreib-Revision nicht.
+- Endpunkt verlangt Anmeldung; nur Bilder erlauben Browser-Caching, alle anderen Antworten bleiben `no-store`.
+- Download-Funktion lokal geprüft: gültiges Bild, zu groß, falscher Typ, HTTP 404.
+- Browser (1440 px und 390 px): Bild angezeigt, fehlendes Bild fällt auf Kachel zurück, keine Überbreite.
 
 Zusätzliche Cookidoo-Tests mit simulierten Antworten:
 
