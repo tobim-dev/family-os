@@ -39,7 +39,16 @@ dialog{border:0;padding:0;border-radius:15px;box-shadow:0 24px 100px #102a4050;w
 .closure-badge{display:block;font-size:.7rem;font-weight:600;border-radius:5px;padding:3px 6px;margin:0 0 5px;background:#eef2f5;color:var(--muted)}.closure-badge.pending{background:var(--amberbg);color:var(--amber)}.slot.suspended{opacity:.45;text-decoration:line-through}
 .vinted-text{width:100%;border:1px solid #bccbd5;border-radius:7px;padding:10px;font:inherit}
 .btn.mic{align-self:flex-start;margin-top:6px;min-height:36px;padding:6px 10px}.btn.mic.recording{color:var(--danger);border-color:#df9aa4;background:#fff0f3}
-.offline-page{max-width:640px;display:grid;gap:16px;padding:32px 16px}
+.offline-page{max-width:640px;display:grid;gap:16px;padding:calc(32px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom))}
 .work-entries{list-style:none;margin:10px 0 8px;padding:0;display:grid;gap:8px}.work-entry{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.9rem}.work-links{display:flex;gap:6px;flex-wrap:wrap;width:100%}.work-links .btn{min-height:36px;padding:6px 10px}
 .tour-start{font-weight:700;font-size:1rem}.tour-card{position:fixed;right:24px;bottom:24px;width:min(380px,calc(100vw - 32px));background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px #14223833;padding:18px 20px;z-index:40;display:grid;gap:8px}.tour-card[hidden]{display:none}.tour-card h3{font-size:1.05rem}.tour-card p{font-size:.925rem;margin:0}.tour-card .actions{justify-content:flex-end;margin-top:6px}.tour-highlight{outline:3px solid #4783ea!important;outline-offset:3px;border-radius:8px}
 @media(max-width:750px){.tour-card{left:16px;right:16px;width:auto;bottom:calc(84px + env(safe-area-inset-bottom))}}
+/* iPhone home-screen app: keep the bottom navigation clear of the rounded
+   display corners and the home indicator (needs viewport-fit=cover). */
+@media(max-width:750px){
+  .sidebar{padding:8px calc(12px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))}
+  .topbar{padding-top:calc(13px + env(safe-area-inset-top))}
+  .main{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+  .tour-card{bottom:calc(92px + env(safe-area-inset-bottom))}
+  #toast{bottom:calc(92px + env(safe-area-inset-bottom))}
+}

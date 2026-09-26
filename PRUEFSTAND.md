@@ -88,6 +88,8 @@ Offline-Lesekopie (E-13, E-17):
 - Browser (Chromium, 390 px): mit Verbindung öffnen, Server stoppen, neu laden → „Einkauf offline“ mit Liste
   und Zeitstempel; nach dem Abmelden ist der Speicher leer.
 - Nicht geprüft: Verhalten auf echten iPhones (Home-Bildschirm-App, Speicherbereinigung durch iOS).
+- iPhone-Ränder: `viewport-fit=cover` und Sicherheitsabstände für Navigation, Kopfzeile, Rundgang-Karte und
+  Meldungen; im Browser ohne Ränder unverändert (390 px), auf dem iPhone noch zu bestätigen.
 - Offline-Seite nennt den Grund (keine Verbindung, Proxy-Fehler 502–504, zu langsam) per Direktprüfung von
   `/health`; „Direkt öffnen“ (`?direkt`) umgeht die Kopie immer. Zeitgrenze für Seitenaufrufe 10 s.
 
