@@ -375,10 +375,12 @@ class Integrations:
         worker.start()
         push_worker = threading.Thread(target=self.run_push, name='family-push', daemon=True)
         push_worker.start()
+        meal_worker = threading.Thread(target=self.meals.background, name='family-meals', daemon=True)
+        meal_worker.start()
         yield
         self.stop.set()
         import asyncio
-        await asyncio.gather(asyncio.to_thread(worker.join, 35), asyncio.to_thread(push_worker.join, 35))
+        await asyncio.gather(asyncio.to_thread(worker.join, 35), asyncio.to_thread(push_worker.join, 35), asyncio.to_thread(meal_worker.join, 35))
 
     def status(self, conn, owner):
         connected = bool(conn.execute("SELECT 1 FROM integration_secrets WHERE key='google'").fetchone()) and not self.demo

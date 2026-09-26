@@ -19,6 +19,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import pyotp
 from integrations import Integrations, notify
+from meals import Meals
 
 ROOT = Path(__file__).parent
 TZ = ZoneInfo('Europe/Berlin')
@@ -210,6 +211,10 @@ def create_app(db_path=None, demo=None, origin=None):
         conn.execute('INSERT INTO audit(actor,action,details,created) VALUES(?,?,?,?)', (actor, action, details, now()))
 
     integrations.routes(app, identity, ROOT / 'static')
+    meals = Meals(integrations)
+    app.state.meals = meals
+    integrations.meals = meals
+    meals.routes(app, identity)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):

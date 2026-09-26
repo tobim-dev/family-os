@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.title="Family OS"
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && useradd --uid 10001 --create-home family && mkdir /data && chown family:family /data
-COPY --chown=family:family app.py integrations.py manage.py docker-entrypoint.py ./
+COPY --chown=family:family app.py integrations.py meals.py manage.py docker-entrypoint.py ./
 COPY --chown=family:family static ./static
 USER family
 ENTRYPOINT ["python", "/app/docker-entrypoint.py"]

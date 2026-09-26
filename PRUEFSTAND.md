@@ -1,14 +1,15 @@
-# Prüfstand · 25. September 2026
+# Prüfstand · 26. September 2026
 
 ## Ergebnis
 
-Die zweite Etappe ist lokal ausführbar: Betreuung, Freigaben, Klärungspunkte,
-persönliche Folgeaufgaben und persistenter Stand. Kein externer Kalender wurde
-verändert, keine Nachricht versendet und keine echte Familienplanung importiert.
+Betreuung, gemeinsamer Planungsmodus, monatliche Verteilung, Google-Verbindung
+und Mitteilungen sind um eine erste Cookidoo-Anbindung ergänzt. Die aktuellen
+Entwicklertests verwenden ausschließlich lokale und simulierte Daten. Tobi hat
+den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-34 Tests bestanden (`python -m unittest discover -s tests -v`):
+59 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -45,7 +46,23 @@ Zusätzliche Integrationstests mit simulierten Google-/Push-Antworten:
 - Push-Annahme erzeugt keine falsche Lesebestätigung.
 - Kalenderabweichung lässt sich nur nach Prüfung des aktuellen Stands erneut übertragen.
 
-JavaScript für Oberfläche und Service Worker syntaktisch geprüft.
+Zusätzliche Cookidoo-Tests mit simulierten Antworten:
+
+- Samstag bis Freitag über zwei Anbieterwochen und einen Monatswechsel.
+- Gezielte Kalenderänderungen, Wiederholung einer bestätigten Anfrage ohne Doppeleintrag.
+- Veralteter Stand und belegter Tag verhindern eine ungewollte Änderung.
+- Unklare Antwort hält weitere Schreibvorgänge bis zur manuellen Prüfung an.
+- Prüfbestätigung liest neu, ohne den alten Schreibvorgang zu wiederholen.
+- Rezeptzutaten hinzufügen/entfernen erhält eigene Artikel und bestehende Häkchen.
+- Gemeinsam verwendete Zutaten bleiben beim Entfernen eines Rezepts vorhanden.
+- Unerwarteter Verlust anderer Artikel wird erkannt und als Prüfhinweis gespeichert.
+- Einzeln abhaken, eigene Artikel ergänzen, Zugriffsschutz und HTML-Escaping im Export.
+- Neustart während einer Übertragung erfordert eine Prüfung; parallele Anfragen werden abgewiesen.
+- Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
+- Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
+
+Vier JavaScript-Tests für die Fehlerdarstellung bestehen. Oberfläche, neuer
+Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft
 
@@ -63,20 +80,28 @@ Neue Oberfläche lokal geprüft:
 
 - Verbindungen zeigt Google ausdrücklich als nicht verbunden und Termine als lokal vorbereitet.
 - Testmitteilung erscheint nur im persönlichen Eingang; „Als gelesen“ entfernt den Neu-Status.
-- Navigation bei 390 px Breite korrigiert: alle sechs Ansichten sind erreichbar.
+- Navigation bei 390 px Breite korrigiert: alle damaligen sechs Ansichten sind erreichbar.
 - Verbindungsansicht auf schmaler Breite visuell geprüft; Desktopbreite 1440 px ohne Seitenüberbreite.
 - Domain ist konfigurierbar; die Demo nennt die geplante Adresse.
 
+Cookidoo-Oberfläche dieser Etappe:
+
+- Beispielwoche und Einkaufsartikel im Desktop-Browser geprüft.
+- Mobile Darstellung mit 390 px Breite ohne horizontale Überbreite geprüft.
+- Diese Ansicht ist eine Demo; echte Anmeldung und Schreiben in Cookidoo wurden
+  in dieser Prüfung nicht ausgeführt.
+
 ## Praktisch noch offen
 
-- Docker-Image bauen und auf Unraid starten: lokaler Docker-Daemon war nicht aktiv.
-- Reverse Proxy, HTTPS und Einrichtung beider echten MFA-Konten auf dem NAS.
+- Das neue Cookidoo-Image auf dem bestehenden NAS aktualisieren und die Verbindung einrichten.
+- Containerbau und Starttests laufen in GitHub Actions; kein lokaler Docker-Daemon.
 - Vollständiger Wiederherstellungslauf in separater NAS-Testinstallation.
 - Browserprüfung auf den tatsächlichen iPhones; die bisherigen Tests verwendeten
   eine Browseransicht in iPhone-Breite, kein physisches iPhone.
-- Google-OAuth und Übertragung im echten Gemeinschaftskalender: noch nicht live geprüft.
+- Google-Verbindung und Terminzuordnung wurden vom Nutzer als funktionierend bestätigt.
 - Push-Zustellung, Berechtigungen und Fokusverhalten auf beiden echten iPhones: offen.
-- Nanny, Cookidoo, Offline-Einkaufsliste und Sprache: folgende Etappen.
+- Cookidoo-End-to-End-Test dieser neuen Oberfläche am echten Konto steht aus.
+- Nanny, automatische Menüvorschläge, automatischer Offline-Abgleich und Sprache folgen später.
 
 Die Entwickler-Testbibliothek meldet eine Abkündigung ihres bisherigen HTTP-Test-
 Adapters. Die Tests sind erfolgreich; die Meldung betrifft nicht den laufenden

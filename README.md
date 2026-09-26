@@ -6,8 +6,9 @@
 Fertiges Image: `ghcr.io/tobim-dev/family-os:latest`.
 
 
-Zweite ausführbare Etappe: Betreuung planen, Änderungen gemeinsam bestätigen,
-Klärungspunkte zuordnen, Aufgaben nachhalten sowie Google-Übertragung und persönliche Mitteilungen vorbereiten.
+Betreuung planen, Änderungen gemeinsam bestätigen, Klärungspunkte zuordnen,
+Aufgaben nachhalten und den Gemeinschaftskalender verbinden. Dazu kommen
+Cookidoo-Essensplanung und eine gemeinsame Einkaufsliste.
 
 ## Lokal ausprobieren
 
@@ -96,9 +97,9 @@ Mitteilung über den eingeschalteten Modus.
 
 ## Noch nicht implementiert
 
-Nanny-Verwaltung, Cookidoo-Integration, Essensplanung, Offline-Einkaufsliste sowie
-Spracherkennung gehören zu den folgenden Etappen. Die Cookidoo-Verbindungstests
-sind eigenständige Werkzeuge und wurden nicht mit dieser Anwendung verbunden.
+Nanny-Verwaltung, automatische Menüvorschläge, automatisch verfügbare
+Offline-Einkaufslisten mit späterem Abgleich sowie Spracherkennung folgen später.
+Die erste Cookidoo-Anbindung ist integriert; siehe [COOKIDOO.md](COOKIDOO.md).
 Es gibt keinen Zugriff auf Arbeitskalender. Google und Push benötigen die Einrichtung
 nach [VERBINDUNGEN.md](VERBINDUNGEN.md); echte End-to-End-Tests stehen noch aus.
 
@@ -107,9 +108,9 @@ abgenommenes öffentliches Familiensystem. Brittas Rückmeldung ist zurückgeste
 
 ## Unraid / Docker vorbereiten
 
-Das Paket enthält Dockerfile und Compose-Konfiguration. Auf diesem Mac war beim
-Prüfen kein Docker-Daemon aktiv; der Containerbau und Betrieb auf Unraid stehen
-deshalb noch aus. Python-Anwendung und Freigaberegeln wurden lokal getestet.
+Das Paket enthält Dockerfile, Compose-Konfiguration und eine Unraid-Vorlage.
+GitHub Actions testet und baut das Image einschließlich eines Container-Starttests
+mit den Unraid-Datenrechten. Tobi hat die Anwendung bereits auf dem NAS eingerichtet.
 
 Den vollständigen Ordner auf das NAS kopieren und darin arbeiten:
 
@@ -173,7 +174,7 @@ Jeder Sicherung einen neuen Dateinamen geben. Zusätzlich zur Datenbank wird, so
 vorhanden, ein gleichnamiger Ordner mit Endung `.keys` angelegt: Verschlüsselungsschlüssel,
 Push-Schlüssel und Google-Zugangsdatei. **Datenbank und Schlüsselordner gemeinsam** auf ein
 separates geschütztes Ziel kopieren. Ohne `integration.key` sind gesicherte Google-Tokens
-nicht lesbar. Die Anwendung erzeugt bei vorhandenen Tokens keinen Ersatzschlüssel. Der Befehl verwendet die SQLite-Backup-API,
+nicht lesbar. Dasselbe gilt für Cookidoo-Tokens. Die Anwendung erzeugt bei vorhandenen Tokens keinen Ersatzschlüssel. Der Befehl verwendet die SQLite-Backup-API,
 damit auch bei laufender Anwendung ein konsistenter Stand entsteht. Es ist noch
 kein automatischer Sicherungsplan eingerichtet.
 
@@ -224,4 +225,5 @@ Eine zeitkritische Betreuungsklärung bleibt bis zur ausdrücklichen Zustimmung 
 Die Anwendung importiert keine fremden Google-Termine. Änderungen an eigenen
 Einträgen werden als Konflikt gezeigt, nicht automatisch in Familienentscheidungen
 umgewandelt. Ein Wechsel des Zielkalenders erfordert eine kontrollierte Migration.
-Die Offline-Einkaufsliste und ein automatischer Sicherungsplan folgen später.
+Eine manuell speicherbare Einkaufskopie ist vorhanden. Automatischer Offline-Abgleich
+und ein automatischer Sicherungsplan folgen später.
