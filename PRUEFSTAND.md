@@ -39,6 +39,15 @@ Schema-Migrationen:
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
 
+Navigation und Optik (A-13, Browser 390 px und 1280 px):
+
+- Fünf Bereiche Heute · Plan · Essen · Familie · Mehr, Unterreiter, Glocke für Mitteilungen;
+  alle Ansichten erreichbar, keine horizontale Überbreite, keine JavaScript-Fehler.
+- „Heute“: heute/morgen mit Bringen, Abholen (Zeiten), Nanny und Abendessen aus der
+  Serverzusammenfassung; „Für dich“ mit Abstimmungen, eigenen Klärungspunkten und Aufgaben.
+- Warme Farbgebung aus dem Icon; Rundgang-Schritte angepasst (Test prüft Ansichten und Selektoren).
+- Auf den echten iPhones noch nicht geprüft.
+
 App-Icon:
 
 - Neues Icon (Haus in der Abenddämmerung, Herz-Fenster, drei Sterne) als SVG-Vorlage
