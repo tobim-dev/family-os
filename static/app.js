@@ -1,7 +1,7 @@
 'use strict';
 const app=document.querySelector('#app'), modal=document.querySelector('#modal');
 const names={tobi:'Tobi',britta:'Britta'}, kinds={bring:'Bringen',pickup:'Abholen'};
-const paths={mic:'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3ZM5 11a7 7 0 0 0 14 0M12 18v3',heart:'M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9Z',home:'M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1Z',calendar:'M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z',chat:'M21 11a8 8 0 0 1-8 8H6l-4 3V11a9 9 0 0 1 19 0Z',check:'m5 12 4 4L19 6',tasks:'M9 5h12M9 12h12M9 19h12M2 5l1 1 2-3M2 12l1 1 2-3M2 19l1 1 2-3',arrow:'m9 5 7 7-7 7',left:'m15 5-7 7 7 7',plus:'M12 5v14M5 12h14',close:'m6 6 12 12M6 18 18 6',clock:'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',shield:'m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z',logout:'M9 4H4v16h5M12 12h9m-4-4 4 4-4 4',meal:'M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-1.7 0-3 2.2-3 6s1.3 5 3 5v9',users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM20 21v-2a4 4 0 0 0-3-4M17 3a4 4 0 0 1 0 8'};
+const paths={bell:'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',more:'M5 12h.01M12 12h.01M19 12h.01',mic:'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3ZM5 11a7 7 0 0 0 14 0M12 18v3',heart:'M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9Z',home:'M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1Z',calendar:'M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z',chat:'M21 11a8 8 0 0 1-8 8H6l-4 3V11a9 9 0 0 1 19 0Z',check:'m5 12 4 4L19 6',tasks:'M9 5h12M9 12h12M9 19h12M2 5l1 1 2-3M2 12l1 1 2-3M2 19l1 1 2-3',arrow:'m9 5 7 7-7 7',left:'m15 5-7 7 7 7',plus:'M12 5v14M5 12h14',close:'m6 6 12 12M6 18 18 6',clock:'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',shield:'m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z',logout:'M9 4H4v16h5M12 12h9m-4-4 4 4-4 4',meal:'M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-1.7 0-3 2.2-3 6s1.3 5 3 5v9',users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM20 21v-2a4 4 0 0 0-3-4M17 3a4 4 0 0 1 0 8'};
 const icon=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[n]||paths.calendar}"/></svg>`;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const avatar=(p)=>`<span class="avatar ${p}" aria-label="${names[p]}">${names[p][0]}</span>`;
@@ -71,22 +71,148 @@ function tasksHTML(limit=0){
   return show.length?show.map(t=>`<div class="list-row">${t.owner===state.user?`<button class="task-check" data-complete="${t.id}" aria-label="${esc(t.title)} als erledigt bestätigen"></button>`:avatar(t.owner)}<div class="grow"><h3>${esc(t.title)}</h3>${t.calendar_items?'':`<p>${esc(t.details)}</p>`}<small>${names[t.owner]} · ${deadlineText(t.due)}</small>${typeof outlookActions==='function'?outlookActions(t):''}</div></div>`).join(''):`<div class="empty-state">${icon('check')}<b>Alles im Blick.</b><p>${taskFilter==='mine'?'Du hast gerade keine offenen Aufgaben.':'Es gibt gerade keine offenen Aufgaben.'}</p></div>`;
 }
 function issuesHTML(){return state.issues.length?state.issues.map(i=>`<div class="list-row">${avatar(i.owner)}<div class="grow"><div class="row between"><h3>${i.day?fmt(i.day,{weekday:'short',day:'numeric',month:'short'})+' · '+kinds[i.kind]:'Gemeinsam besprechen'}</h3><span class="status ${new Date(i.deadline)<new Date()?'red':'amber'}">${new Date(i.deadline)<new Date()?'Frist erreicht':'Offen'}</span></div><p>${esc(i.text)}</p><small>${names[i.owner]} kümmert sich · bis ${deadlineText(i.deadline)}</small><div class="actions">${i.appointment_id?`<button class="btn" data-issue-plan="${i.id}">Neu planen</button>`:''}${i.owner===state.user?`<button class="btn ghost" data-resolve="${i.id}">Als besprochen abschließen</button>`:''}</div></div></div>`).join(''):`<div class="empty-state">${icon('chat')}<b>Kein Gesprächsbedarf offen.</b><p>Wenn sich etwas ändert, könnt ihr hier die Klärung festhalten.</p></div>`;}
+// Five main areas (iPhone tab bar); areas with several views get a segmented
+// sub-navigation. Internal view names stay stable (tour, deep links).
+const AREAS=[
+  {icon:'home',label:'Heute',views:['home','tasks','notifications']},
+  {icon:'calendar',label:'Plan',views:['plan','issues']},
+  {icon:'meal',label:'Essen',views:['meals']},
+  {icon:'users',label:'Familie',views:['nanny','lina']},
+  {icon:'more',label:'Mehr',views:['connections']},
+];
+const VIEW_TITLES={home:'Übersicht',tasks:'Aufgaben',notifications:'Mitteilungen',plan:'Monat',issues:'Klärung & Abstimmung',
+  meals:'Essen & Einkauf',nanny:'Nanny',lina:'Windeln & Kleidung',connections:'Verbindungen & Einstellungen'};
+
+const unreadCount=()=>connections.notifications.filter(n=>!n.read_at).length;
+const myOpenTasks=()=>state.tasks.filter(t=>t.owner===state.user&&t.state==='open');
+const myIssues=()=>state.issues.filter(i=>i.owner===state.user);
+
+function viewBadge(id){
+  const count={tasks:myOpenTasks().length,notifications:unreadCount(),issues:state.issues.length+pendingMine().length}[id]||0;
+  return count?`<span class="badge">${count}</span>`:'';
+}
+function areaBadge(area){
+  const count=area.views[0]==='home'?pendingMine().length+myOpenTasks().length:area.views[0]==='plan'?state.issues.length:0;
+  return count?`<span class="badge">${count}</span>`:'';
+}
+function navHTML(){
+  return AREAS.map(area=>{
+    const active=area.views.includes(view);
+    return `<button data-view="${area.views[0]}" class="${active?'active':''}" ${active?'aria-current="page"':''}>
+      ${icon(area.icon)}<span>${area.label}</span>${areaBadge(area)}</button>`;
+  }).join('');
+}
+function subnavHTML(){
+  const area=AREAS.find(a=>a.views.includes(view));
+  if(area.views.length<2)return '';
+  return `<div class="tabs subnav" role="group" aria-label="${area.label}">${area.views.map(id=>
+    `<button data-view="${id}" class="${view===id?'active':''}" ${view===id?'aria-current="page"':''}>${VIEW_TITLES[id]}${viewBadge(id)}</button>`).join('')}</div>`;
+}
+
+// Page head: short title plus the one action that fits the page.
+function pageHead(){
+  const heads={
+    home:['Hallo '+names[state.user],fmt(state.today,{weekday:'long',day:'numeric',month:'long'}),''],
+    plan:['Betreuung','Vorläufig planen, gemeinsam bestätigen.',''],
+    issues:['Klärung & Abstimmung','Offene Fragen, ohne den gültigen Plan zu verlieren.',`<button class="btn primary" data-action="new-issue">${icon('plus')}<span>Klärungspunkt</span></button>`],
+    tasks:['Aufgaben','Jede Aufgabe hat eine verantwortliche Person.',''],
+    notifications:['Mitteilungen','Abstimmungen, Erinnerungen und Neuigkeiten.',''],
+    meals:['Essen & Einkauf','Eure Cookidoo-Woche und die Einkaufsliste.',''],
+    nanny:['Nanny','Termine, Anfragen und Abrechnung.',''],
+    lina:['Windeln & Kleidung','Für Lina – ohne Inventur.',''],
+    connections:['Mehr','Verbindungen, Widget und Einstellungen.',''],
+  };
+  const [title,sub,action]=heads[view];
+  return `<div class="pageheading"><div><h1>${title}</h1><p>${sub}</p></div>${action}</div>`;
+}
+
+function todayColumn(label,day){
+  if(!day)return '';
+  const rows=[];
+  if(day.closure)rows.push(['home',esc(day.closure),'warn']);
+  else if(day.bring||day.pickup){
+    rows.push(['arrow',`Bringen <b>${esc(day.bring||'offen')}</b>${day.bring_time?' · '+day.bring_time:''}`]);
+    rows.push(['clock',`Abholen <b>${esc(day.pickup||'offen')}</b>${day.pickup_time?' · '+day.pickup_time:''}`]);
+  }else rows.push(['home','Keine Krippe']);
+  day.nanny.forEach(time=>rows.push(['users',`Nanny <b>${esc(time)}</b>`]));
+  rows.push(['meal',day.dinner?esc(day.dinner):'<span class="muted">Noch kein Abendessen</span>']);
+  return `<div class="today-col"><h3>${label} <small>${fmt(day.day,{weekday:'short',day:'numeric',month:'short'})}</small></h3>
+    ${rows.map(([ic,text,tone])=>`<div class="today-row ${tone||''}">${icon(ic)}<span>${text}</span></div>`).join('')}</div>`;
+}
+function todayCard(){
+  const [today,next]=state.today_summary?.days||[];
+  return `<section class="today-card"><div class="today-grid">${todayColumn('Heute',today)}${todayColumn('Morgen',next)}</div></section>`;
+}
+
+// Everything that needs the signed-in person, in one list.
+function forYouHTML(){
+  const proposals=pendingMine().map(p=>`<div class="list-row">${icon('calendar')}<div class="grow">
+      <span class="status amber">Deine Bestätigung</span>
+      <h3>${fmt(p.day,{weekday:'short',day:'numeric',month:'short'})} · ${kinds[p.kind]}</h3>
+      <p>${p.current_owner?names[p.current_owner]+' → ':''}<strong>${names[p.owner]}</strong> · ${p.start}–${p.end}</p>
+      <div class="actions"><button class="btn primary" data-proposal="${p.id}">Ansehen ${icon('arrow')}</button></div></div></div>`);
+  const issues=myIssues().map(i=>`<div class="list-row">${icon('chat')}<div class="grow"><span class="status amber">Klärung</span>
+      <h3>${esc(i.text)}</h3><small>Du kümmerst dich · bis ${deadlineText(i.deadline)}</small>
+      <div class="actions"><button class="btn" data-view="issues">Öffnen ${icon('arrow')}</button></div></div></div>`);
+  const saved=taskFilter;taskFilter='mine';
+  const tasks=myOpenTasks().length?tasksHTML(5):'';
+  taskFilter=saved;
+  const count=proposals.length+issues.length+myOpenTasks().length;
+  const more=myOpenTasks().length>5?`<div class="panel-body"><button class="btn ghost" data-view="tasks">Alle ${myOpenTasks().length} Aufgaben ${icon('arrow')}</button></div>`:'';
+  return `<section class="panel"><div class="panel-head"><h2>Für dich</h2>${count?`<span class="status amber">${count} offen</span>`:''}</div>
+    ${count?proposals.join('')+issues.join('')+tasks+more:`<div class="empty-state">${icon('check')}<b>Alles erledigt.</b><p>Gerade wartet nichts auf dich.</p></div>`}</section>`;
+}
+function waitingHTML(){
+  const mine=state.proposals.filter(p=>p.creator===state.user);
+  return mine.length?mine.slice(0,2).map(p=>proposalCard(p,true)).join(''):'';
+}
+function historyHTML(){
+  return `<section class="panel"><div class="panel-head"><h2>Zuletzt passiert</h2></div><div class="panel-body">${state.history.slice(0,3).map(h=>
+    `<div class="history-item"><b>${esc(h.action)}</b><p>${esc(h.details)}</p><small>${names[h.actor]||esc(h.actor)} · ${deadlineText(h.created)}</small></div>`).join('')}</div></section>`;
+}
+
+function homeHTML(){
+  return `${state.planning?planningBanner():''}${todayCard()}<div class="content-grid"><div class="stack">${forYouHTML()}${agendaHTML()}</div>
+    <aside class="rail">${waitingHTML()||'<div class="notice-card"><div class="eyebrow">Abgestimmt</div><h3>Keine Freigabe offen.</h3><p>Neue Vorschläge erscheinen hier.</p></div>'}</aside></div>`;
+}
+function planHTML(){
+  return `${planningBanner()}<div class="content-grid"><div>${calendarHTML()}</div><aside class="rail">${waitingHTML()}${fairness()}${closuresPanel()}${historyHTML()}</aside></div>`;
+}
+function issuesViewHTML(){
+  return `<div class="content-grid"><div class="stack"><section class="panel"><div class="panel-head"><h2>Änderungen zur Abstimmung</h2><span class="status amber">${state.proposals.length}</span></div>
+    ${state.proposals.length?state.proposals.map(p=>proposalCard(p)).join(''):'<div class="empty-state"><b>Keine Vorschläge offen.</b></div>'}</section>
+    <section class="panel"><div class="panel-head"><h2>Gesprächsbedarf</h2><span class="status amber">${state.issues.length}</span></div>${issuesHTML()}</section></div>
+    <aside class="rail"><div class="notice-card"><div class="eyebrow">Eine klare Verantwortung</div><h3>Offen heißt nicht ungeplant.</h3>
+    <p>Wer einen Klärungspunkt eröffnet, kümmert sich um die Lösung. Die bisherige Zuordnung bleibt gültig.</p></div></aside></div>`;
+}
+function tasksViewHTML(){
+  const done=state.tasks.filter(t=>t.state==='done'&&(taskFilter==='all'||t.owner===state.user)).slice(0,12);
+  return `<div class="tabs" role="group" aria-label="Aufgaben filtern"><button data-filter="mine" class="${taskFilter==='mine'?'active':''}">Meine</button>
+    <button data-filter="all" class="${taskFilter==='all'?'active':''}">Alle</button></div><section class="panel">${tasksHTML()}</section>
+    ${done.length?`<section class="panel tasks-section"><div class="panel-head"><h2>Bereits erledigt</h2></div>${done.map(t=>
+      `<div class="list-row">${icon('check')}<div><h3 class="done">${esc(t.title)}</h3><small>${names[t.owner]} · ${esc(t.details)}</small></div></div>`).join('')}</section>`:''}`;
+}
+
 function render(){
   if(!state)return;
-  const titles={home:'Euer Alltag. Gemeinsam im Blick.',plan:'Betreuung gemeinsam planen.',issues:'Was wir noch klären.',tasks:'Was für dich ansteht.',notifications:'Was für dich neu ist.',connections:'Gut verbunden.',meals:'Gut essen. Entspannt einkaufen.',lina:'Für Lina. Ohne Inventur.',nanny:'Betreuung am Nachmittag. Sauber abgerechnet.'};
-  const nav=[['home','home','Übersicht'],['plan','calendar','Monatsplanung'],['issues','chat','Klärungspunkte'],['tasks','tasks','Aufgaben'],['notifications','chat','Mitteilungen'],['connections','shield','Verbindungen'],['meals','tasks','Essen & Einkauf'],['nanny','users','Nanny'],['lina','heart','Lina']];
-  const myTasks=state.tasks.filter(t=>t.owner===state.user&&t.state==='open');
-  const proposals=monthlyProposals();
-  let body='';
-  if(view==='home'||view==='plan')body=`${view==='home'?`<div class="metrics"><div class="metric"><div class="metric-icon">${icon('calendar')}</div><div><strong>${state.appointments.filter(a=>a.owner).length}</strong><span>Wege bestätigt · ${fmt(month+'-01',{month:'long'})}</span></div></div><div class="metric"><div class="metric-icon">${icon('chat')}</div><div><strong>${state.issues.length}</strong><span>Offene Klärungspunkte</span></div></div><div class="metric"><div class="metric-icon">${icon('tasks')}</div><div><strong>${myTasks.length}</strong><span>Aufgaben für dich</span></div></div></div>`:''}<div class="content-grid"><div>${view==='home'?agendaHTML():calendarHTML()}${view==='home'?`<section class="panel tasks-section"><div class="panel-head"><h2>Deine nächsten Schritte</h2><button class="btn ghost" data-view="tasks">Alle Aufgaben ${icon('arrow')}</button></div>${tasksHTML(3)}</section>`:''}</div><aside class="rail">${pendingMine().length?proposalCard(pendingMine()[0],true):state.proposals.length?proposalCard(state.proposals[0],true):`<div class="notice-card"><div class="eyebrow">Abgestimmt</div><h3>Keine Freigabe offen.</h3><p>Neue Vorschläge erscheinen hier zur gemeinsamen Entscheidung.</p></div>`}${fairness()}${view==='plan'?closuresPanel():''}<section class="panel"><div class="panel-head"><h2>Zuletzt passiert</h2></div><div class="panel-body">${state.history.slice(0,3).map(h=>`<div class="history-item"><b>${esc(h.action)}</b><p>${esc(h.details)}</p><small>${names[h.actor]||esc(h.actor)} · ${deadlineText(h.created)}</small></div>`).join('')}</div></section></aside></div>`;
-  if(view==='issues')body=`<div class="content-grid"><div class="stack"><section class="panel"><div class="panel-head"><h2>Gesprächsbedarf <span class="status amber">${state.issues.length}</span></h2></div>${issuesHTML()}</section><section class="panel"><div class="panel-head"><h2>Änderungen zur Abstimmung</h2><span class="status amber">${state.proposals.length}</span></div>${state.proposals.length?state.proposals.map(p=>proposalCard(p)).join(''):'<div class="empty-state"><b>Keine Vorschläge offen.</b></div>'}</section></div><aside class="rail"><div class="notice-card"><div class="eyebrow">Eine klare Verantwortung</div><h3>Offen heißt nicht ungeplant.</h3><p>Wer einen Klärungspunkt eröffnet, kümmert sich um die Lösung. Die bisherige Zuordnung bleibt gültig.</p></div></aside></div>`;
-  if(view==='tasks')body=`<div class="tabs" role="group" aria-label="Aufgaben filtern"><button data-filter="mine" class="${taskFilter==='mine'?'active':''}">Meine Aufgaben</button><button data-filter="all" class="${taskFilter==='all'?'active':''}">Alle Aufgaben</button></div><section class="panel">${tasksHTML()}</section>${state.tasks.some(t=>t.state==='done')?`<section class="panel tasks-section"><div class="panel-head"><h2>Bereits erledigt</h2></div>${state.tasks.filter(t=>t.state==='done'&&(taskFilter==='all'||t.owner===state.user)).slice(0,12).map(t=>`<div class="list-row">${icon('check')}<div><h3 class="done">${esc(t.title)}</h3><small>${names[t.owner]} · ${esc(t.details)}</small></div></div>`).join('')}</section>`:''}`;
-  if(view==='meals')body=mealsHTML();
-  if(view==='nanny')body=nannyHTML();
-  if(view==='lina')body=linaHTML();
-  if(view==='connections')body=connectionsHTML();
-  if(view==='notifications')body=notificationsHTML();
-  app.innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><img src="/static/favicon.svg" alt=""><div><strong>Zuhause</strong><small>Family OS</small></div></div><div class="nav-label">UNSER ALLTAG</div><nav class="nav" aria-label="Hauptnavigation">${nav.map(([id,ic,title])=>`<button data-view="${id}" aria-label="${title}" class="${view===id?'active':''}" ${view===id?'aria-current="page"':''}>${icon(ic)}<span class="nav-full">${title}</span><span class="nav-short" aria-hidden="true">${({home:"Start",plan:"Plan",issues:"Klärung",tasks:"Aufgaben",notifications:"Neu",connections:"Mehr",meals:"Essen",nanny:"Nanny",lina:"Lina"})[id]}</span>${id==='notifications'&&connections.notifications.some(n=>!n.read_at)?`<span class="badge">${connections.notifications.filter(n=>!n.read_at).length}</span>`:id==='issues'&&state.issues.length?`<span class="badge">${state.issues.length}</span>`:''}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="household"><p>Tobi, Britta & Lina</p><small>Ein gemeinsamer Plan.</small></div><div class="profile">${avatar(state.user)}<div><strong>${names[state.user]}</strong><small>${state.demo?'Demo-Perspektive':'Angemeldet'}</small></div><button data-action="logout" aria-label="${state.demo?'Person wechseln':'Abmelden'}">${icon('logout')}</button></div></div></aside><div class="workspace"><header class="topbar"><span class="crumb">Unser Alltag &nbsp; / &nbsp; <b>${nav.find(n=>n[0]===view)[2]}</b></span><div class="mobile-brand"><img src="/static/favicon.svg" alt="">Zuhause</div><div class="topright">${state.demo?'<span class="demo-label">DEMO · BEISPIELDATEN</span>':''}<button class="icon-btn tour-start" data-tour-start aria-label="Rundgang durch Family OS">?</button><div class="avatars">${avatar('tobi')}${avatar('britta')}</div><button class="mobile-switch" data-action="logout" aria-label="Person wechseln oder abmelden">${avatar(state.user)}</button></div></header><main class="main">${networkError?`<div class="error-banner" role="alert">${esc(networkError)} <button class="btn" data-action="reload">Neu laden</button></div>`:''}<div class="pageheading"><div><div class="eyebrow">${view==='home'?'Hallo '+names[state.user]:view==='plan'?'Ein Plan für uns drei':view==='issues'?'Gemeinsam entscheiden':'Schritt für Schritt'}</div><h1>${titles[view]}</h1><p>${view==='home'?fmt(state.today,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):view==='plan'?'Vorläufig planen. Gemeinsam bestätigen.':view==='issues'?'Änderungen besprechen, ohne den gültigen Plan zu verlieren.':view==='meals'?'Eure Cookidoo-Woche und Einkaufsliste an einem Ort.':view==='connections'?'Kalender und Mitteilungen mit nachvollziehbarem Status.':view==='notifications'?'Abstimmungen, Erinnerungen und eure nächsten Schritte.':'Jede Aufgabe hat eine verantwortliche Person.'}</p></div><button class="btn primary" data-action="new-issue">${icon('plus')}<span>Klärungspunkt</span></button></div>${(view==='home'||view==='plan'||state.planning)?planningBanner():''}${body}<footer class="footer"><span>${icon('shield')} ${state.demo?'Lokal gespeicherte Beispieldaten':'Auf eurem Server gespeichert'}</span><span>${connections?.google_connected?'Google verbunden · Übertragungsstatus unter Verbindungen':'Google noch nicht verbunden · Planung lokal gespeichert'}</span></footer></main></div></div>`;
+  const bodies={home:homeHTML,plan:planHTML,issues:issuesViewHTML,tasks:tasksViewHTML,meals:mealsHTML,nanny:nannyHTML,
+    lina:linaHTML,connections:connectionsHTML,notifications:notificationsHTML};
+  const unread=unreadCount();
+  app.innerHTML=`<div class="shell"><aside class="sidebar">
+      <div class="brand"><img src="/static/favicon.svg" alt=""><div><strong>Zuhause</strong><small>Family OS</small></div></div>
+      <nav class="nav" aria-label="Hauptnavigation">${navHTML()}</nav>
+      <div class="sidebar-bottom"><div class="profile">${avatar(state.user)}<div><strong>${names[state.user]}</strong><small>${state.demo?'Demo-Perspektive':'Angemeldet'}</small></div>
+        <button data-action="logout" aria-label="${state.demo?'Person wechseln':'Abmelden'}">${icon('logout')}</button></div></div></aside>
+    <div class="workspace"><header class="topbar"><span class="crumb">${AREAS.find(a=>a.views.includes(view)).label} &nbsp;/&nbsp; <b>${VIEW_TITLES[view]}</b></span>
+      <div class="mobile-brand"><img src="/static/favicon.svg" alt="">Zuhause</div>
+      <div class="topright">${state.demo?'<span class="demo-label">DEMO</span>':''}
+        <button class="icon-btn bell" data-view="notifications" aria-label="Mitteilungen${unread?', '+unread+' ungelesen':''}">${icon('bell')}${unread?`<span class="badge">${unread}</span>`:''}</button>
+        <button class="icon-btn tour-start" data-tour-start aria-label="Rundgang durch Family OS">?</button>
+        <button class="mobile-switch" data-action="logout" aria-label="Person wechseln oder abmelden">${avatar(state.user)}</button></div></header>
+    <main class="main">${networkError?`<div class="error-banner" role="alert">${esc(networkError)} <button class="btn" data-action="reload">Neu laden</button></div>`:''}
+      ${pageHead()}${subnavHTML()}${bodies[view]()}
+      <footer class="footer"><span>${icon('shield')} ${state.demo?'Lokal gespeicherte Beispieldaten':'Auf eurem Server gespeichert'}</span>
+        <span>${connections?.google_connected?'Google verbunden':'Google noch nicht verbunden · Planung lokal gespeichert'}</span></footer></main></div></div>`;
   bind();
 }
 

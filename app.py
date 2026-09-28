@@ -240,7 +240,8 @@ def create_app(db_path=None, demo=None, origin=None):
     integrations.speech = speech
     speech.routes(app, identity)
     Offline(db).routes(app, identity)
-    Widget(db).routes(app, identity)
+    widget = Widget(db)
+    widget.routes(app, identity)
 
     @app.post('/api/planning/start')
     def start_planning(request: Request):
@@ -329,7 +330,8 @@ def create_app(db_path=None, demo=None, origin=None):
             nanny_shifts = [dict(r) for r in conn.execute("SELECT id,day,start,end,state FROM nanny_shifts WHERE day BETWEEN ? AND ? AND state IN ('wish','requested','confirmed') ORDER BY day,start", (str(first), str(last)))]
             closed_days = closures.listing(conn, first, last)
             tour_seen = bool(conn.execute('SELECT 1 FROM metadata WHERE key=?', ('tour_seen:' + user,)).fetchone())
-        return {'tour_seen': tour_seen, 'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
+            today = widget.summary(conn, user, datetime.now(TZ))  # today and tomorrow for the start page
+        return {'today_summary': today, 'tour_seen': tour_seen, 'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
 
     @app.post('/api/proposals')
     def propose(data: ProposalInput, request: Request):

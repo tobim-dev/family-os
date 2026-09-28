@@ -238,7 +238,7 @@ class Lina:
                 return
             conn.execute("INSERT OR REPLACE INTO metadata VALUES('lina_nursery_check',?)", (str(instant.date()),))
             task_id = self.add_task(conn, CLOTHING_OWNER, 'Wechselkleidung in der Krippe prüfen',
-                                    'Passt die Wechselkleidung noch und ist genug da? Fehlendes unter Lina als Wechselkleidung notieren.',
+                                    'Passt die Wechselkleidung noch und ist genug da? Fehlendes unter Familie → Windeln & Kleidung notieren.',
                                     (instant + timedelta(days=3)).isoformat(timespec='seconds'))
             self.remember_task(conn, 'lina_nursery_task', task_id)
 

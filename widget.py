@@ -62,14 +62,17 @@ class Widget:
 
     def day(self, conn, day):
         closure = conn.execute("SELECT kind FROM day_closures WHERE day=? AND state='confirmed'", (str(day),)).fetchone()
-        slots = {row['kind']: row['owner'] for row in conn.execute('SELECT kind,owner FROM appointments WHERE day=?', (str(day),))}
+        slots = {row['kind']: row for row in conn.execute('SELECT kind,owner,start,end FROM appointments WHERE day=?', (str(day),))}
         shifts = conn.execute("SELECT start,end FROM nanny_shifts WHERE day=? AND state='confirmed' ORDER BY start", (str(day),)).fetchall()
-        result = {'day': str(day), 'closure': KINDS[closure['kind']] if closure else None, 'bring': None, 'pickup': None,
+        result = {'day': str(day), 'closure': KINDS[closure['kind']] if closure else None,
+                  'bring': None, 'pickup': None, 'bring_time': None, 'pickup_time': None,
                   'nanny': [f"{s['start']}–{s['end']}" for s in shifts], 'dinner': self.dinner(conn, day)}
         if not closure:
             for kind in ('bring', 'pickup'):
                 if kind in slots:
-                    result[kind] = PEOPLE.get(slots[kind], 'offen')
+                    slot = slots[kind]
+                    result[kind] = PEOPLE.get(slot['owner'], 'offen')
+                    result[kind + '_time'] = slot['start']
         return result
 
     @staticmethod

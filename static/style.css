@@ -11,19 +11,19 @@ dialog{border:0;padding:0;border-radius:15px;box-shadow:0 24px 100px #102a4050;w
 
 .connection-stats{display:flex;gap:24px;flex-wrap:wrap;margin:24px 0}.connection-stats div{display:flex;flex-direction:column;gap:5px}.connection-stats strong{font-size:28px}.connection-stats span{font-size:12px;color:var(--muted)}.break-word{overflow-wrap:anywhere}
 
-.nav-short{display:none}@media(max-width:750px){.nav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}.nav button{min-width:0;font-size:.72rem}.nav-full{display:none}.nav-short{display:inline}.nav button .badge{right:3px}}
+.nav-short{display:none}@media(max-width:750px){.nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}.nav button{min-width:0;font-size:.72rem}.nav-full{display:none}.nav-short{display:inline}.nav button .badge{right:3px}}
 
 .planning-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#e4f4ee;border:1px solid #95c9b4;border-radius:12px;padding:18px;margin-bottom:22px}.planning-banner p{font-size:.875rem;margin-top:5px}.planning-banner .btn{flex-shrink:0}@media(max-width:750px){.planning-banner{align-items:flex-start;flex-direction:column}}
 
 .field[hidden]{display:none!important}
 
-.meal-toolbar{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:22px}.meal-toolbar p{margin:5px 0}.meal-day{display:grid;grid-template-columns:125px minmax(0,1fr);gap:18px;padding:20px;border-bottom:1px solid var(--line)}.meal-day:last-child{border:0}.meal-day>div>small{display:block;margin-top:5px;color:var(--muted)}.meal-recipe+.meal-recipe{margin-top:15px}.meal-shopping-recipe{padding:14px 0;border-bottom:1px solid var(--line)}.meal-item input{width:22px;height:22px;flex-shrink:0;accent-color:var(--green)}.meal-done summary{padding:18px;cursor:pointer;font-weight:600}.recipe-ingredients{padding-left:22px;line-height:1.8}.meal-done{border-top:1px solid var(--line)}@media(max-width:750px){.nav{grid-template-columns:repeat(7,minmax(0,1fr))}.nav button{font-size:.65rem}.meal-day{grid-template-columns:1fr;gap:10px}.meal-toolbar .actions{gap:6px}}
+.meal-toolbar{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:22px}.meal-toolbar p{margin:5px 0}.meal-day{display:grid;grid-template-columns:125px minmax(0,1fr);gap:18px;padding:20px;border-bottom:1px solid var(--line)}.meal-day:last-child{border:0}.meal-day>div>small{display:block;margin-top:5px;color:var(--muted)}.meal-recipe+.meal-recipe{margin-top:15px}.meal-shopping-recipe{padding:14px 0;border-bottom:1px solid var(--line)}.meal-item input{width:22px;height:22px;flex-shrink:0;accent-color:var(--green)}.meal-done summary{padding:18px;cursor:pointer;font-weight:600}.recipe-ingredients{padding-left:22px;line-height:1.8}.meal-done{border-top:1px solid var(--line)}@media(max-width:750px){.meal-day{grid-template-columns:1fr;gap:10px}.meal-toolbar .actions{gap:6px}}
 
 .nanny-hint{color:#126c51;font-size:.68rem;font-weight:600}
 .nanny-row .nanny-date{min-width:44px;text-align:center}.nanny-date strong{display:block;font-size:1.3rem;line-height:1.1}.nanny-detail{display:block;margin-top:4px}
 .nanny-total{margin-bottom:14px}.nanny-total strong{display:block;font-size:1.65rem;letter-spacing:-.04rem}.nanny-line{padding:7px 0;border-bottom:1px solid var(--line);font-size:.875rem}.nanny-line:last-of-type{margin-bottom:14px}
 .nanny-locked{margin-bottom:18px}.nanny-toolbar .actions{align-items:center;margin-top:0}.choice{display:flex;gap:8px;align-items:center;margin:6px 0}fieldset.field{border:0;padding:0;margin:0 0 16px}fieldset.field legend{font-weight:600;margin-bottom:6px}
-@media(max-width:750px){.nav{grid-template-columns:repeat(9,minmax(0,1fr))}.nav button{font-size:.58rem;padding:7px 0}}
+
 .nanny-weeks{display:grid;gap:6px;margin:14px 0}.nanny-week{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.nanny-weeks-full .nanny-week{grid-template-columns:repeat(7,minmax(0,1fr))}
 .nanny-pick{display:flex;gap:6px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:8px 6px;cursor:pointer;min-width:0}.nanny-pick input{margin-top:3px;accent-color:var(--green)}.nanny-pick b{display:block;font-size:.85rem}.nanny-pick small{display:block;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nanny-pick span{min-width:0}.nanny-pick:has(input:checked){background:var(--greenbg);border-color:#95c9b4}.nanny-pick.past{opacity:.45;cursor:default}.nanny-pick.planned{cursor:default}
 .nanny-answer{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:0 0 10px}.nanny-answer legend{font-weight:600;font-size:.9rem;padding:0 4px}.nanny-answer .choice{display:inline-flex;margin-right:14px}.nanny-answer-all{margin:0 0 12px}
@@ -54,3 +54,19 @@ dialog{border:0;padding:0;border-radius:15px;box-shadow:0 24px 100px #102a4050;w
 }
 .minijob{display:grid;gap:6px;margin:14px 0;padding-top:12px;border-top:1px solid var(--line)}.minijob-payout{font-size:1rem}.minijob-payout strong{font-size:1.25rem;color:var(--green)}.minijob-details summary{cursor:pointer;font-size:.875rem;color:var(--muted);padding:4px 0}
 .widget-steps{margin:0 0 14px;padding-left:20px;font-size:.9rem;display:grid;gap:6px}.widget-script{width:100%;font-family:ui-monospace,Menlo,monospace;font-size:.72rem;border:1px solid #bccbd5;border-radius:7px;padding:10px;resize:vertical;background:#f6f8fa;color:var(--ink)}
+
+/* Navigation in five areas, sub-navigation, bell */
+.nav button{position:relative}
+.subnav{margin:-6px 0 20px}.subnav button{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.subnav .badge,.bell .badge{background:#f3bd79;color:#3b2918;padding:0 6px;font-size:.7rem;border-radius:9px;font-weight:700}
+.bell{position:relative}.bell svg{width:18px;height:18px}.bell .badge{position:absolute;top:-6px;right:-7px;min-width:18px;line-height:18px;padding:0 5px}
+@media(max-width:750px){.nav button{font-size:.75rem;padding:8px 2px}.nav button span:not(.badge){display:block}.nav button .badge{top:2px;right:calc(50% - 22px)}}
+
+/* Start page: today and tomorrow first */
+.today-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:22px}
+.today-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.today-col h3{font-size:1rem;margin-bottom:10px}.today-col h3 small{font-weight:500;margin-left:4px}
+.today-row{display:flex;gap:9px;align-items:flex-start;font-size:.925rem;padding:5px 0;line-height:1.35}
+.today-row svg{width:17px;height:17px;flex-shrink:0;color:var(--green);margin-top:1px}
+.today-row.warn svg,.today-row.warn span{color:var(--amber)}
+@media(max-width:750px){.today-card{padding:15px 14px}.today-grid{gap:12px}.today-row{font-size:.85rem}.today-col h3 small{display:block;margin:2px 0 0}}

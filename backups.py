@@ -119,7 +119,7 @@ class AutoBackup:
         with self.db() as conn:
             if conn.execute('SELECT 1 FROM users WHERE id=?', (OWNER,)).fetchone():
                 notify(conn, OWNER, f'backup-failed:{instant.date()}', 'Sicherung fehlgeschlagen',
-                       'Die automatische Sicherung konnte nicht erstellt werden. Bitte unter Verbindungen prüfen. '
+                       'Die automatische Sicherung konnte nicht erstellt werden. Bitte unter Mehr → Verbindungen prüfen. '
                        'Ein neuer Versuch folgt in einer Stunde.', False, instant)
 
     @staticmethod
