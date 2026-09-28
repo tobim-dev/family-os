@@ -30,6 +30,7 @@ from vouchers import Vouchers
 from speech import Speech
 from offline import Offline
 from widget import Widget
+from nursery import Nursery
 import work_calendar
 
 ROOT = Path(__file__).parent
@@ -227,6 +228,9 @@ def create_app(db_path=None, demo=None, origin=None):
     integrations.periodic.append(MealReminders(db, demo).periodic)
     closures = Closures(db)
     closures.routes(app, identity, validate_planning, require_household)
+    nursery = Nursery(db, demo, closures)
+    app.state.nursery = nursery
+    nursery.routes(app, identity)
     lina = Lina(db, demo)
     app.state.lina = lina
     integrations.periodic.append(lina.periodic)
@@ -329,9 +333,10 @@ def create_app(db_path=None, demo=None, origin=None):
             history = [dict(r) for r in conn.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 30')]
             nanny_shifts = [dict(r) for r in conn.execute("SELECT id,day,start,end,state FROM nanny_shifts WHERE day BETWEEN ? AND ? AND state IN ('wish','requested','confirmed') ORDER BY day,start", (str(first), str(last)))]
             closed_days = closures.listing(conn, first, last)
+            nursery_events = nursery.listing(conn, first, last)
             tour_seen = bool(conn.execute('SELECT 1 FROM metadata WHERE key=?', ('tour_seen:' + user,)).fetchone())
             today = widget.summary(conn, user, datetime.now(TZ))  # today and tomorrow for the start page
-        return {'today_summary': today, 'tour_seen': tour_seen, 'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
+        return {'today_summary': today, 'nursery_events': nursery_events, 'tour_seen': tour_seen, 'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
 
     @app.post('/api/proposals')
     def propose(data: ProposalInput, request: Request):

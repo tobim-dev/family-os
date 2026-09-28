@@ -102,3 +102,16 @@ dialog{border-radius:20px}.dialog-head{border-bottom-color:var(--line)}
 .status.gray,.closure-badge{background:#f3ebe2}
 .recipe-thumb,.recipe-hero{background:linear-gradient(135deg,#ffe9d2,#fcd9c4);border-radius:14px}
 .recipe-thumb.placeholder{color:var(--coral)}
+
+/* Nursery dates (B-19) */
+.nursery-badge{display:block;font-size:.7rem;font-weight:600;border-radius:6px;padding:3px 6px;margin:0 0 5px;background:#ffe9d6;color:#8a3e24}
+.nursery-badge.early_close{background:#fff0d9;color:var(--amber)}
+.today-row.nursery svg{color:#b8577a}
+.file-btn{cursor:pointer}.file-btn input{display:none}
+.nursery-list{display:grid;gap:12px;max-height:55dvh;overflow:auto;margin-bottom:12px}
+.nursery-item{border:1px solid var(--line);border-radius:14px;padding:12px 14px 2px;margin:0;background:#fffcf8}
+.nursery-take{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.875rem;margin-bottom:10px}
+.nursery-item .field{margin-bottom:10px}
+details.sent{margin-top:10px;font-size:.8rem}details.sent pre{white-space:pre-wrap;background:#f8f0e7;border-radius:10px;padding:10px;max-height:180px;overflow:auto}
+.file-btn svg{width:19px;height:19px}
+.nursery-when{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}.nursery-when select{padding-right:4px}

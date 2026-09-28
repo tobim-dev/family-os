@@ -12,6 +12,8 @@ const TOUR_STEPS = [
    text: 'Sitzt ihr zusammen, startet „Gemeinsam planen“: Dann gilt jede Zuordnung sofort, ohne einzelne Bestätigung. Der Modus endet nach zwei Stunden von selbst.'},
   {view: 'plan', highlight: '[data-closure-new]', title: 'Tage ohne Krippe',
    text: 'Schließtage, Feiertage, Urlaub oder wenn Lina krank ist: unter „Ohne Krippe“ eintragen. Nach der Bestätigung entfallen Bringen und Abholen an diesen Tagen und zählen nicht zur Verteilung.'},
+  {view: 'plan', highlight: '[data-nursery-paste]', title: 'Termine der Krippe',
+   text: 'Elternbrief der Krippe als Word-Datei hochladen (oder Text einfügen): Feste, früher Schluss und Schließtage werden erkannt und erst nach deiner Prüfung übernommen. Schließt die Krippe früher als eure Abholung, bekommt die abholende Person eine Aufgabe.'},
   {view: 'issues', highlight: '[data-action="new-issue"]', title: 'Plan → Klärung & Abstimmung',
    text: 'Passt ein Termin nicht, aber ihr wisst noch keine Lösung? Lege einen Klärungspunkt an. Er zeigt Gesprächsbedarf an, ohne den gültigen Plan zu ändern.'},
   {view: 'tasks', title: 'Heute → Aufgaben',

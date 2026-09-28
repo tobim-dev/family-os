@@ -65,7 +65,7 @@ const sample = () => ({
   user: 'Tobi', generated: day(0) + 'T07:30:00+02:00', tasks: 2, task_titles: ['Windeln kaufen', 'Nanny anfragen'],
   approvals: 1, issues: 0,
   days: [
-    {day: day(0), closure: null, bring: 'Tobi', pickup: 'Britta', nanny: [], dinner: 'Linsencurry'},
+    {day: day(0), closure: null, bring: 'Tobi', pickup: 'Britta', nanny: [], dinner: 'Linsencurry', nursery: ['Mini-Wiesn · 09:00']},
     {day: day(1), closure: 'Feiertag', bring: null, pickup: null, nanny: ['16:00–18:00'], dinner: null},
   ],
 });
@@ -80,7 +80,7 @@ test('medium widget shows today, tomorrow and open items', async () => {
   const context = await run(scriptable({response: sample()}));
   const texts = context.texts;
   for (const expected of ['Heute', 'Morgen', 'Bringen: Tobi', 'Abholen: Britta', 'Linsencurry', 'Feiertag',
-    'Nanny 16:00–18:00', '1 zu bestätigen · 2 Aufgaben', 'Stand 07:30']) {
+    'Nanny 16:00–18:00', 'Mini-Wiesn · 09:00', '1 zu bestätigen · 2 Aufgaben', 'Stand 07:30']) {
     assert.ok(texts.includes(expected), expected + ' in ' + JSON.stringify(texts));
   }
   assert.equal(context.widget.url, 'https://fos.example/');

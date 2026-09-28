@@ -27,6 +27,7 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
 - `meal_suggestions.py`: Wochenvorschläge; harte Regeln lokal, Claude API optional mit minimalen anonymen Daten.
 - `recipe_images.py`: Rezeptbilder über den NAS (Host-Allowlist, Cache); Browser lädt nie extern.
 - `closures.py`: Tage ohne Krippe (Schließtag, Feiertag, Urlaub, Krankheit) mit Bestätigung; setzt Wege aus.
+- `nursery.py` + `static/nursery.js`: Krippen-Termine aus Elternbriefen (Word/Text, B-19): Erkennung per Claude (gefilterter Text) oder lokal, Übernahme erst nach Prüfung; Schließtage über `closures.py`.
 - `lina.py`: Windelvorrat (ereignisbasiert), Wechselkleidung Krippe, Kleidungsbedarf, Aussortiertes.
 - `vouchers.py`: Einkaufsgutscheine (PDF unter `vouchers/` auf dem NAS, Restbetrag, Donnerstags-Erinnerung).
 - `minijob.py`: Minijob im Privathaushalt – Überweisung an die Nanny und Abgaben an die Minijob-Zentrale (Sätze einstellbar, beim Abschluss eingefroren).
@@ -39,7 +40,7 @@ Code-Bezeichner und Commit-Betreffzeilen dürfen Englisch sein.
 - `backups.py`: tägliche automatische Sicherung (DB + Schlüssel, Integritätsprüfung, Aufbewahrung).
 - `migrations.py`: versioniertes SQLite-Schema (`PRAGMA user_version`).
 - `manage.py`: Konten einrichten, Backups. `docker-entrypoint.py`: Unraid-Rechte.
-- `static/`: Vanilla-JS-PWA ohne Build-Schritt (`app.js` Kern, `meals.js`, `nanny.js`, `closures.js`, `lina.js`, `vouchers.js`, `speech.js`, `outlook.js`, `widget.js`, `tour.js` je Bereich; globale Namen müssen dateiübergreifend eindeutig sein, geprüft in `tests/test_scripts.cjs`), strikte CSP (keine Inline-Skripte/-Styles,
+- `static/`: Vanilla-JS-PWA ohne Build-Schritt (`app.js` Kern, `meals.js`, `nanny.js`, `closures.js`, `nursery.js`, `lina.js`, `vouchers.js`, `speech.js`, `outlook.js`, `widget.js`, `tour.js` je Bereich; globale Namen müssen dateiübergreifend eindeutig sein, geprüft in `tests/test_scripts.cjs`), strikte CSP (keine Inline-Skripte/-Styles,
   keine externen Ressourcen).
 
 ## Datenbank-Regeln

@@ -84,6 +84,26 @@ class Closures:
                      (actor, now(), rows[0]['batch']))
         self.calendar_tasks(conn, days, suspended=True)
 
+    def create_days(self, conn, actor, days, kind, note, joint=False):
+        """Record days without nursery care; the other parent confirms unless planning jointly."""
+        marks = ','.join('?' * len(days))
+        taken = conn.execute(f'SELECT day FROM day_closures WHERE day IN ({marks})', days).fetchall()
+        if taken:
+            raise HTTPException(409, 'Für ' + span([r[0] for r in taken]) + ' ist bereits etwas eingetragen.')
+        batch_id = secrets.token_hex(8)
+        for day in days:
+            conn.execute('INSERT INTO day_closures(day,kind,note,batch,creator,created) VALUES(?,?,?,?,?,?)',
+                         (day, kind, note.strip(), batch_id, actor, now()))
+        label = f'{KINDS[kind]} {span(days)}'
+        self.audit(conn, actor, 'Betreuungsfreie Tage eingetragen', label)
+        if joint:
+            self.confirm(conn, actor, self.batch(conn, batch_id))
+            self.audit(conn, actor, 'In gemeinsamer Planung bestätigt', label)
+        else:
+            notify(conn, self.other(actor), f'closure:{batch_id}', 'Betreuungsfreie Tage bestätigen',
+                   f'{label}: Bitte bestätigen. Bis dahin gilt die bisherige Planung.')
+        return batch_id
+
     # --- routes ----------------------------------------------------------
 
     def routes(self, app, identity, validate_planning, require_household):
@@ -101,22 +121,7 @@ class Closures:
                 actor = identity(request, conn)
                 require_household(conn)
                 joint = validate_planning(conn, request, data.planning_session)
-                marks = ','.join('?' * len(days))
-                taken = conn.execute(f'SELECT day FROM day_closures WHERE day IN ({marks})', days).fetchall()
-                if taken:
-                    raise HTTPException(409, 'Für ' + span([r[0] for r in taken]) + ' ist bereits etwas eingetragen.')
-                batch_id = secrets.token_hex(8)
-                for day in days:
-                    conn.execute('INSERT INTO day_closures(day,kind,note,batch,creator,created) VALUES(?,?,?,?,?,?)',
-                                 (day, data.kind, data.note.strip(), batch_id, actor, now()))
-                label = f'{KINDS[data.kind]} {span(days)}'
-                self.audit(conn, actor, 'Betreuungsfreie Tage eingetragen', label)
-                if joint:
-                    self.confirm(conn, actor, self.batch(conn, batch_id))
-                    self.audit(conn, actor, 'In gemeinsamer Planung bestätigt', label)
-                else:
-                    notify(conn, self.other(actor), f'closure:{batch_id}', 'Betreuungsfreie Tage bestätigen',
-                           f'{label}: Bitte bestätigen. Bis dahin gilt die bisherige Planung.')
+                batch_id = self.create_days(conn, actor, days, data.kind, data.note, joint)
                 return {'batch': batch_id, 'days': len(days)}
 
         @app.post('/api/closures/{batch_id}/decision')

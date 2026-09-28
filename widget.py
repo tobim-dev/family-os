@@ -64,7 +64,11 @@ class Widget:
         closure = conn.execute("SELECT kind FROM day_closures WHERE day=? AND state='confirmed'", (str(day),)).fetchone()
         slots = {row['kind']: row for row in conn.execute('SELECT kind,owner,start,end FROM appointments WHERE day=?', (str(day),))}
         shifts = conn.execute("SELECT start,end FROM nanny_shifts WHERE day=? AND state='confirmed' ORDER BY start", (str(day),)).fetchall()
-        result = {'day': str(day), 'closure': KINDS[closure['kind']] if closure else None,
+        events = conn.execute("SELECT kind,title,start,end FROM nursery_events WHERE day=? AND state='active' ORDER BY start",
+                              (str(day),)).fetchall()
+        nursery = [f"Krippe schließt {e['end']}" if e['kind'] == 'early_close'
+                   else e['title'] + (f" · {e['start']}" if e['start'] else '') for e in events]
+        result = {'day': str(day), 'closure': KINDS[closure['kind']] if closure else None, 'nursery': nursery,
                   'bring': None, 'pickup': None, 'bring_time': None, 'pickup_time': None,
                   'nanny': [f"{s['start']}–{s['end']}" for s in shifts], 'dinner': self.dinner(conn, day)}
         if not closure:

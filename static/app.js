@@ -43,7 +43,7 @@ function calendarHTML(){
   const first=dateObj(month+'-01'),last=new Date(first.getFullYear(),first.getMonth()+1,0),cells=[];
   const leading=(first.getDay()+6)%7;
   for(let i=0;i<(leading<5?leading:0);i++)cells.push('<div class="day empty" aria-hidden="true"></div>');
-  for(let n=1;n<=last.getDate();n++){const d=new Date(first.getFullYear(),first.getMonth(),n);if(d.getDay()===0||d.getDay()===6)continue;const day=iso(d);cells.push(`<div class="day ${day===state.today?'today':''}"><div class="day-number"><span class="date-pill">${n}</span><span class="day-weekday">${fmt(day,{weekday:'short'})}</span>${day===state.today?'<small>Heute</small>':''}</div>${closureBadge(day)}${slotButton(day,'bring')}${slotButton(day,'pickup')}</div>`);}
+  for(let n=1;n<=last.getDate();n++){const d=new Date(first.getFullYear(),first.getMonth(),n);if(d.getDay()===0||d.getDay()===6)continue;const day=iso(d);cells.push(`<div class="day ${day===state.today?'today':''}"><div class="day-number"><span class="date-pill">${n}</span><span class="day-weekday">${fmt(day,{weekday:'short'})}</span>${day===state.today?'<small>Heute</small>':''}</div>${closureBadge(day)}${typeof nurseryBadge==='function'?nurseryBadge(day):''}${slotButton(day,'bring')}${slotButton(day,'pickup')}</div>`);}
   while(cells.length%5)cells.push('<div class="day empty" aria-hidden="true"></div>');
   const approvals=monthlyProposals().filter(p=>jointMode()||p.creator!==state.user);
   return `<section class="panel"><div class="panel-head"><div><h2>Bringen & Abholen</h2><p>${state.appointments.filter(a=>a.owner&&!confirmedClosure(a.day)).length} bestätigte Zuordnungen</p></div><div class="month-tools"><button class="icon-btn" data-month="-1" aria-label="Vorheriger Monat">${icon('left')}</button><span class="month-title">${monthName(month)}</span><button class="icon-btn" data-month="1" aria-label="Nächster Monat">${icon('arrow')}</button></div></div><div class="legend"><span class="legend-item"><i class="swatch"></i>Tobi</span><span class="legend-item"><i class="swatch purple"></i>Britta</span><span class="legend-item"><i class="swatch amber"></i>Abstimmung offen</span></div><div class="calendar"><div class="weekdays">${['Mo','Di','Mi','Do','Fr'].map(d=>'<span>'+d+'</span>').join('')}</div><div class="calendar-grid">${cells.join('')}</div></div><div class="calendar-foot"><small>${jointMode()?'Gemeinsame Planung: Änderungen werden beim Speichern direkt verbindlich.':'Eine bestätigte Zuordnung gilt weiter, bis ihr beide der Änderung zugestimmt habt.'}</small>${approvals.length?`<button class="btn green" data-action="batch">${icon('check')}${approvals.length} Vorschläge prüfen</button>`:!state.appointments.length?`<button class="btn primary" data-action="draft">Monat vorbereiten</button>`:monthlyProposals().length?'<span class="status amber">Zustimmung steht aus</span>':'<span class="status gray">Gemeinsamer Stand</span>'}</div></section>`;
@@ -52,7 +52,7 @@ function agendaHTML(){
   const start=state.today.startsWith(month)?state.today:month+'-01';
   const days=[];let d=dateObj(start);
   while(days.length<5&&iso(d).startsWith(month)){if(d.getDay()!==0&&d.getDay()!==6)days.push(iso(d));d.setDate(d.getDate()+1);}
-  return `<section class="panel agenda"><div class="panel-head"><div><h2>Die nächsten Betreuungstage</h2><p>${monthName(month)}</p></div><button class="btn ghost" data-view="plan">Ganzer Monat ${icon('arrow')}</button></div><div class="agenda-days">${days.length?days.map(day=>`<div class="day ${day===state.today?'today':''}"><div class="day-number"><span class="date-pill">${fmt(day,{day:'numeric'})}</span><span class="day-weekday">${fmt(day,{weekday:'short'})}</span>${day===state.today?'<small>Heute</small>':''}</div>${closureBadge(day)}${slotButton(day,'bring')}${slotButton(day,'pickup')}</div>`).join(''):'<div class="empty-state">Keine weiteren Betreuungstage in diesem Monat.</div>'}</div><div class="calendar-foot"><small>${jointMode()?'Gemeinsame Planung: Gespeicherte Zuordnungen gelten direkt.':'Änderungen gelten erst nach eurer gemeinsamen Bestätigung.'}</small><span class="status gray">Bringen & Abholen</span></div></section>`;
+  return `<section class="panel agenda"><div class="panel-head"><div><h2>Die nächsten Betreuungstage</h2><p>${monthName(month)}</p></div><button class="btn ghost" data-view="plan">Ganzer Monat ${icon('arrow')}</button></div><div class="agenda-days">${days.length?days.map(day=>`<div class="day ${day===state.today?'today':''}"><div class="day-number"><span class="date-pill">${fmt(day,{day:'numeric'})}</span><span class="day-weekday">${fmt(day,{weekday:'short'})}</span>${day===state.today?'<small>Heute</small>':''}</div>${closureBadge(day)}${typeof nurseryBadge==='function'?nurseryBadge(day):''}${slotButton(day,'bring')}${slotButton(day,'pickup')}</div>`).join(''):'<div class="empty-state">Keine weiteren Betreuungstage in diesem Monat.</div>'}</div><div class="calendar-foot"><small>${jointMode()?'Gemeinsame Planung: Gespeicherte Zuordnungen gelten direkt.':'Änderungen gelten erst nach eurer gemeinsamen Bestätigung.'}</small><span class="status gray">Bringen & Abholen</span></div></section>`;
 }
 function fairness(){
   const first=dateObj(month+'-01'),last=new Date(first.getFullYear(),first.getMonth()+1,0);
@@ -134,6 +134,7 @@ function todayColumn(label,day){
     rows.push(['arrow',`Bringen <b>${esc(day.bring||'offen')}</b>${day.bring_time?' · '+day.bring_time:''}`]);
     rows.push(['clock',`Abholen <b>${esc(day.pickup||'offen')}</b>${day.pickup_time?' · '+day.pickup_time:''}`]);
   }else rows.push(['home','Keine Krippe']);
+  (day.nursery||[]).forEach(text=>rows.push(['heart',`Krippe: <b>${esc(text)}</b>`,'nursery']));
   day.nanny.forEach(time=>rows.push(['users',`Nanny <b>${esc(time)}</b>`]));
   rows.push(['meal',day.dinner?esc(day.dinner):'<span class="muted">Noch kein Abendessen</span>']);
   return `<div class="today-col"><h3>${label} <small>${fmt(day.day,{weekday:'short',day:'numeric',month:'short'})}</small></h3>
@@ -176,7 +177,7 @@ function homeHTML(){
     <aside class="rail">${waitingHTML()||'<div class="notice-card"><div class="eyebrow">Abgestimmt</div><h3>Keine Freigabe offen.</h3><p>Neue Vorschläge erscheinen hier.</p></div>'}</aside></div>`;
 }
 function planHTML(){
-  return `${planningBanner()}<div class="content-grid"><div>${calendarHTML()}</div><aside class="rail">${waitingHTML()}${fairness()}${closuresPanel()}${historyHTML()}</aside></div>`;
+  return `${planningBanner()}<div class="content-grid"><div>${calendarHTML()}</div><aside class="rail">${waitingHTML()}${fairness()}${closuresPanel()}${typeof nurseryPanel==='function'?nurseryPanel():''}${historyHTML()}</aside></div>`;
 }
 function issuesViewHTML(){
   return `<div class="content-grid"><div class="stack"><section class="panel"><div class="panel-head"><h2>Änderungen zur Abstimmung</h2><span class="status amber">${state.proposals.length}</span></div>
@@ -287,6 +288,7 @@ function bind(){
   bindMeals();
   bindNanny();
   bindClosures();
+  if(typeof bindNursery==='function')bindNursery();
   bindLina();
   if(typeof bindWidget==='function')bindWidget();
   if(typeof bindTour==='function')bindTour();

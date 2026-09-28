@@ -190,6 +190,21 @@ CREATE TABLE voucher_uses(
     (7, 'Nanny-Abrechnung: Minijob-Abgaben beim Abschluss festhalten', '''
 ALTER TABLE nanny_statements ADD COLUMN levies TEXT;
 '''),
+    (8, 'Krippe: Veranstaltungen und früher Schluss', '''
+CREATE TABLE nursery_events(
+ id INTEGER PRIMARY KEY,
+ day TEXT NOT NULL,
+ kind TEXT NOT NULL CHECK(kind IN ('event','early_close')),
+ title TEXT NOT NULL,
+ start TEXT,
+ end TEXT,
+ note TEXT NOT NULL DEFAULT '',
+ source TEXT NOT NULL DEFAULT 'manual',
+ state TEXT NOT NULL DEFAULT 'active' CHECK(state IN ('active','deleted')),
+ creator TEXT NOT NULL REFERENCES users(id),
+ created TEXT NOT NULL);
+CREATE INDEX nursery_events_day ON nursery_events(day);
+'''),
 ]
 
 LATEST = 1 + len(MIGRATIONS)

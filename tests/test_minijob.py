@@ -109,7 +109,7 @@ class MigrationTests(unittest.TestCase):
                 conn.execute("INSERT INTO nanny_statements(month,rate_cents,minutes,amount_cents,lines,closed_by,closed) "
                              "VALUES('2026-08',2000,480,16000,'[]','tobi','2026-09-01')")
             conn.close()
-            self.assertEqual(migrations.migrate(path), [7])
+            self.assertEqual(migrations.migrate(path, migrations.MIGRATIONS[:6]), [7])
             app = create_app(path, demo=True)
             with app.state.db() as conn:
                 row = conn.execute("SELECT amount_cents,levies FROM nanny_statements").fetchone()

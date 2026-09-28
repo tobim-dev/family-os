@@ -94,6 +94,7 @@ function addDay(stack, day, compact) {
   } else {
     addLine(stack, 'moon.zzz', 'Keine Krippe', null, size);
   }
+  for (const text of day.nursery || []) addLine(stack, 'star', text, colors.warn, size);
   if (day.nanny.length) addLine(stack, 'person.2', 'Nanny ' + day.nanny.join(', '), null, size);
   if (day.dinner && !compact) addLine(stack, 'fork.knife', day.dinner, null, size);
 }

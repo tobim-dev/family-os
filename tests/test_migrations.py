@@ -229,6 +229,21 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual([t[0] for t in open_tasks], ['britta', 'tobi'])
         self.assertIn('Entfernen: Di 06.10. Lina abholen', open_tasks[1][1])
 
+    def test_nursery_events_migration_keeps_statements(self):
+        legacy_database(self.path)
+        migrate(self.path, migrations.MIGRATIONS[:6])  # production state before version 8
+        with sqlite3.connect(self.path) as conn:
+            conn.execute("INSERT INTO nanny_statements(month,rate_cents,minutes,amount_cents,lines,closed_by,closed,levies) "
+                         "VALUES('2026-08',2000,120,4000,'[]','tobi','x','{}')")
+        conn.close()
+        self.assertEqual(migrate(self.path, migrations.MIGRATIONS[:7]), [8])
+        with sqlite3.connect(self.path) as conn:
+            self.assertEqual(conn.execute('SELECT month,amount_cents FROM nanny_statements').fetchall(), [('2026-08', 4000)])
+            conn.execute("INSERT INTO nursery_events(day,kind,title,creator,created) VALUES('2026-10-02','event','Mini-Wiesn','tobi','x')")
+            with self.assertRaises(sqlite3.IntegrityError):
+                conn.execute("INSERT INTO nursery_events(day,kind,title,creator,created) VALUES('2026-10-02','party','x','tobi','x')")
+        conn.close()
+
     def test_statement_splitting_handles_triggers(self):
         script = "CREATE TABLE a(x); CREATE TRIGGER t AFTER INSERT ON a BEGIN UPDATE a SET x=1; END; SELECT 1;"
         self.assertEqual(len(list(statements(script))), 3)

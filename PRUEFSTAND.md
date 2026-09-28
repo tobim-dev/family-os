@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-205 Tests bestanden (`python -m unittest discover -s tests -v`):
+217 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -38,6 +38,21 @@ Schema-Migrationen:
 - Vor einer Migration mit Daten entsteht eine geschützte Kopie mit altem Stand.
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
+
+Krippen-Termine (B-19, Migration 8):
+
+- Word-Text aus Absätzen und Tabellenzeilen; alte .doc/andere Dateien mit klarer Meldung abgelehnt;
+  Anmeldung nötig, höchstens 2 MB, Datei wird nicht gespeichert.
+- Datenfilter vor Claude: E-Mail, Telefon, Straße/Hausnummer, Postleitzahl+Ort, Links entfernt;
+  Datum und Uhrzeit bleiben; gesendeter Text wird angezeigt. Claude-Antwort lokal geprüft
+  (ungültiges Datum, unbekannte Art, früher Schluss ohne Uhrzeit verworfen), Verbrauch gezählt.
+- Ohne Claude, bei Fehler oder erreichtem Monatslimit lokale Erkennung (Veranstaltung mit Zeiten,
+  früher Schluss, Schließzeitraum, Datum ohne Jahr, Monatsnamen).
+- Übernehmen: Veranstaltung und früher Schluss gespeichert, Aufgabe für die abholende Person bei
+  späterer Abholung (Plan unverändert), Schließtage als offene Eintragung zur Bestätigung,
+  Mitteilung an die andere Person; Anzeige in Monatsdaten, Heute-Zusammenfassung und Widget.
+- Browser (390 px): Beispiel-Elternbrief mit Tabelle → 4 Termine erkannt, übernommen, im Oktober
+  im Plan sichtbar. Mit echtem Brief und echtem Claude-Schlüssel noch nicht geprüft.
 
 Navigation und Optik (A-13, Browser 390 px und 1280 px):
 
