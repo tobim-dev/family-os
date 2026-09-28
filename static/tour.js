@@ -5,7 +5,7 @@
 
 const TOUR_STEPS = [
   {view: 'home', title: 'Willkommen bei Family OS',
-   text: 'Unten gibt es fünf Bereiche: Heute, Plan, Essen, Familie und Mehr. „Heute“ zeigt oben Bringen, Abholen, Nanny und Abendessen für heute und morgen, darunter unter „Für dich“ alles, was gerade auf dich wartet.'},
+   text: 'Unten gibt es fünf Bereiche: Heute, Plan, Essen, Familie und Mehr. „Heute“ zeigt oben Bringen, Abholen, Nanny und Abendessen für heute und morgen, darunter unter „Für dich“ alles, was gerade auf dich wartet. Zum Aktualisieren oben einfach herunterziehen.'},
   {view: 'plan', highlight: '.calendar-grid .slot', title: 'Monatsplanung: Bringen & Abholen',
    text: 'Tippe auf einen Weg, um ihn dir oder Tobi vorzuschlagen. Die andere Person bestätigt – vorher ändert sich nichts. Vorläufige Einträge stehen als „[Vorläufig]“ im gemeinsamen Google-Kalender.'},
   {view: 'plan', highlight: '[data-start-planning]', title: 'Gemeinsam auf der Couch planen',

@@ -50,6 +50,7 @@ jobs:
           node --check static/tour.js
           node --check static/widget.js
           node --check static/nursery.js
+          node --check static/refresh.js
           node --test tests/*.cjs
           python scripts/check_unraid.py
       - name: Build production image

@@ -328,6 +328,10 @@ def create_app(db_path=None, demo=None, origin=None):
             appointments = [dict(r) for r in conn.execute('SELECT * FROM appointments WHERE day BETWEEN ? AND ? ORDER BY day,kind', (str(first), str(last)))]
             proposals = [dict(r) for r in conn.execute("SELECT p.*,a.day,a.kind,a.owner AS current_owner FROM proposals p JOIN appointments a ON a.id=p.appointment_id WHERE p.state='pending' ORDER BY p.deadline")]
             issues = [dict(r) for r in conn.execute("SELECT i.*,a.day,a.kind FROM issues i LEFT JOIN appointments a ON a.id=i.appointment_id WHERE i.state='open' ORDER BY i.deadline")]
+            resolved_issues = [dict(r) for r in conn.execute(
+                "SELECT i.id,i.text,i.owner,i.created,i.resolution,i.resolved,i.resolved_by,a.day,a.kind FROM issues i "
+                "LEFT JOIN appointments a ON a.id=i.appointment_id WHERE i.state='resolved' "
+                "ORDER BY COALESCE(i.resolved,i.created) DESC,i.id DESC LIMIT 50")]
             tasks = work_calendar.attach(conn, [dict(r) for r in conn.execute("SELECT * FROM tasks WHERE state IN ('open','done') ORDER BY state DESC,due,id DESC LIMIT 200")])
             planning = planning_mode(conn, request)
             history = [dict(r) for r in conn.execute('SELECT * FROM audit ORDER BY id DESC LIMIT 30')]
@@ -336,7 +340,7 @@ def create_app(db_path=None, demo=None, origin=None):
             nursery_events = nursery.listing(conn, first, last)
             tour_seen = bool(conn.execute('SELECT 1 FROM metadata WHERE key=?', ('tour_seen:' + user,)).fetchone())
             today = widget.summary(conn, user, datetime.now(TZ))  # today and tomorrow for the start page
-        return {'today_summary': today, 'nursery_events': nursery_events, 'tour_seen': tour_seen, 'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
+        return {'resolved_issues': resolved_issues, 'today_summary': today, 'nursery_events': nursery_events, 'tour_seen': tour_seen, 'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
 
     @app.post('/api/proposals')
     def propose(data: ProposalInput, request: Request):
@@ -388,7 +392,8 @@ def create_app(db_path=None, demo=None, origin=None):
             work_calendar.record(conn, slot['owner'], 'remove', slot)
         work_calendar.record(conn, proposal['owner'], 'add', slot, proposal['start'], proposal['end'])
         if proposal['issue_id']:
-            conn.execute("UPDATE issues SET state='resolved',version=version+1,resolution=? WHERE id=? AND state='open'", ('Gemeinsam bestätigte Neuplanung', proposal['issue_id']))
+            conn.execute("UPDATE issues SET state='resolved',version=version+1,resolution=?,resolved=?,resolved_by=? WHERE id=? AND state='open'",
+                         ('Gemeinsam bestätigte Neuplanung', now(), actor, proposal['issue_id']))
         if send_notice:
             notify(conn, proposal['creator'], f'approved:{proposal_id}', 'Planung gemeinsam bestätigt', f"{slot['day']}: Betreuung bestätigt. Bitte deine Aufgaben und den Übertragungsstatus prüfen.")
         audit(conn, actor, 'In gemeinsamer Planung zugeordnet' if joint else 'Planung bestätigt', f"{slot['day']} · {kind}: {PEOPLE[proposal['owner']]} übernimmt.")
@@ -479,7 +484,8 @@ def create_app(db_path=None, demo=None, origin=None):
                 raise HTTPException(422, 'Bitte das Ergebnis festhalten.')
             if conn.execute("SELECT id FROM proposals WHERE issue_id=? AND state='pending'", (issue_id,)).fetchone():
                 raise HTTPException(409, 'Zuerst den zugehörigen Änderungsvorschlag entscheiden.')
-            conn.execute("UPDATE issues SET state='resolved',version=version+1,resolution=? WHERE id=?", (data.resolution.strip(),issue_id))
+            conn.execute("UPDATE issues SET state='resolved',version=version+1,resolution=?,resolved=?,resolved_by=? WHERE id=?",
+                         (data.resolution.strip(), now(), actor, issue_id))
             audit(conn, actor, 'Klärungspunkt abgeschlossen', data.resolution.strip())
         return {'ok': True}
 

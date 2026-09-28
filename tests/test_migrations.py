@@ -244,6 +244,23 @@ class MigrationTests(unittest.TestCase):
                 conn.execute("INSERT INTO nursery_events(day,kind,title,creator,created) VALUES('2026-10-02','party','x','tobi','x')")
         conn.close()
 
+    def test_resolved_issues_get_time_and_person_from_history(self):
+        legacy_database(self.path)
+        migrate(self.path, migrations.MIGRATIONS[:7])  # production state before version 9
+        with sqlite3.connect(self.path) as conn:
+            conn.execute("INSERT INTO issues(text,owner,state,deadline,created,resolution) "
+                         "VALUES('Abholen tauschen?','tobi','resolved','x','2026-09-01T10:00:00+02:00','Britta holt ab')")
+            conn.execute("INSERT INTO issues(text,owner,state,deadline,created) VALUES('Noch offen','tobi','open','x','x')")
+            conn.execute("INSERT INTO audit(actor,action,details,created) "
+                         "VALUES('tobi','Klärungspunkt abgeschlossen','Britta holt ab','2026-09-02T18:00:00+02:00')")
+        conn.close()
+        self.assertEqual(migrate(self.path, migrations.MIGRATIONS[:8]), [9])
+        with sqlite3.connect(self.path) as conn:
+            rows = conn.execute('SELECT text,state,resolution,resolved,resolved_by FROM issues ORDER BY id').fetchall()
+        conn.close()
+        self.assertEqual(rows, [('Abholen tauschen?', 'resolved', 'Britta holt ab', '2026-09-02T18:00:00+02:00', 'tobi'),
+                                ('Noch offen', 'open', None, None, None)])
+
     def test_statement_splitting_handles_triggers(self):
         script = "CREATE TABLE a(x); CREATE TRIGGER t AFTER INSERT ON a BEGIN UPDATE a SET x=1; END; SELECT 1;"
         self.assertEqual(len(list(statements(script))), 3)

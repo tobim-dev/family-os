@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-217 Tests bestanden (`python -m unittest discover -s tests -v`):
+219 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -38,6 +38,15 @@ Schema-Migrationen:
 - Vor einer Migration mit Daten entsteht eine geschützte Kopie mit altem Stand.
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
+
+Pull to refresh, Abmelden, Geklärt (A-14, A-15, B-20, Migration 9):
+
+- Browser mit Touch-Simulation (390 px): langes Ziehen lädt die Ansicht neu (eine Abfrage),
+  kurzes Ziehen nicht; Anzeige „Loslassen zum Aktualisieren“.
+- Profilbild öffnet eine Rückfrage; „Abbrechen“ lässt die Anmeldung bestehen.
+- Abschluss speichert Ergebnis, Zeitpunkt und Person (manuell und über bestätigte Neuplanung);
+  Migration 9 übernimmt Zeitpunkt und Person bestehender Abschlüsse aus der Historie.
+- „Geklärt“ zeigt Frage, Ergebnis, Person und Zeit. Auf dem echten iPhone noch nicht geprüft.
 
 Krippen-Termine (B-19, Migration 8):
 

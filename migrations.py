@@ -205,6 +205,15 @@ CREATE TABLE nursery_events(
  created TEXT NOT NULL);
 CREATE INDEX nursery_events_day ON nursery_events(day);
 '''),
+    (9, 'Klärungspunkte: Zeitpunkt und Person des Abschlusses', '''
+ALTER TABLE issues ADD COLUMN resolved TEXT;
+ALTER TABLE issues ADD COLUMN resolved_by TEXT REFERENCES users(id);
+UPDATE issues SET
+ resolved=(SELECT created FROM audit WHERE action='Klärungspunkt abgeschlossen' AND details=issues.resolution ORDER BY id DESC LIMIT 1),
+ resolved_by=(SELECT actor FROM audit WHERE action='Klärungspunkt abgeschlossen' AND details=issues.resolution
+              AND actor IN (SELECT id FROM users) ORDER BY id DESC LIMIT 1)
+ WHERE state='resolved';
+'''),
 ]
 
 LATEST = 1 + len(MIGRATIONS)

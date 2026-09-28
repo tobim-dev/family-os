@@ -115,6 +115,17 @@ class PlanningTests(unittest.TestCase):
         p=self.proposal(owner='britta',expected_version=1,issue_id=issue['id']).json()['id']
         self.approve(p)
         self.assertEqual(self.state()['issues'],[])
+        [done]=self.state()['resolved_issues']
+        self.assertEqual((done['text'],done['resolution']),('Ich kann nicht','Gemeinsam bestätigte Neuplanung'))
+        self.assertTrue(done['resolved'] and done['resolved_by'])
+
+    def test_resolved_issue_keeps_result_time_and_person(self):
+        self.tobi.post('/api/issues',json={'text':'Urlaub abstimmen','deadline':self.deadline})
+        issue=self.state()['issues'][0]
+        self.assertEqual(self.tobi.post(f"/api/issues/{issue['id']}/resolve",json={'version':1,'resolution':'Erste Oktoberwoche'}).status_code,200)
+        [done]=self.state()['resolved_issues']
+        self.assertEqual((done['resolution'],done['resolved_by'],done['day']),('Erste Oktoberwoche','tobi',None))
+        self.assertTrue(done['resolved'])
 
     def test_deadline_does_not_approve_automatically(self):
         p=self.proposal().json()['id']

@@ -182,9 +182,24 @@ function planHTML(){
 function issuesViewHTML(){
   return `<div class="content-grid"><div class="stack"><section class="panel"><div class="panel-head"><h2>Änderungen zur Abstimmung</h2><span class="status amber">${state.proposals.length}</span></div>
     ${state.proposals.length?state.proposals.map(p=>proposalCard(p)).join(''):'<div class="empty-state"><b>Keine Vorschläge offen.</b></div>'}</section>
-    <section class="panel"><div class="panel-head"><h2>Gesprächsbedarf</h2><span class="status amber">${state.issues.length}</span></div>${issuesHTML()}</section></div>
+    <section class="panel"><div class="panel-head"><h2>Gesprächsbedarf</h2><span class="status amber">${state.issues.length}</span></div>${issuesHTML()}</section>
+    ${resolvedHTML()}</div>
     <aside class="rail"><div class="notice-card"><div class="eyebrow">Eine klare Verantwortung</div><h3>Offen heißt nicht ungeplant.</h3>
     <p>Wer einen Klärungspunkt eröffnet, kümmert sich um die Lösung. Die bisherige Zuordnung bleibt gültig.</p></div></aside></div>`;
+}
+// Results of closed issues: what was asked, what was agreed, by whom and when.
+let resolvedLimit=5;
+function resolvedHTML(){
+  const list=state.resolved_issues||[];
+  const rows=list.slice(0,resolvedLimit).map(i=>`<div class="list-row">${icon('check')}<div class="grow">
+      <div class="row between"><h3>${i.day?fmt(i.day,{weekday:'short',day:'numeric',month:'short'})+' · '+kinds[i.kind]:'Gemeinsam besprochen'}</h3>
+        <span class="status gray">Geklärt</span></div>
+      <p class="muted">${esc(i.text)}</p>
+      <p class="resolution"><b>Ergebnis:</b> ${esc(i.resolution||'–')}</p>
+      <small>${i.resolved_by?names[i.resolved_by]+' · ':''}${i.resolved?deadlineText(i.resolved):'Zeitpunkt unbekannt'}</small></div></div>`).join('');
+  const more=list.length>resolvedLimit?`<div class="panel-body"><button class="btn ghost" data-resolved-more>Weitere ${Math.min(10,list.length-resolvedLimit)} anzeigen</button></div>`:'';
+  return `<section class="panel"><div class="panel-head"><h2>Geklärt</h2>${list.length?`<span class="status gray">${list.length}</span>`:''}</div>
+    ${rows||`<div class="empty-state">${icon('check')}<b>Noch nichts abgeschlossen.</b><p>Ergebnisse abgeschlossener Klärungspunkte erscheinen hier.</p></div>`}${more}</section>`;
 }
 function tasksViewHTML(){
   const done=state.tasks.filter(t=>t.state==='done'&&(taskFilter==='all'||t.owner===state.user)).slice(0,12);
@@ -271,6 +286,34 @@ function newIssue(appointmentId=null){dialog('Es gibt Gesprächsbedarf','Du übe
 function resolveIssue(id){const issue=state.issues.find(i=>i.id===Number(id));dialog('Klärung abschließen','Das Gesprächsergebnis bleibt in der Historie.',`<form><div class="field"><label for="resolution">Was habt ihr vereinbart?</label><textarea id="resolution" name="resolution" required maxlength="500"></textarea></div><p class="note">Dadurch ändern sich keine Termine. Für eine neue Zuordnung bitte „Neu planen“ verwenden.</p><div class="dialog-footer"><button class="btn primary" type="submit">Als besprochen abschließen</button></div></form>`);submitForm(modal.querySelector('form'),data=>api('/issues/'+id+'/resolve',{...data,version:issue.version}));}
 function draftMonth(){dialog('Monatsentwurf vorbereiten',monthName(month),`<form><p class="note">Zehn Wege pro voller Woche, je fünf für euch beide. Alle Zuordnungen sind vorläufig. Prüft eure Verfügbarkeit und persönliche Zeitfenster gemeinsam.</p><h3>Bringen · vorgeschlagener Zeitblock</h3><div class="field-pair"><div class="field"><label for="bs">Von</label><input id="bs" name="bring_start" type="time" value="07:45" required></div><div class="field"><label for="be">Bis</label><input id="be" name="bring_end" type="time" value="08:45" required></div></div><h3>Abholen · vorgeschlagener Zeitblock</h3><div class="field-pair"><div class="field"><label for="ps">Von</label><input id="ps" name="pickup_start" type="time" value="15:30" required></div><div class="field"><label for="pe">Bis</label><input id="pe" name="pickup_end" type="time" value="17:30" required></div></div><p class="small">Die Vorschlagszeiten stammen aus Tobis Angaben. Brittas passende Zeiten sind noch abzustimmen.</p><div class="dialog-footer"><button class="btn primary" type="submit">Entwurf erstellen</button></div></form>`);submitForm(modal.querySelector('form'),data=>api('/month-draft',{...data,month}));}
 function batchApprove(){const list=monthlyProposals().filter(p=>jointMode()||p.creator!==state.user);dialog('Monatsvorschläge prüfen',`${list.length} Vorschläge ${jointMode()?'für eure gemeinsame Planung':'von '+names[state.user==='tobi'?'britta':'tobi']} · ${monthName(month)}`,`<p class="note">Mit der Bestätigung werden alle unten aufgeführten Zuordnungen verbindlich. Prüfe auch die Zeitfenster.</p><div class="stack">${list.map(p=>`<div class="row between"><span>${fmt(p.day,{day:'numeric',month:'short'})} · ${kinds[p.kind]}<br><small>${p.start}–${p.end}</small></span><strong>${names[p.owner]}</strong></div>`).join('')}</div><form><div class="dialog-footer"><button type="submit" class="btn green">Alle ${list.length} bestätigen</button></div></form>`);submitForm(modal.querySelector('form'),()=>api('/proposals/approve-batch',{ids:list.map(p=>p.id),...planningFields()}));}
+// Signing out needs a password and an authenticator code again, so ask first.
+function logoutDialog(){
+  const demo=state.demo;
+  dialog(demo?'Person wechseln?':'Abmelden?',`Angemeldet als ${names[state.user]}`,`<form>
+    <p>${demo?'Du wechselst zur Auswahl der Demo-Personen.':'Du wirst auf diesem Gerät abgemeldet. Zum Anmelden brauchst du wieder Passwort und Code aus der Authenticator-App.'}</p>
+    ${demo?'':'<p class="note">Die Offline-Kopie der Einkaufsliste auf diesem Gerät wird dabei gelöscht.</p>'}
+    <div class="dialog-footer"><button type="button" class="btn" data-logout-cancel>Abbrechen</button>
+      <button type="submit" class="btn danger-solid">${demo?'Person wechseln':'Abmelden'}</button></div></form>`);
+  const form=modal.querySelector('form');
+  form.querySelector('[data-logout-cancel]').onclick=()=>modal.close();
+  form.onsubmit=async event=>{
+    event.preventDefault();
+    const button=form.querySelector('[type=submit]');
+    button.disabled=true;
+    try{
+      await logout();
+      if(modal.open)modal.close();
+    }catch(error){formError(form,error.message);button.disabled=false;}
+  };
+}
+async function logout(){
+  await api('/logout',{});
+  state=null;mealState=null;nannyState=null;linaState=null;
+  if(typeof clearOffline==='function')await clearOffline();
+  if(typeof tourIndex!=='undefined'&&tourIndex>=0){tourIndex=-1;document.querySelector('#tour-card')?.setAttribute('hidden','');}
+  renderLogin();
+}
+
 async function navigate(next){
   if(!['home','plan','issues','tasks','notifications','connections','meals','nanny','lina'].includes(next))throw new Error('Unbekannte Ansicht.');
   if(!state)throw new Error('Bitte zuerst anmelden.');
@@ -288,6 +331,7 @@ function bind(){
   bindMeals();
   bindNanny();
   bindClosures();
+  app.querySelector('[data-resolved-more]')?.addEventListener('click',()=>{resolvedLimit+=10;render();});
   if(typeof bindNursery==='function')bindNursery();
   bindLina();
   if(typeof bindWidget==='function')bindWidget();
@@ -302,7 +346,7 @@ function bind(){
   app.querySelectorAll('[data-resolve]').forEach(b=>b.onclick=()=>resolveIssue(b.dataset.resolve));
   app.querySelectorAll('[data-issue-plan]').forEach(b=>b.onclick=async()=>{const i=state.issues.find(i=>i.id===Number(b.dataset.issuePlan));if(!i?.day)return;month=i.day.slice(0,7);await load();editSlot(i.day,i.kind,i.id);});
   app.querySelectorAll('[data-complete]').forEach(b=>b.onclick=()=>{const t=state.tasks.find(t=>t.id===Number(b.dataset.complete));const calendarTask=t.title==='Arbeitskalender aktualisieren';dialog(calendarTask?'Arbeitskalender aktualisiert?':esc(t.title)+' erledigt?',esc(t.details),`<form><p>${calendarTask?'Bestätige erst, wenn du alle aufgeführten Einträge in deinem Arbeitskalender angepasst hast. Neue Einträge, die gerade erst hinzugekommen sind, bleiben offen.':'Bestätige erst, wenn die Aufgabe wirklich erledigt ist.'}</p><div class="dialog-footer"><button type="submit" class="btn green">Ja, ist erledigt</button></div></form>`);submitForm(modal.querySelector('form'),()=>api('/tasks/'+t.id+'/complete',typeof workCalendarUpto==='function'?workCalendarUpto(t):{}));});
-  app.querySelectorAll('[data-action]').forEach(b=>b.onclick=async()=>{switch(b.dataset.action){case 'new-issue':newIssue();break;case 'draft':draftMonth();break;case 'batch':batchApprove();break;case 'reload':load();break;case 'logout':try{await api('/logout',{});state=null;mealState=null;nannyState=null;linaState=null;if(typeof clearOffline==='function')await clearOffline();if(typeof tourIndex!=='undefined'&&tourIndex>=0){tourIndex=-1;document.querySelector('#tour-card')?.setAttribute('hidden','');}renderLogin();}catch(e){toast(e.message);}break;}});
+  app.querySelectorAll('[data-action]').forEach(b=>b.onclick=async()=>{switch(b.dataset.action){case 'new-issue':newIssue();break;case 'draft':draftMonth();break;case 'batch':batchApprove();break;case 'reload':load();break;case 'logout':logoutDialog();break;}});
 }
 (async()=>{try{if(typeof registerOfflineWorker==='function')registerOfflineWorker();config=await api('/config');await load();}catch(e){app.innerHTML='<div class="loading"><h1>Verbindung nicht verfügbar</h1><p>Bitte die Seite neu laden, sobald der Server erreichbar ist.</p></div>';}})();
 setInterval(()=>{if(state&&!modal.open&&!document.hidden)load();},30000);
