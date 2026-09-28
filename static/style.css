@@ -129,3 +129,9 @@ details.sent{margin-top:10px;font-size:.8rem}details.sent pre{white-space:pre-wr
 .pull-refresh.busy .pull-spinner{animation:pull-spin .8s linear infinite}
 @keyframes pull-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.pull-refresh.busy .pull-spinner{animation:none}}
+.day-notes .closure-badge,.day-notes .nursery-badge{display:block}
+@media(max-width:750px){
+  .calendar .day .day-notes,.agenda .day .day-notes{grid-column:2 / -1;display:flex;flex-wrap:wrap;gap:5px}
+  .day-notes .closure-badge,.day-notes .nursery-badge{margin:0;font-size:.8rem;padding:4px 8px}
+  .calendar .day:has(.day-notes) .day-number,.agenda .day:has(.day-notes) .day-number{grid-row:span 2}
+}

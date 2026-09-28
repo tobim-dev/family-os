@@ -62,6 +62,8 @@ Krippen-Termine (B-19, Migration 8):
   Mitteilung an die andere Person; Anzeige in Monatsdaten, Heute-Zusammenfassung und Widget.
 - Browser (390 px): Beispiel-Elternbrief mit Tabelle → 4 Termine erkannt, übernommen, im Oktober
   im Plan sichtbar. Mit echtem Brief und echtem Claude-Schlüssel noch nicht geprüft.
+- Korrektur nach iPhone-Rückmeldung: Hinweise eines Tages (Krippen-Termine, ohne Krippe) als eigene
+  Zeile über Bringen/Abholen; 390 px mit einem und zwei Hinweisen am Tag und 1280 px geprüft.
 
 Navigation und Optik (A-13, Browser 390 px und 1280 px):
 
