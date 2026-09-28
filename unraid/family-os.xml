@@ -12,6 +12,7 @@
   <Category>Productivity:</Category>
   <WebUI>https://fos.lausbuben.cloud</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/tobim-dev/family-os/main/unraid/family-os.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/tobim-dev/family-os/main/static/icons/icon-512.png</Icon>
   <ExtraParams>--user 0:0 --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --cap-drop=ALL --cap-add=CHOWN --cap-add=FOWNER --cap-add=SETUID --cap-add=SETGID --security-opt=no-new-privileges:true --restart=unless-stopped</ExtraParams>
   <PostArgs/>
   <Config Name="Web-Port (nur LAN / Reverse Proxy)" Target="8000" Default="8765" Mode="tcp" Description="HTTP-Zielport fuer den Reverse Proxy. Nicht direkt im Router freigeben; Anmeldung erfolgt ueber die HTTPS-Adresse." Type="Port" Display="always" Required="true" Mask="false">8765</Config>

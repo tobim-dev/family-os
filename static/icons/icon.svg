@@ -1,8 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <!-- Family OS app icon: a warm house at dusk, a glowing heart window and
-       three stars for the family. Rounded variant of static/icons/icon.svg for tabs and the app header. -->
+       three stars for the family. Full-bleed square; iOS rounds the corners. -->
   <defs>
-    <clipPath id="tile"><rect width="1024" height="1024" rx="230"/></clipPath>
     <linearGradient id="sky" x1="0" y1="0" x2="0.35" y2="1">
       <stop offset="0" stop-color="#101d3a"/>
       <stop offset="0.52" stop-color="#2e2a63"/>
@@ -45,7 +44,6 @@
     </filter>
   </defs>
 
-  <g clip-path="url(#tile)">
   <rect width="1024" height="1024" fill="url(#sky)"/>
   <rect width="1024" height="1024" fill="url(#glow)"/>
 
@@ -87,5 +85,4 @@
   </g>
   <path d="M512 718 C 440 668 404 634 404 592 C 404 560 428 538 458 538 C 482 538 500 552 512 572 C 524 552 542 538 566 538 C 596 538 620 560 620 592 C 620 634 584 668 512 718 Z" fill="url(#heart)"/>
   <path d="M446 574 Q458 558 476 560" stroke="#ffffff" stroke-opacity="0.7" stroke-width="12" fill="none" stroke-linecap="round"/>
-  </g>
 </svg>

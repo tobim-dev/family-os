@@ -63,7 +63,7 @@ self.addEventListener('push', event => {
   let data = {title: 'Family OS', body: 'Eine neue Mitteilung liegt bereit.', tag: 'fos'};
   try { data = {...data, ...event.data.json()}; } catch (_) {}
   event.waitUntil(self.registration.showNotification(data.title,
-    {body: data.body, tag: data.tag, icon: '/static/favicon.svg', data: {url: '/'}}));
+    {body: data.body, tag: data.tag, icon: '/static/icons/icon-192.png', data: {url: '/'}}));
 });
 
 self.addEventListener('notificationclick', event => {

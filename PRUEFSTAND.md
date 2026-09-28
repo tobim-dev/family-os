@@ -39,6 +39,13 @@ Schema-Migrationen:
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
 
+App-Icon:
+
+- Neues Icon (Haus in der Abenddämmerung, Herz-Fenster, drei Sterne) als SVG-Vorlage
+  `static/icons/icon.svg`; PNGs mit `scripts/render_icons.cjs` erzeugt. Test: apple-touch-icon
+  180 px, 192 px und 512 px sind quadratisch und deckend (iOS füllt Transparenz schwarz und
+  nutzt kein SVG); Seiten und Manifest verweisen darauf. Auf dem iPhone noch nicht geprüft.
+
 Home-Bildschirm-Widget (A-12):
 
 - Widget-Schlüssel nur mit Anmeldung und gültigem Ursprung erstellbar, nur als Hash gespeichert;
@@ -282,7 +289,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-31 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
+33 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft
