@@ -82,7 +82,7 @@ async def snapshot(client, start, progress=lambda stage: None, images=None):
     progress('shopping_recipes')
     # Recipe ingredients carry other IDs (localId) than shopping-list entries; names match.
     shopping_recipes = [{**keep(r), 'ingredient_ids': sorted(i.id for i in r.ingredients),
-                         'ingredient_names': sorted({i.name for i in r.ingredients})}
+                         'ingredient_names': sorted({i.name for i in r.ingredients if getattr(i, 'name', None)})}
                         for r in await client.get_shopping_list_recipes()]
     progress('ingredients')
     ingredients = [asdict(i) for i in await client.get_ingredient_items()]
