@@ -67,7 +67,8 @@ def plan(snapshot):
 
 def removal(recipe, ingredients):
     ids = set(recipe['ingredient_ids'])
-    checked = sorted({i['name'] for i in ingredients if i['id'] in ids and i['is_owned']})
+    names = set(recipe.get('ingredient_names', []))
+    checked = sorted({i['name'] for i in ingredients if (i['id'] in ids or i['name'] in names) and i['is_owned']})
     return {'id': recipe['id'], 'name': recipe['name'], 'checked': checked}
 
 
@@ -94,9 +95,16 @@ def recipes(snapshot, skip=None):
 
 
 def ingredient_ids(snapshot, recipe_id=None, skip=None):
-    return {iid for r in snapshot['shopping_recipes']
-            if (recipe_id is None or r['id'] == recipe_id) and r['id'] != skip
-            for iid in r['ingredient_ids']}
+    """IDs of shopping-list entries that belong to the given recipes.
+
+    Cookidoo gives recipe ingredients other IDs (localId) than the entries on
+    the shopping list, so entries are matched by ingredient name as well.
+    """
+    chosen = [r for r in snapshot['shopping_recipes']
+              if (recipe_id is None or r['id'] == recipe_id) and r['id'] != skip]
+    ids = {iid for r in chosen for iid in r['ingredient_ids']}
+    names = {name for r in chosen for name in r.get('ingredient_names', [])}
+    return ids | {i['id'] for i in snapshot['ingredients'] if i['name'] in names}
 
 
 def preserved(action, recipe_id, before, after):

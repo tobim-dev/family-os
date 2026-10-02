@@ -59,7 +59,8 @@ class Remote:
         return result
 
     async def get_shopping_list_recipes(self):
-        return [Row(id=r, name=RECIPES[r][0], ingredients=[Row(id=i[0]) for i in RECIPES[r][1]])
+        # Like Cookidoo: recipe ingredients carry their own IDs (localId), not the list entry IDs.
+        return [Row(id=r, name=RECIPES[r][0], ingredients=[Row(id='local-' + i[0], name=i[1]) for i in RECIPES[r][1]])
                 for r in self.recipes]
 
     async def get_ingredient_items(self):

@@ -215,3 +215,5 @@ Nach jeder Änderung liest Family OS den Stand zurück. Passt etwas nicht, bleib
 verändert“). Bekannte Cookidoo-Eigenheit: Wird ein Rezept ergänzt, das eine schon abgehakte
 Zutat ebenfalls braucht, setzt Cookidoo sie wieder auf „zu kaufen“; das gilt als in Ordnung.
 Fehler kommen mit HTTP 424, damit der Reverse Proxy die Meldung nicht ersetzt.
+Zutaten eines Rezepts tragen bei Cookidoo andere Kennungen (localId) als die Einträge der
+Einkaufsliste; Family OS ordnet sie deshalb über den Zutatennamen zu.

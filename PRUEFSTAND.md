@@ -47,7 +47,11 @@ Cookidoo-Rückleseprüfung (Korrektur 02.10.2026):
   wieder als „zu kaufen“ markieren, ohne Prüfungsfall. Verlorene Einträge, geänderte Zutaten
   anderer Rezepte und eigene Artikel bleiben Prüfungsfälle.
 - Cookidoo-/Google-Fehler mit HTTP 424 statt 502, damit der Reverse Proxy die Meldung nicht
-  durch eine eigene Fehlerseite ersetzt. Mit echtem Cookidoo noch nicht geprüft.
+  durch eine eigene Fehlerseite ersetzt.
+- Ursache der Fehlmeldung „12 Zutaten anderer Rezepte haben sich verändert“: Cookidoo gibt
+  Rezeptzutaten andere Kennungen (localId) als den Einträgen der Einkaufsliste; die Zuordnung
+  erfolgt jetzt zusätzlich über den Zutatennamen. Test-Nachbildung verwendet nun getrennte
+  Kennungen wie Cookidoo; mit der alten Zuordnung reproduziert sie genau diese Meldung.
 
 Angemeldet bleiben (A-16):
 
