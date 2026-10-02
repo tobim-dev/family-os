@@ -223,6 +223,10 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(items[3][6], 'Blöcke entfernen, sie entfallen: 07.10. Bringen 07:45–08:45.')
         self.assertEqual([s[0] for s in states], ['superseded'] * 4 + ['done'])
         # On start the app shows one task per person with all entries.
+        # Skip the demo sample month, which would collide with these October dates.
+        with sqlite3.connect(self.path) as conn:
+            conn.execute("INSERT INTO metadata VALUES('seeded','1')")
+        conn.close()
         app = create_app(self.path, demo=True)
         with app.state.db() as conn:
             open_tasks = conn.execute("SELECT owner,details FROM tasks WHERE state='open' ORDER BY owner").fetchall()

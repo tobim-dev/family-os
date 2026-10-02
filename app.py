@@ -38,6 +38,12 @@ TZ = ZoneInfo('Europe/Berlin')
 PEOPLE = {'tobi': 'Tobi', 'britta': 'Britta'}
 
 
+# Stay signed in (A-16): a sign-in lasts a year and is extended on use, at
+# most once a day. Lost device: sign out other devices in "Mehr".
+SESSION_SECONDS = 365 * 86400
+SESSION_RENEW_AFTER = 86400
+
+
 def now():
     return datetime.now(TZ).isoformat(timespec='seconds')
 
@@ -174,6 +180,7 @@ def create_app(db_path=None, demo=None, origin=None):
             if request.headers.get('origin') != origin or request.headers.get('x-family-request') != '1':
                 return JSONResponse({'detail': 'Ungültiger Anfrageursprung.'}, status_code=403)
         response = await call_next(request)
+        renew_session(request, response)
         # Private data is never cached, except responses that explicitly opt in (recipe images).
         if 'cache-control' not in response.headers:
             response.headers['Cache-Control'] = 'no-store'
@@ -181,6 +188,24 @@ def create_app(db_path=None, demo=None, origin=None):
         response.headers['Referrer-Policy'] = 'no-referrer'
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
         return response
+
+    def set_session_cookie(response, token):
+        response.set_cookie('fos_session', token, httponly=True, secure=not demo, samesite='strict',
+                            max_age=SESSION_SECONDS, path='/')
+
+    def renew_session(request, response):
+        token = request.cookies.get('fos_session')
+        path = request.url.path
+        if not token or not path.startswith('/api/') or path in ('/api/login', '/api/logout') or response.status_code >= 400:
+            return
+        digest = hashlib.sha256(token.encode()).hexdigest()
+        current = time.time()
+        with db() as conn:
+            row = conn.execute('SELECT expires FROM sessions WHERE token=?', (digest,)).fetchone()
+            if not row or row['expires'] <= current or row['expires'] > current + SESSION_SECONDS - SESSION_RENEW_AFTER:
+                return
+            conn.execute('UPDATE sessions SET expires=? WHERE token=?', (current + SESSION_SECONDS, digest))
+        set_session_cookie(response, token)
 
     def identity(request, conn):
         token = hashlib.sha256(request.cookies.get('fos_session', '').encode()).hexdigest()
@@ -299,7 +324,7 @@ def create_app(db_path=None, demo=None, origin=None):
                     conn.execute('DELETE FROM attempts WHERE key=?', (key,))
                     conn.execute('DELETE FROM sessions WHERE expires<?', (time.time(),))
                     token = secrets.token_urlsafe(32)
-                    conn.execute('INSERT INTO sessions VALUES(?,?,?)', (hashlib.sha256(token.encode()).hexdigest(), data.user, time.time() + 43200))
+                    conn.execute('INSERT INTO sessions VALUES(?,?,?)', (hashlib.sha256(token.encode()).hexdigest(), data.user, time.time() + SESSION_SECONDS))
                     audit(conn, data.user, 'Anmeldung', 'Neue Sitzung')
                 else:
                     count = attempt['count'] + 1 if attempt and attempt['until'] > time.time() else 1
@@ -309,8 +334,17 @@ def create_app(db_path=None, demo=None, origin=None):
         if error:
             raise error
         response = JSONResponse({'user': data.user})
-        response.set_cookie('fos_session', token, httponly=True, secure=not demo, samesite='strict', max_age=43200, path='/')
+        set_session_cookie(response, token)
         return response
+
+    @app.post('/api/sessions/revoke-others')
+    def revoke_other_sessions(request: Request):
+        current = hashlib.sha256(request.cookies.get('fos_session', '').encode()).hexdigest()
+        with db() as conn:
+            user = identity(request, conn)
+            count = conn.execute('DELETE FROM sessions WHERE user_id=? AND token<>?', (user, current)).rowcount
+            audit(conn, user, 'Andere Geräte abgemeldet', f'{count} Anmeldungen beendet')
+        return {'revoked': count}
 
     @app.post('/api/logout')
     def logout(request: Request):
@@ -339,8 +373,9 @@ def create_app(db_path=None, demo=None, origin=None):
             closed_days = closures.listing(conn, first, last)
             nursery_events = nursery.listing(conn, first, last)
             tour_seen = bool(conn.execute('SELECT 1 FROM metadata WHERE key=?', ('tour_seen:' + user,)).fetchone())
+            sessions = conn.execute('SELECT COUNT(*) FROM sessions WHERE user_id=? AND expires>?', (user, time.time())).fetchone()[0]
             today = widget.summary(conn, user, datetime.now(TZ))  # today and tomorrow for the start page
-        return {'resolved_issues': resolved_issues, 'today_summary': today, 'nursery_events': nursery_events, 'tour_seen': tour_seen, 'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
+        return {'sessions': sessions, 'resolved_issues': resolved_issues, 'today_summary': today, 'nursery_events': nursery_events, 'tour_seen': tour_seen, 'closures': closed_days, 'nanny': nanny_shifts, 'user': user, 'month': month, 'today': str(datetime.now(TZ).date()), 'appointments': appointments, 'proposals': proposals, 'issues': issues, 'tasks': tasks, 'history': history, 'demo': demo, 'planning': planning}
 
     @app.post('/api/proposals')
     def propose(data: ProposalInput, request: Request):

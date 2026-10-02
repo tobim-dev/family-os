@@ -12,7 +12,7 @@ from migrations import migrate
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=['setup-user', 'backup'])
+    parser.add_argument('command', choices=['setup-user', 'backup', 'sign-out'])
     parser.add_argument('--user', choices=PEOPLE)
     parser.add_argument('--output')
     args = parser.parse_args()
@@ -45,6 +45,18 @@ def main():
         print('Sicherung erstellt:', output)
         if existing:
             print('Zugehörige Schlüssel ebenfalls sichern:', sidecars)
+        return
+    if args.command == 'sign-out':
+        # Lost device: end all sign-ins of one person (or both) without changing the account.
+        if not path.exists():
+            parser.error('Existing FOS_DB required.')
+        users = [args.user] if args.user else list(PEOPLE)
+        with sqlite3.connect(path) as conn:
+            marks = ','.join('?' * len(users))
+            count = conn.execute(f'DELETE FROM sessions WHERE user_id IN ({marks})', users).rowcount
+            conn.execute('INSERT INTO audit(actor,action,details,created) VALUES(?,?,?,?)',
+                         ('admin', 'Alle Anmeldungen beendet', ', '.join(users), now()))
+        print(f'{count} Anmeldungen beendet.')
         return
     if not args.user:
         parser.error('--user required.')

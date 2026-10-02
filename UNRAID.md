@@ -108,3 +108,15 @@ Das tatsächlich veröffentlichte Image durchläuft ebenfalls den Container-Test
 
 Die Pipeline ersetzt nicht den Test eures Reverse Proxys, des Gemeinschaftskalenders
 und der Push-Zustellung auf euren iPhones.
+
+## Angemeldet bleiben und Gerät verloren
+
+Eine Anmeldung gilt ein Jahr und verlängert sich bei Nutzung automatisch (A-16). Geht ein
+Gerät verloren, in der App unter „Mehr → Angemeldet bleiben“ die anderen Geräte abmelden
+oder auf dem NAS alle Anmeldungen einer Person (ohne `--user`: beider) beenden:
+
+```sh
+docker exec --user 99:100 family-os python manage.py sign-out --user tobi
+```
+
+Passwort und Authenticator bleiben unverändert.

@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-219 Tests bestanden (`python -m unittest discover -s tests -v`):
+223 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -38,6 +38,15 @@ Schema-Migrationen:
 - Vor einer Migration mit Daten entsteht eine geschützte Kopie mit altem Stand.
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
+
+Angemeldet bleiben (A-16):
+
+- Anmeldung gilt 365 Tage (Cookie und Server), Nutzung verlängert höchstens einmal täglich;
+  abgelaufene Anmeldungen werden nicht wiederbelebt; andere Geräte abmelden betrifft nur die
+  eigene Person; `manage.py sign-out` beendet Anmeldungen auf dem NAS. Browser: Abmelden des
+  zweiten Geräts → dort 401.
+- Korrektur: allgemeine Regel `[hidden]{display:none!important}` fehlte (die Korrektur vom
+  28.09. betraf nur einzelne Elemente); Test in `tests/test_styles.cjs`.
 
 Pull to refresh, Abmelden, Geklärt (A-14, A-15, B-20, Migration 9):
 
@@ -324,7 +333,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-33 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
+34 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft
