@@ -100,20 +100,27 @@ def ingredient_ids(snapshot, recipe_id=None, skip=None):
 
 
 def preserved(action, recipe_id, before, after):
-    """True if an ingredients_add/remove left everything else intact.
+    """True if an ingredients_add/remove left everything else intact."""
+    return preserved_reason(action, recipe_id, before, after) is None
+
+
+def preserved_reason(action, recipe_id, before, after):
+    """None if an ingredients_add/remove left everything else intact, else why not.
 
     - Own items and the week plan are unchanged.
     - Other shopping-list recipes are unchanged.
     - Entries of IDs the recipe does not use are exactly unchanged.
     - For IDs the recipe uses: no position and no checkmark of another recipe
       is lost; removal never adds entries, adding never loses entries.
+      Adding may uncheck a shared ingredient: more of it is needed now.
+    The reason names counts only, never ingredient names (it is logged).
     """
     if before['days'] != after['days']:
-        return False
+        return 'Der Wochenplan hat sich gleichzeitig geändert.'
     if Counter(map(repr, before['additional'])) != Counter(map(repr, after['additional'])):
-        return False
+        return 'Eure eigenen Einkaufsartikel haben sich gleichzeitig geändert.'
     if recipes(before, skip=recipe_id) != recipes(after, skip=recipe_id):
-        return False
+        return 'Andere Rezepte auf der Einkaufsliste haben sich gleichzeitig geändert.'
 
     if action == 'ingredients_remove':
         touched = ingredient_ids(before, recipe_id)
@@ -121,21 +128,31 @@ def preserved(action, recipe_id, before, after):
         touched = ingredient_ids(after, recipe_id)
     untouched_before = [i for i in before['ingredients'] if i['id'] not in touched]
     untouched_after = [i for i in after['ingredients'] if i['id'] not in touched]
-    if entries(untouched_before) != entries(untouched_after):
-        return False
+    changed = entries(untouched_before) - entries(untouched_after) + (entries(untouched_after) - entries(untouched_before))
+    if changed:
+        return f'{len({key[0] for key in changed})} Zutaten anderer Rezepte haben sich verändert.'
 
     old = entries(before['ingredients'], touched, loose=True)
     new = entries(after['ingredients'], touched, loose=True)
     if action == 'ingredients_remove':
         # Only entries that existed before may remain.
         if new - old:
-            return False
+            return 'Nach dem Entfernen sind Zutaten neu hinzugekommen.'
         # Shared ingredients that were on the list must stay. Cookidoo may
         # leave some recipe ingredients off the list entirely (e.g. water).
         listed = {i['id'] for i in before['ingredients']}
         still_needed = ingredient_ids(before, skip=recipe_id) & touched & listed
         present = {i['id'] for i in after['ingredients']}
-        return still_needed <= present
-    # Adding: every earlier entry (including checkmarks) must still be there.
-    return not old - new
-
+        missing = still_needed - present
+        return f'{len(missing)} Zutaten, die andere Rezepte noch brauchen, fehlen.' if missing else None
+    # Adding: every earlier entry must still be there; a checkmark may turn
+    # into "needed again" for a shared ingredient, never the other way round.
+    lost = old - new
+    if not lost:
+        return None
+    unchecked = Counter({(iid, name, False): n for (iid, name, owned), n in lost.items() if owned})
+    really_lost = Counter({key: n for key, n in lost.items() if not key[2]})
+    spare = new - old
+    if not really_lost and not unchecked - spare:
+        return None
+    return f'{len({key[0] for key in lost})} Zutaten, die vorher auf der Liste standen, fehlen danach.'

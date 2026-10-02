@@ -207,3 +207,11 @@ des Rezepts darf beim Hinzufügen keine bisherige Position und kein Häkchen feh
 Entfernen darf nichts Neues entstehen und jede Zutat, die ein anderes Rezept braucht,
 muss vorhanden bleiben. Weicht etwas ab, bleibt ein Prüfhinweis und weitere
 Schreibvorgänge sind angehalten.
+
+## Rückleseprüfung nach dem Schreiben
+
+Nach jeder Änderung liest Family OS den Stand zurück. Passt etwas nicht, bleibt der Vorgang
+„zu prüfen“ und die Meldung nennt den Grund (z. B. „1 Zutaten anderer Rezepte haben sich
+verändert“). Bekannte Cookidoo-Eigenheit: Wird ein Rezept ergänzt, das eine schon abgehakte
+Zutat ebenfalls braucht, setzt Cookidoo sie wieder auf „zu kaufen“; das gilt als in Ordnung.
+Fehler kommen mit HTTP 424, damit der Reverse Proxy die Meldung nicht ersetzt.

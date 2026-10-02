@@ -9,7 +9,7 @@ den bestehenden Betrieb auf Unraid und die Google-Verbindung bereits bestätigt.
 
 ## Automatisch geprüft
 
-223 Tests bestanden (`python -m unittest discover -s tests -v`):
+224 Tests bestanden (`python -m unittest discover -s tests -v`):
 
 - Passwort und TOTP nötig; Wiederverwendung eines Codes abgewiesen.
 - Fehlversuche begrenzt, abgelaufene Sitzungen abgewiesen.
@@ -38,6 +38,16 @@ Schema-Migrationen:
 - Vor einer Migration mit Daten entsteht eine geschützte Kopie mit altem Stand.
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
+
+Cookidoo-Rückleseprüfung (Korrektur 02.10.2026):
+
+- Meldung nennt, was nach dem Schreiben nicht passte (nur Anzahlen, keine Zutatennamen im
+  Protokoll), Schritt „Ergebnis prüfen“ statt des zuletzt gelesenen Teils.
+- Rezept hinzufügen, das eine bereits abgehakte Zutat ebenfalls braucht: Cookidoo darf sie
+  wieder als „zu kaufen“ markieren, ohne Prüfungsfall. Verlorene Einträge, geänderte Zutaten
+  anderer Rezepte und eigene Artikel bleiben Prüfungsfälle.
+- Cookidoo-/Google-Fehler mit HTTP 424 statt 502, damit der Reverse Proxy die Meldung nicht
+  durch eine eigene Fehlerseite ersetzt. Mit echtem Cookidoo noch nicht geprüft.
 
 Angemeldet bleiben (A-16):
 

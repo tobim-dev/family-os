@@ -215,7 +215,7 @@ class Meals:
             category, hint = 'connection', 'Die Verbindung vom NAS zu Cookidoo ist fehlgeschlagen.'
         else:
             category, hint = 'internal', 'Beim Verarbeiten der Cookidoo-Verbindung ist ein interner Fehler aufgetreten.'
-        labels = {'login':'Anmeldung', 'save_tokens':'Zugang speichern', 'restore_tokens':'Zugang laden', 'calendar':'Wochenplanung laden', 'shopping_recipes':'Einkaufsrezepte laden', 'ingredients':'Zutaten laden', 'additional_items':'Eigene Artikel laden', 'write':'Änderung übertragen', 'search':'Rezeptsuche', 'details':'Rezept laden', 'prepare':'Vorbereitung'}
+        labels = {'login':'Anmeldung', 'save_tokens':'Zugang speichern', 'restore_tokens':'Zugang laden', 'calendar':'Wochenplanung laden', 'shopping_recipes':'Einkaufsrezepte laden', 'ingredients':'Zutaten laden', 'additional_items':'Eigene Artikel laden', 'write':'Änderung übertragen', 'search':'Rezeptsuche', 'details':'Rezept laden', 'prepare':'Vorbereitung', 'verify':'Ergebnis prüfen'}
         detail = f"{labels.get(self.phase, 'Cookidoo-Abgleich')}: {hint} Diagnose {self.diagnostic_id}."
         if status:
             detail += f' Cookidoo-HTTP-Status: {status}.'
@@ -250,7 +250,7 @@ class Meals:
             detail = self.diagnose(error)
             with self.db() as conn:
                 conn.execute("UPDATE meal_operations SET state='review',message='Antwort von Cookidoo unklar. Bitte vor einem erneuten Schreibzugriff prüfen.' WHERE state='sending'")
-            raise HTTPException(502, detail) from None
+            raise HTTPException(424, detail) from None
         finally:
             self.lock.release()
 
@@ -369,6 +369,18 @@ class Meals:
             item = matches[0]
             await method([replace(item, is_owned=data.owned)])
 
+    def readback_problem(self, data, before, after):
+        """None if Cookidoo shows exactly the intended change, else a reason (counts only, no names)."""
+        if not self.effect(data, after, before):
+            if data.action == 'ingredients_add':
+                return 'Das Rezept steht danach nicht auf der Einkaufsliste.'
+            return 'Die Änderung ist danach in Cookidoo nicht zu sehen.'
+        if data.action.startswith('ingredients_'):
+            return shopping_week.preserved_reason(data.action, data.recipe_id, before, after)
+        if not self.unaffected(data, before, after):
+            return 'Weitere Einträge haben sich gleichzeitig geändert.'
+        return None
+
     def effect(self, data, after, before):
         if data.action.startswith('plan_'):
             exists = any(r['id'] == data.recipe_id for d in after['days'] if d['day'] == str(data.day) for r in d['recipes'])
@@ -424,13 +436,20 @@ class Meals:
                 await self.apply(api, data)
                 after = await snapshot(api, start, self.progress, images)
                 self.store(after, images)
-                if not self.effect(data, after, before) or not self.unaffected(data, before, after):
-                    raise ValueError('Readback did not match')
+                self.progress('verify')
+                problem = self.readback_problem(data, before, after)
             except Exception as error:
                 diagnostic = self.diagnose(error)
                 with self.db() as conn:
                     conn.execute("UPDATE meal_operations SET state='review',message='Ergebnis unklar oder parallele Änderung erkannt. Bitte Cookidoo öffnen und den Stand prüfen; nicht blind wiederholen.' WHERE id=?", (data.id,))
-                raise HTTPException(502, 'Cookidoo-Ergebnis muss geprüft werden. Der Vorgang wird nicht automatisch wiederholt. ' + diagnostic) from None
+                raise HTTPException(424, 'Cookidoo-Ergebnis muss geprüft werden. Der Vorgang wird nicht automatisch wiederholt. ' + diagnostic) from None
+            if problem:
+                # Written, but the readback shows something unexpected: say what, never claim success (Q-01).
+                LOG.warning('Cookidoo readback mismatch diagnostic=%s action=%s reason=%s', self.diagnostic_id, data.action, problem)
+                message = f'Ergebnis prüfen: {problem} Bitte Cookidoo öffnen und den Stand prüfen; nicht blind wiederholen.'
+                with self.db() as conn:
+                    conn.execute("UPDATE meal_operations SET state='review',message=? WHERE id=?", (message, data.id))
+                raise HTTPException(424, message + f' Diagnose {self.diagnostic_id}.')
             with self.db() as conn:
                 conn.execute("UPDATE meal_operations SET state='confirmed' WHERE id=?", (data.id,))
                 conn.execute('INSERT INTO audit(actor,action,details,created) VALUES(?,?,?,?)', (actor, 'Cookidoo aktualisiert', data.action, datetime.now(TZ).isoformat()))
@@ -586,7 +605,7 @@ class Meals:
             except HTTPException:
                 raise
             except Exception:
-                raise HTTPException(502, 'Cookidoo konnte nicht gelesen werden. Die Prüfung bleibt offen.')
+                raise HTTPException(424, 'Cookidoo konnte nicht gelesen werden. Die Prüfung bleibt offen.')
             finally:
                 self.lock.release()
 

@@ -187,7 +187,7 @@ class MealTests(unittest.TestCase):
         p = self.payload()
         self.remote.fail_after_write = True
         r = self.client.post('/api/meals/change', json=p)
-        self.assertEqual(r.status_code, 502)
+        self.assertEqual(r.status_code, 424)
         self.assertNotIn('secret', r.text)
         self.assertEqual(self.client.post('/api/meals/change', json=p).status_code, 409)
         self.assertEqual(self.client.post('/api/meals/change', json=self.payload('additional_add', name='Neu')).status_code, 409)
@@ -213,7 +213,7 @@ class MealTests(unittest.TestCase):
     def test_unrelated_data_loss_is_detected_and_requires_review(self):
         self.remote.lose_custom = True
         r = self.client.post('/api/meals/change', json=self.payload())
-        self.assertEqual(r.status_code, 502)
+        self.assertEqual(r.status_code, 424)
         self.assertEqual(self.client.get('/api/meals?start='+self.start).json()['reviews'][0]['state'], 'review')
 
     def test_checkmarks_and_custom_articles_are_targeted(self):
@@ -325,7 +325,7 @@ class MealTests(unittest.TestCase):
         self.meals.adapter = unavailable
         with self.assertLogs('uvicorn.error.family_os.cookidoo', level='INFO') as logged:
             response = self.client.post('/api/meals/connect', json={'email':'private@example.org','password':'secret'})
-        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.status_code, 424)
         state = self.client.get('/api/meals?start='+self.start).json()
         self.assertEqual(state['diagnostic']['category'], 'authentication')
         self.assertEqual(state['diagnostic']['phase'], 'login')

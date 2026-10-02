@@ -466,7 +466,7 @@ class Integrations:
                 with self.db() as conn:
                     conn.execute("INSERT OR REPLACE INTO metadata VALUES('calendar_id',?)", (self.calendar,))
             except Exception:
-                raise HTTPException(502, 'Google-Verbindung nicht abgeschlossen. Bitte erneut versuchen.')
+                raise HTTPException(424, 'Google-Verbindung nicht abgeschlossen. Bitte erneut versuchen.')
             response = RedirectResponse('/?connected=google', status_code=303)
             response.delete_cookie('fos_oauth', path='/api/google/callback', secure=True, httponly=True, samesite='lax')
             return response
@@ -480,7 +480,7 @@ class Integrations:
                 raise HTTPException(409, 'Keine aktuelle Kalenderabweichung gefunden.')
             response = self.google('GET', target['event_id'])
             if response.status_code not in (200, 404, 410):
-                raise HTTPException(502, 'Google konnte nicht geprüft werden. Bitte später erneut versuchen.')
+                raise HTTPException(424, 'Google konnte nicht geprüft werden. Bitte später erneut versuchen.')
             remote = response.json() if response.status_code == 200 else None
             if remote and remote.get('status') == 'cancelled':
                 remote = None

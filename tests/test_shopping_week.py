@@ -98,6 +98,12 @@ class Remote:
             for _, item in self.list:
                 if item.id == 'linsen':
                     item.description = '999 g'
+        elif self.sabotage == 'uncheck_shared':
+            # Adding a recipe that needs an already checked ingredient: Cookidoo marks it as needed again.
+            added = {iid for iid, _, _ in RECIPES[self.recipes[-1]][1]}
+            for _, item in self.list:
+                if item.id in added:
+                    item.is_owned = False
         elif self.sabotage == 'lose_own':
             self.additional = self.additional[1:]
 
@@ -192,7 +198,7 @@ class WeekSwitchTests(unittest.TestCase):
         self.remote.put('r2')
         self.sync()
         self.remote.sabotage = 'drop_shared'
-        self.step('ingredients_remove', 'r4', expect=502)
+        self.step('ingredients_remove', 'r4', expect=424)
         state = self.client.get('/api/meals', params={'start': self.start}).json()
         self.assertEqual(state['reviews'][0]['state'], 'review')
         # Further writes stay blocked until someone checks Cookidoo.
@@ -203,17 +209,32 @@ class WeekSwitchTests(unittest.TestCase):
     def test_lost_checkmark_on_add_needs_review(self):
         self.sync()
         self.remote.sabotage = 'uncheck'
-        self.step('ingredients_add', 'r2', expect=502)
+        self.step('ingredients_add', 'r2', expect=424)
 
     def test_change_to_untouched_ingredient_needs_review(self):
         self.sync()
         self.remote.sabotage = 'touch_other'
-        self.step('ingredients_add', 'r3', expect=502)
+        result = self.step('ingredients_add', 'r3', expect=424)
+        # The message says what did not match (counts only) and keeps the operation in review.
+        self.assertIn('1 Zutaten anderer Rezepte haben sich verändert', result['detail'])
+        [review] = self.client.get('/api/meals', params={'start': self.start}).json()['reviews']
+        self.assertEqual(review['state'], 'review')
+        self.assertIn('Zutaten anderer Rezepte', review['message'])
+
+    def test_shared_checked_ingredient_needed_again_is_fine(self):
+        RECIPES['r7'] = ('Linsensuppe', [('linsen', 'Rote Linsen', '300 g')])
+        self.addCleanup(RECIPES.pop, 'r7')
+        self.remote.days['2026-11-03'] = ['r7']
+        self.sync()
+        self.remote.sabotage = 'uncheck_shared'
+        self.step('ingredients_add', 'r7')
+        linsen = [item for _, item in self.remote.list if item.id == 'linsen']
+        self.assertEqual([item.is_owned for item in linsen], [False, False])
 
     def test_lost_own_item_needs_review(self):
         self.sync()
         self.remote.sabotage = 'lose_own'
-        self.step('ingredients_remove', 'r1', expect=502)
+        self.step('ingredients_remove', 'r1', expect=424)
 
     def test_ingredients_missing_from_list_do_not_cause_false_alarm(self):
         # Cookidoo can leave basics like water off the list; they must not block writes.
