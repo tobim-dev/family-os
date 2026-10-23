@@ -39,6 +39,14 @@ Schema-Migrationen:
 - Fehlgeschlagene Migration und Fremdschlüsselverletzung werden vollständig zurückgerollt.
 - Tabellenumbau mit Fremdschlüsseln funktioniert.
 
+Gutschein-PDF in der App (23.10.2026):
+
+- „PDF öffnen“ zeigt das PDF in einem Betrachter mit „‹ Zurück“; Zurück-Geste schließt ihn,
+  die App bleibt erhalten (Browser 390 px). Nur das Gutschein-PDF darf eingebettet werden und
+  nur von der App selbst (frame-ancestors 'self'), alles andere bleibt 'none'.
+- Offline: der Betrachter liegt im gespeicherten Grundbestand; das PDF im Betrachter kommt aus
+  der gespeicherten Kopie (Service-Worker-Test). Darstellung auf dem iPhone noch nicht geprüft.
+
 Cookidoo-Rückleseprüfung (Korrektur 02.10.2026):
 
 - Meldung nennt, was nach dem Schreiben nicht passte (nur Anzahlen, keine Zutatennamen im
@@ -347,7 +355,7 @@ Wochenwechsel der Einkaufsliste (E-16, Cookidoo-Ersatz mit mehrfachen Kennungen 
 - Ein anderer Cookidoo-Zugang wird vor der Anmeldung abgewiesen.
 - Passwort und E-Mail werden nicht dauerhaft gespeichert; Tokens verschlüsselt gespeichert und wiederhergestellt.
 
-34 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
+37 JavaScript-Tests für Fehlerdarstellung, Cookidoo-Verbindung, Wochenwechsel, Tage ohne Krippe, Nanny-WhatsApp-Texte, Offline-Service-Worker, Outlook-Links und eindeutige globale Namen über alle Skripte bestehen. Oberfläche, neuer
 Cookidoo-Bereich und Service Worker sind syntaktisch geprüft.
 
 ## In der Oberfläche geprüft

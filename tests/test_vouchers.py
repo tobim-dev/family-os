@@ -59,6 +59,9 @@ class VoucherTests(unittest.TestCase):
         pdf = self.britta.get(f'/api/vouchers/{voucher_id}/pdf')
         self.assertEqual((pdf.status_code, pdf.headers['content-type'], pdf.content), (200, 'application/pdf', PDF))
         self.assertEqual(pdf.headers['cache-control'], 'no-store')
+        # Only the voucher PDF may be framed, and only by the app itself (in-app viewer).
+        self.assertIn("frame-ancestors 'self'", pdf.headers['content-security-policy'])
+        self.assertIn("frame-ancestors 'none'", self.britta.get('/api/vouchers').headers['content-security-policy'])
         anonymous = self.client('x', login=False)
         self.assertEqual(anonymous.get(f'/api/vouchers/{voucher_id}/pdf').status_code, 401)
         self.assertEqual(self.upload(client=anonymous).status_code, 401)

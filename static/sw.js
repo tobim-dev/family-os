@@ -5,7 +5,7 @@
 // it on logout. All other API responses are never cached.
 
 const OFFLINE_CACHE = 'fos-offline-v2';
-const SHELL = ['/static/offline.html', '/static/offline.js', '/static/style.css', '/static/favicon.svg'];
+const SHELL = ['/static/offline.html', '/static/offline.js', '/static/pdf-viewer.js', '/static/style.css', '/static/favicon.svg'];
 // Long enough for a slow start of the NAS; the offline page is for real outages.
 const TIMEOUT_MS = 10000;
 
@@ -52,10 +52,12 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
   // Escape hatch from the offline page: "?direkt" always goes to the network.
   if (url.searchParams.has('direkt')) return;
-  if (request.mode === 'navigate') {
-    event.respondWith(networkOr(request, '/static/offline.html'));
-  } else if (cachedCopy(url)) {
+  // Saved copies first: a voucher PDF in the in-app viewer is an iframe
+  // navigation and must show the saved PDF offline, not the offline page.
+  if (cachedCopy(url)) {
     event.respondWith(networkOr(request));
+  } else if (request.mode === 'navigate') {
+    event.respondWith(networkOr(request, '/static/offline.html'));
   }
 });
 

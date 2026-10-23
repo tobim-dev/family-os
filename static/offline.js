@@ -19,7 +19,7 @@ function offlineRender(data) {
   const row = i => `<div class="list-row"><div><b class="${i.owned ? 'done' : ''}">${offlineEsc(i.name)}</b>
       <p>${offlineEsc(i.description || (i.own ? 'Eigener Artikel' : ''))}</p></div></div>`;
   const vouchers = data.vouchers.map(v => `<div class="list-row"><div class="grow"><b>${offlineEsc(v.store)} · ${offlineEuro(v.remaining_cents)}</b>
-      <div class="actions"><a class="btn primary" href="/api/vouchers/${v.id}/pdf">PDF öffnen</a></div></div></div>`).join('');
+      <div class="actions"><a class="btn primary" href="/api/vouchers/${v.id}/pdf" data-pdf="Gutschein ${offlineEsc(v.store)}">PDF öffnen</a></div></div></div>`).join('');
   return `${data.vouchers.length ? `<section class="panel"><div class="panel-head"><h2>Gutscheine</h2></div>${vouchers}</section>` : ''}
     <section class="panel"><div class="panel-head"><h2>Einkaufsliste</h2><span class="status amber">${open.length} offen</span></div>
       ${open.map(row).join('') || '<div class="empty-state">Nichts offen.</div>'}

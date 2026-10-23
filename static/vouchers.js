@@ -29,7 +29,7 @@ function voucherRow(v) {
       <div class="row between"><b>${esc(v.store)} · ${voucherEuro(v.remaining_cents)}</b>
         <span class="status ${v.status === 'active' ? 'green' : v.status === 'partial' ? 'amber' : 'gray'}">${voucherStatus[v.status]}</span></div>
       <small>Wert ${voucherEuro(v.value_cents)} · abgelegt ${deadlineText(v.created)}${v.note ? ' · ' + esc(v.note) : ''}</small>
-      <div class="actions"><a class="btn ${open ? 'primary' : 'ghost'}" href="/api/vouchers/${v.id}/pdf" target="_blank" rel="noopener">PDF öffnen</a>
+      <div class="actions"><a class="btn ${open ? 'primary' : 'ghost'}" href="/api/vouchers/${v.id}/pdf" data-pdf="Gutschein ${esc(v.store)}">PDF öffnen</a>
         ${open ? `<button class="btn" data-voucher-use="${v.id}">Eingelöst</button>` : ''}
         <button class="btn ghost" data-voucher-set="${v.id}">Rest korrigieren</button></div>
     </div></div>`;

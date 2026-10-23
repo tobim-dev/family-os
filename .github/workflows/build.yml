@@ -51,6 +51,7 @@ jobs:
           node --check static/widget.js
           node --check static/nursery.js
           node --check static/refresh.js
+          node --check static/pdf-viewer.js
           node --test tests/*.cjs
           python scripts/check_unraid.py
       - name: Build production image

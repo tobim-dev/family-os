@@ -39,6 +39,19 @@ test('only the offline copy and voucher PDFs are served from the cache', async (
   assert.equal(await offline('/api/offline', 'cors', 'POST'), 'not handled');
 });
 
+test('a voucher PDF in the in-app viewer (iframe navigation) shows the saved PDF offline', async () => {
+  const offline = worker(async () => { throw new Error('offline'); },
+    {'/api/vouchers/3/pdf': 'PDF', '/static/offline.html': 'OFFLINE PAGE'});
+  assert.equal(await offline('/api/vouchers/3/pdf', 'navigate'), 'PDF');
+  assert.equal(await offline('/', 'navigate'), 'OFFLINE PAGE');
+});
+
+test('the offline page can open PDFs in the viewer without connection', () => {
+  const sw = fs.readFileSync('static/sw.js', 'utf8');
+  assert.match(sw, /'\/static\/pdf-viewer\.js'/);
+  assert.match(fs.readFileSync('static/offline.html', 'utf8'), /pdf-viewer\.js/);
+});
+
 test('an expired session is shown as such and not replaced by the copy', async () => {
   const expired = worker(async () => ({status: 401}), {'/api/offline': 'COPY'});
   assert.equal((await expired('/api/offline')).status, 401);

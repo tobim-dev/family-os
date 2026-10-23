@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta
 import calendar
 import hashlib
 import hmac
+import re
 import json
 import os
 from pathlib import Path
@@ -186,7 +187,10 @@ def create_app(db_path=None, demo=None, origin=None):
             response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'no-referrer'
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        # Voucher PDFs may be shown inside the app's own viewer (same origin only).
+        ancestors = "'self'" if re.fullmatch(r'/api/vouchers/\d+/pdf', request.url.path) else "'none'"
+        response.headers['Content-Security-Policy'] = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
+                                                       f"connect-src 'self'; frame-ancestors {ancestors}; base-uri 'none'; form-action 'self'")
         return response
 
     def set_session_cookie(response, token):
